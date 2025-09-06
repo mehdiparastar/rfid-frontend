@@ -1,35 +1,32 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import * as React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { LinearProgress } from "@mui/material";
+const MainLayout = React.lazy(() => import("./layouts/MainLayout"));
+const Home = React.lazy(() => import("./pages/Home"));
+const Products = React.lazy(() => import("./pages/Products"));
+const Scans = React.lazy(() => import("./pages/Scans"));
+const SignIn = React.lazy(() => import("./pages/SignIn"));
+const SignUp = React.lazy(() => import("./pages/SignUp"));
+const Tags = React.lazy(() => import("./pages/Tags"));
+const Users = React.lazy(() => import("./pages/Users"));
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <React.Suspense fallback={<LinearProgress />}>
+      <Routes>
+        <Route element={<MainLayout />}>
+          <Route index element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/scans" element={<Scans />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/tags" element={<Tags />} />
+          <Route path="/users" element={<Users />} />
+          <Route path="*" element={<div style={{ padding: 24 }}>Not Found</div>} />
+        </Route>
+      </Routes>
+    </React.Suspense>
+  );
 }
-
-export default App
