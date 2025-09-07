@@ -190,7 +190,7 @@ export default function MainLayout() {
                 <Toolbar />
 
                 {/* Routed page content */}
-                <Box sx={{ flex: 1, p: 3 }}>
+                <Box sx={{ flex: 1, p: 0 }}>
                     <Outlet />
                 </Box>
 

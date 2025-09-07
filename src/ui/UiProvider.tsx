@@ -74,7 +74,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
                 direction: dir,
                 palette: { mode },
                 // Add your shared design tokens here to avoid recalculations elsewhere
-                shape: { borderRadius: 12 },
+                // shape: { borderRadius: 12 },
             }),
         [dir, mode]
     );
