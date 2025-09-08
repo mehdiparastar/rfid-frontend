@@ -5,8 +5,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    port: 1251,
     proxy: {
-      '/api': 'http://localhost:1251',          // Nest
+      '/api': {
+        target: 'http://localhost:1251',
+        changeOrigin: true
+      },
       '/socket.io': {
         target: 'http://localhost:1251',        // Socket.IO on Nest
         ws: true,

@@ -5,7 +5,7 @@ import RequireAuth from "./routes/RequireAuth";
 const MainLayout = React.lazy(() => import("./layouts/MainLayout"));
 const Home = React.lazy(() => import("./pages/Home"));
 const Products = React.lazy(() => import("./pages/Products"));
-const Scans = React.lazy(() => import("./pages/Scans"));
+const ScanMode = React.lazy(() => import("./pages/ScanMode"));
 const SignIn = React.lazy(() => import("./pages/SignIn"));
 const SignUp = React.lazy(() => import("./pages/SignUp"));
 const Tags = React.lazy(() => import("./pages/Tags"));
@@ -20,7 +20,7 @@ export default function App() {
           <Route index element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Home />} />
           <Route path="/products" element={<RequireAuth><Products /></RequireAuth>} />
-          <Route path="/scans" element={<RequireAuth><Scans /></RequireAuth>} />
+          <Route path="/scan-mode" element={<RequireAuth><ScanMode /></RequireAuth>} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/tags" element={<RequireAuth><Tags /></RequireAuth>} />

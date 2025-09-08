@@ -1,26 +1,24 @@
-import * as React from "react";
-import {
-    Box,
-    Paper,
-    Typography,
-    TextField,
-    Button,
-    Stack,
-    FormControlLabel,
-    Checkbox,
-    InputAdornment,
-    IconButton,
-    Alert,
-    CircularProgress,
-    Link as MuiLink,
-} from "@mui/material";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import {
+    Alert,
+    Box,
+    Button,
+    Checkbox,
+    CircularProgress,
+    FormControlLabel,
+    IconButton,
+    InputAdornment,
+    Link as MuiLink,
+    Paper,
+    Stack,
+    TextField,
+    Typography,
+} from "@mui/material";
+import * as React from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
-
 import { useLogin } from "../api/auth";
-import { useAuth } from "../stores/auth";
 
 // only store email (never password)
 const REMEMBER_KEY = "rfid-remember-email";
@@ -29,7 +27,6 @@ const emailOk = (v: string) => /.+@.+\..+/.test(v);
 export default function SignIn() {
     const navigate = useNavigate();
     const location = useLocation() as { state?: { from?: Location } };
-    const setUser = useAuth((s) => s.setUser);
 
     const login = useLogin();
 
@@ -78,18 +75,11 @@ export default function SignIn() {
         login.mutate(
             { email, password },
             {
-                onSuccess: ({ user }) => {
-                    // keep Zustand in sync (useLogin also primes ['me'] cache in our earlier code)
-                    setUser(user);
-                    const to =
-                        (location.state?.from as any)?.pathname
-                            ? (location.state!.from as any).pathname
-                            : "/home";
+                onSuccess: () => {
+                    const to = (location.state as any)?.from?.pathname ?? "/home";
                     navigate(to, { replace: true });
                 },
-                onError: (err: any) => {
-                    setErrorMsg(err?.message || "Login failed");
-                },
+                onError: (err: any) => setErrorMsg(err?.message || "Login failed"),
             }
         );
     };
