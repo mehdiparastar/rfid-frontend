@@ -1,10 +1,10 @@
+import { QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
-import { UiProvider } from "./ui/UiProvider";
 import { BrowserRouter } from "react-router-dom";
-import { QueryClientProvider } from "@tanstack/react-query";
+import App from "./App.tsx";
 import { queryClient } from "./lib/queryClient.ts";
+import { UiProvider } from "./providers/UiProvider.tsx";
 
 // Recommended by MUI for consistent typography rendering
 import "@fontsource/roboto/300.css";

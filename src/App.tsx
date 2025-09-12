@@ -5,7 +5,7 @@ import RequireAuth from "./routes/RequireAuth";
 const MainLayout = React.lazy(() => import("./layouts/MainLayout"));
 const Home = React.lazy(() => import("./pages/Home"));
 const Products = React.lazy(() => import("./pages/Products"));
-const ScanMode = React.lazy(() => import("./pages/ScanMode"));
+const ScanMode = React.lazy(() => import("./pages/ScanMode/ScanMode"));
 const SignIn = React.lazy(() => import("./pages/SignIn"));
 const SignUp = React.lazy(() => import("./pages/SignUp"));
 const Tags = React.lazy(() => import("./pages/Tags"));

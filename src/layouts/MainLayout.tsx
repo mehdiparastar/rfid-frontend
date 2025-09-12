@@ -1,8 +1,6 @@
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import FormatTextdirectionLToRIcon from "@mui/icons-material/FormatTextdirectionLToR";
-import FormatTextdirectionRToLIcon from "@mui/icons-material/FormatTextdirectionRToL";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import LabelIcon from "@mui/icons-material/Label";
 import LightModeIcon from "@mui/icons-material/LightMode";
@@ -36,7 +34,8 @@ import { useTheme } from "@mui/material/styles";
 import * as React from "react";
 import { Outlet, Link as RouterLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useLogout, useMe } from "../api/auth";
-import { useUi } from "../ui/UiProvider";
+import { useUi } from "../providers/UiProvider";
+import { useSocketStore } from "../store/socketStore";
 
 const drawerWidth = 260;
 
@@ -132,6 +131,7 @@ const Header = React.memo(function Header({ onMenuClick }: { onMenuClick: () => 
             await logout.mutateAsync(); // Wait for the logout mutation to finish
             // After logout completes, proceed with navigation
             handleClose();
+            useSocketStore.getState().disconnect(true);
             navigate("/signin", { replace: true });
         } catch (error) {
             console.error("Logout failed:", error);

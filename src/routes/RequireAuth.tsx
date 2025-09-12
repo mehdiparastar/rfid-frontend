@@ -1,6 +1,7 @@
 import type { JSX } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useMe } from "../api/auth";
+import { AppSocketConnector } from "../AppSocketConnector";
 
 export default function RequireAuth({ children }: { children: JSX.Element }) {
     const { data: me, status, isFetching, isLoading } = useMe();
@@ -12,5 +13,10 @@ export default function RequireAuth({ children }: { children: JSX.Element }) {
     if (!!!me) {
         return <Navigate to="/signin" replace state={{ from: loc }} />;
     }
-    return children;
+    return (
+        <>
+            <AppSocketConnector />
+            {children}
+        </>
+    );
 }
