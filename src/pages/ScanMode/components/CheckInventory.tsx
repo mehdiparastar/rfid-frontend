@@ -49,44 +49,44 @@ interface Product {
 }
 
 // Sample product data for a gold jewelry store
-const products_: Product[] = [
-    {
-        id: 1,
-        name: 'Gold Necklace',
-        image: 'https://www.shutterstock.com/shutterstock/photos/2256160991/display_1500/stock-photo-gold-pendant-with-blue-crystals-on-a-thin-chain-on-a-white-background-2256160991.jpg',
-        weight: '20g',
-    },
-    {
-        id: 2,
-        name: 'Gold Ring',
-        image: 'https://www.shutterstock.com/shutterstock/photos/2198896509/display_1500/stock-photo-diamond-ring-yellow-gold-isolated-on-white-engagement-solitaire-style-ring-2198896509.jpg',
-        weight: '5g',
-    },
-    {
-        id: 3,
-        name: 'Gold Bracelet',
-        image: 'https://www.shutterstock.com/shutterstock/photos/1926931343/display_1500/stock-photo-gold-bangle-on-white-background-1926931343.jpg',
-        weight: '15g',
-    },
-    {
-        id: 4,
-        name: 'Gold Earrings',
-        image: 'https://www.shutterstock.com/shutterstock/photos/2256160991/display_1500/stock-photo-gold-pendant-with-blue-crystals-on-a-thin-chain-on-a-white-background-2256160991.jpg',
-        weight: '8g',
-    },
-    {
-        id: 5,
-        name: 'Gold Pendant',
-        image: 'https://www.shutterstock.com/shutterstock/photos/2198896509/display_1500/stock-photo-diamond-ring-yellow-gold-isolated-on-white-engagement-solitaire-style-ring-2198896509.jpg',
-        weight: '12g',
-    },
-    {
-        id: 6,
-        name: 'Gold Anklet',
-        image: 'https://www.shutterstock.com/shutterstock/photos/1926931343/display_1500/stock-photo-gold-bangle-on-white-background-1926931343.jpg',
-        weight: '18g',
-    },
-];
+// const products_: Product[] = [
+//     {
+//         id: 1,
+//         name: 'Gold Necklace',
+//         image: 'https://www.shutterstock.com/shutterstock/photos/2256160991/display_1500/stock-photo-gold-pendant-with-blue-crystals-on-a-thin-chain-on-a-white-background-2256160991.jpg',
+//         weight: '20g',
+//     },
+//     {
+//         id: 2,
+//         name: 'Gold Ring',
+//         image: 'https://www.shutterstock.com/shutterstock/photos/2198896509/display_1500/stock-photo-diamond-ring-yellow-gold-isolated-on-white-engagement-solitaire-style-ring-2198896509.jpg',
+//         weight: '5g',
+//     },
+//     {
+//         id: 3,
+//         name: 'Gold Bracelet',
+//         image: 'https://www.shutterstock.com/shutterstock/photos/1926931343/display_1500/stock-photo-gold-bangle-on-white-background-1926931343.jpg',
+//         weight: '15g',
+//     },
+//     {
+//         id: 4,
+//         name: 'Gold Earrings',
+//         image: 'https://www.shutterstock.com/shutterstock/photos/2256160991/display_1500/stock-photo-gold-pendant-with-blue-crystals-on-a-thin-chain-on-a-white-background-2256160991.jpg',
+//         weight: '8g',
+//     },
+//     {
+//         id: 5,
+//         name: 'Gold Pendant',
+//         image: 'https://www.shutterstock.com/shutterstock/photos/2198896509/display_1500/stock-photo-diamond-ring-yellow-gold-isolated-on-white-engagement-solitaire-style-ring-2198896509.jpg',
+//         weight: '12g',
+//     },
+//     {
+//         id: 6,
+//         name: 'Gold Anklet',
+//         image: 'https://www.shutterstock.com/shutterstock/photos/1926931343/display_1500/stock-photo-gold-bangle-on-white-background-1926931343.jpg',
+//         weight: '18g',
+//     },
+// ];
 
 
 const CheckInventory: React.FC = () => {
