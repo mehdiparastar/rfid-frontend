@@ -4,6 +4,9 @@ import svgr from 'vite-plugin-svgr';
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+  },
   plugins: [
     react(),
     svgr({
@@ -17,16 +20,16 @@ export default defineConfig({
     }),
   ],
   server: {
-    host: '0.0.0.0',
+    host: process.env.NODE_ENV === 'production' ? '127.0.0.1' : '0.0.0.0',
     port: 1252,
     proxy: {
       '/api': {
-        target: 'http://localhost:1251',
+        target: process.env.NODE_ENV === 'production' ? 'http://localhost:7219' : 'http://localhost:1251',
         changeOrigin: true,
         ws: true
       },
       '/socket.io': {
-        target: 'http://localhost:1251',
+        target: process.env.NODE_ENV === 'production' ? 'http://localhost:7219' : 'http://localhost:1251',
         ws: true,
         changeOrigin: true,
       },
