@@ -8,10 +8,11 @@ import { RFIDIcon } from "../../../svg/RFIDIcon/RFIDIcon";
 interface IProps {
     openSettings: boolean,
     setOpenSettings: React.Dispatch<React.SetStateAction<boolean>>,
-    fullScreenSettingsDialog: boolean
+    fullScreenSettingsDialog: boolean,
+    scanMode: Mode
 }
 
-const Transition = forwardRef(function Transition(
+export const DialogTransition = forwardRef(function Transition(
     props: TransitionProps & {
         children: React.ReactElement<unknown>;
     },
@@ -20,10 +21,10 @@ const Transition = forwardRef(function Transition(
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullScreenSettingsDialog }) => {
+const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullScreenSettingsDialog, scanMode }) => {
     const [powerValue, setPowerValue] = useState(100)
     const theme = useTheme()
-    const { data: modules, error: getModulesError, isLoading } = useModules("Inventory");
+    const { data: modules, error: getModulesError, isLoading } = useModules(scanMode);
     const initModulesMutation = useInitModules();
 
     const handleInitModules = (power: number, mode: Mode) => {
@@ -38,7 +39,7 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
             onClose={() => setOpenSettings(false)}
             aria-labelledby="responsive-dialog-title"
             slots={{
-                transition: Transition,
+                transition: DialogTransition,
             }}
         >
             <AppBar sx={{ position: 'relative' }}>
@@ -56,11 +57,11 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                     </Typography>
                 </Toolbar>
             </AppBar>
-            <DialogContent>
+            <DialogContent sx={{ p: 1 }}>
                 <DialogContentText py={1}>
                     You can see connected Module(s) and re-init them, also you can change modules power of scanning.
                 </DialogContentText>
-                <Divider variant="fullWidth" sx={{ mx: -3, mb: 1 }} />
+                <Divider variant="fullWidth" sx={{ mx: -1, mb: 1 }} />
 
                 <Stack width={1} direction="column" justifyContent={'space-between'}>
                     <Slider
@@ -97,7 +98,7 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                             borderTopRightRadius: 0,
                         }}
                         size="small"
-                        onClick={() => handleInitModules(powerValue, 'Inventory')}
+                        onClick={() => handleInitModules(powerValue, scanMode)}
                         disabled={initModulesMutation.status === "pending"}
                     >
                         {initModulesMutation.status === "pending" ? 'Initializing...' : 'RE-INIT'}
@@ -107,7 +108,7 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
 
                 {
                     (isLoading || initModulesMutation.status === "pending") ?
-                        <Box sx={{ width: 1, mt: 4, justifyContent: 'center', display: 'flex' }}><CircularProgress /> </Box> :
+                        <Box sx={{ width: 1, mt: 4, justifyContent: 'center', display: 'flex' }}><CircularProgress /></Box> :
                         (!!getModulesError || initModulesMutation.status === "error") ?
                             <Alert severity="error" sx={{ mt: 4 }}>
                                 {

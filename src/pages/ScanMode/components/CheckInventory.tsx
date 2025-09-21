@@ -90,7 +90,7 @@ interface Product {
 
 
 const CheckInventory: React.FC = () => {
-    const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
+    const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(3);
     const [sortBy, setSortBy] = useState<'name' | 'weight'>('name');
@@ -112,7 +112,6 @@ const CheckInventory: React.FC = () => {
         name: p.epc || '',
         weight: `${p.rssi}` || ''
     }))
-    // console.log(products)
 
     const handleCalculatePrice = (product: Product): void => {
         alert(`Calculating price for ${product.name} (${product.weight})...`);
@@ -144,13 +143,11 @@ const CheckInventory: React.FC = () => {
     };
 
     const handleStartScenario = async () => {
-        const start = await startScenarioMutateAsync({ mode: "Inventory" })
-        console.log(start)
+        await startScenarioMutateAsync({ mode: "Inventory" })
     }
 
     const handleStopScenario = async () => {
-        const stop = await stopScenarioMutateAsync()
-        console.log(stop)
+        await stopScenarioMutateAsync()
     }
 
     const sortedProducts = useMemo(() => {
@@ -182,9 +179,7 @@ const CheckInventory: React.FC = () => {
                     sx={{
                         textAlign: 'center',
                         width: { xs: "100%", sm: 200 },
-                        mb: 1, display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
+                        mb: 1,
                         padding: '8px 10px',
                         '& .MuiAlert-message': {
                             width: '100%',
@@ -193,6 +188,16 @@ const CheckInventory: React.FC = () => {
                         borderTopRightRadius: { sm: 0 },
                         borderBottomRightRadius: { sm: 0 },
                         borderRight: { xs: 0, sm: 1 }
+                    }}
+                    slotProps={{
+                        message: {
+                            sx: {
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                flexDirection: { xs: 'row', sm: 'column', md: 'column', lg: 'column', xl: 'column' }
+                            }
+                        }
                     }}
                 >
                     <Typography
@@ -216,6 +221,7 @@ const CheckInventory: React.FC = () => {
                     >
                         Checking Mode
                     </Typography>
+                    <Typography variant='caption'>{scenarioState?.scanMode}</Typography>
                 </Alert>
                 <Alert
                     icon={false}
@@ -244,7 +250,6 @@ const CheckInventory: React.FC = () => {
                             <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
                             <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
                         </ToggleButtonGroup>
-                        {scenarioState?.scanMode}
                         <IconButton onClick={() => setOpenSettings(true)}><Settings /></IconButton>
                     </Stack>
                 </Alert>
@@ -586,7 +591,12 @@ const CheckInventory: React.FC = () => {
                 </>
             )}
 
-            <ModuleSettings openSettings={openSettings} setOpenSettings={setOpenSettings} fullScreenSettingsDialog={fullScreenSettingsDialog} />
+            <ModuleSettings
+                openSettings={openSettings}
+                setOpenSettings={setOpenSettings}
+                fullScreenSettingsDialog={fullScreenSettingsDialog}
+                scanMode='Inventory'
+            />
         </Paper>
     );
 };

@@ -1,21 +1,52 @@
+import type { User } from "../api/auth";
+import type { Tag } from "../api/products";
+import type { GoldProductType } from "../store/useProductFormStore";
+
+export class ApiError extends Error {
+    status: number;
+    body?: string;
+    constructor(status: number, message: string, body?: string) {
+        super(message);
+        this.status = status;
+        this.body = body;
+    }
+}
+
+export const isAuthError = (e: unknown): e is ApiError => e instanceof ApiError && (e.status === 401 || e.status === 403);
+
 let refreshPromise: Promise<void> | null = null;
 let isLoggedOut = false;
 
-async function doRefresh() {
-    if (isLoggedOut) {
-        throw new Error("User is logged out, login again.");
-    }
+// allow app to react (e.g., route to /login) when refresh finally fails
+let onHardLogout: (() => void) | null = null;
+export const setOnHardLogout = (fn: () => void) => (onHardLogout = fn);
 
-    const r = await fetch("/api/auth/refresh", { method: "POST", credentials: "include" });
-    if (!r.ok) throw new Error("refresh failed");
+async function doRefresh() {
+    if (isLoggedOut) throw new ApiError(401, 'User is logged out, login again.');
+
+    try {
+        const response = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            credentials: 'include',
+        });
+        if (!response.ok) throw new ApiError(response.status, 'Refresh failed');
+    } catch (error) {
+        isLoggedOut = true;
+        onHardLogout?.();
+        throw error;
+    }
 }
 
 export async function api<T>(input: RequestInfo, init: RequestInit = {}): Promise<T> {
+    const headers = init.body instanceof FormData
+        ? { ...init.headers } // Omit Content-Type for FormData
+        : { "Content-Type": "application/json", ...init.headers };
+
     const req = () =>
         fetch(input, {
             ...init,
             credentials: "include",
-            headers: { "Content-Type": "application/json", ...(init.headers || {}) },
+            headers
         });
 
     let res = await req();
@@ -30,8 +61,150 @@ export async function api<T>(input: RequestInfo, init: RequestInit = {}): Promis
         }
         res = await req(); // retry once
     }
-    if (!res.ok) throw new Error((await res.text()) || "Request failed");
-    // Some endpoints (logout) may return empty
+
+    if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new ApiError(res.status, body || 'Request failed', body);
+    }
+
     const text = await res.text();
     return (text ? JSON.parse(text) : ({} as T)) as T;
 }
+
+export function apiUpload<T>(
+    url: string,
+    formData: FormData,
+    onProgress?: (percent: number, loaded: number, total: number) => void
+): Promise<T> {
+    const send = () =>
+        new Promise<T>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            xhr.withCredentials = true;
+
+            if (xhr.upload && onProgress) {
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        onProgress(pct, e.loaded, e.total);
+                    }
+                };
+            }
+
+            xhr.onload = async () => {
+                // attempt refresh on 401 once
+                if (xhr.status === 401) {
+                    try {
+                        if (!refreshPromise) refreshPromise = doRefresh().finally(() => (refreshPromise = null));
+                        await refreshPromise;
+                        resolve(await apiUpload<T>(url, formData, onProgress)); // retry once
+                        return;
+                    } catch (err) {
+                        isLoggedOut = true;
+                        onHardLogout?.();
+                        reject(err);
+                        return;
+                    }
+                }
+
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(xhr.responseText ? JSON.parse(xhr.responseText) : ({} as T));
+                } else {
+                    reject(new Error(xhr.responseText || 'Request failed'));
+                }
+            };
+
+            xhr.onerror = () => reject(new Error('Network error'));
+            xhr.send(formData);
+        });
+
+    return send();
+}
+
+export type Customer = {
+    id: number;
+    name: string;
+    phone: string;
+    nid: string;  // National ID
+    sales?: Sale[];
+    createdBy?: User;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export type Sale = {
+    id: number;
+    sellDate: Date;
+    customer?: Customer;
+    product: Product;
+    quantity: number;  // Quantity sold
+    payType: string;  // Payment type (e.g., 'credit', 'cash')
+    description: string;  // Description of the sale (optional)
+    spotPrice: number;  // Spot price at the time of sale
+    soldPrice: number;  // Final sold price
+    createdBy?: User;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export type Product = {
+    id: number;
+    name: string
+    photos: string[];  // Local file paths for photos
+    previews: string[];  // Local file paths for preview images
+    weight: number;  // In grams or kilograms, depending on your unit system
+    type: GoldProductType;
+    createdBy?: User;
+    quantity: number;  // Available quantity of the product
+    makingCharge: number;  // Charge for making the product
+    vat: number;  // vat for making the product
+    profit: number;  // profit for making the product
+    tags?: Tag[];
+    sales?: Sale[];
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export type Page<T> = {
+    items: T[]
+    nextCursor?: string | null
+    total?: number
+}
+
+export type SortingState = Array<{ id: string; desc: boolean }>;
+
+function encodeSort(sorting: SortingState | undefined) {
+    // Server expects "field:asc,other:desc"
+    if (!sorting?.length) return undefined
+    return sorting.map(s => `${s.id}:${s.desc ? 'desc' : 'asc'}`).join(',')
+}
+
+export async function getItems({
+    cursor,
+    limit,
+    sorting,
+    filters,
+}: {
+    cursor?: string | null
+    limit?: number
+    sorting?: SortingState
+    filters?: Record<string, string | number | boolean | undefined>
+}) {
+    const params = new URLSearchParams()
+    if (cursor) params.set('cursor', JSON.stringify(cursor))
+    if (limit) params.set('limit', String(limit))
+    const sort = encodeSort(sorting)
+    if (sort) params.set('sort', sort)
+
+    // Object.entries(filters ?? {}).forEach(([k, v]) => {
+    //     if (v !== undefined && v !== null) params.set(k, String(v))
+    // })
+
+    // Properly stringify filters object before sending
+    if (filters && Object.keys(filters).length > 0) {
+        params.set('filters', JSON.stringify(filters));  // Send as JSON string
+    }
+
+    return api<Page<Product>>(`/api/products/all?${params.toString()}`)
+}
+

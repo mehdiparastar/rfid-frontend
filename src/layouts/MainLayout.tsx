@@ -268,7 +268,7 @@ export default function MainLayout() {
             )}
 
             {/* Content + Footer */}
-            <Box component="main" sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+            <Box component="main" sx={{ minHeight: "1000px", flexGrow: 1, display: "flex", flexDirection: "column" }}>
                 {/* Push content below AppBar */}
                 <Toolbar />
 
