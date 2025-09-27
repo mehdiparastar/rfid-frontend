@@ -1,6 +1,6 @@
 import type { User } from "../api/auth";
 import type { Tag } from "../api/products";
-import type { GoldProductType } from "../store/useProductFormStore";
+import type { GoldProductSUBType, GoldProductType } from "../store/useProductFormStore";
 
 export class ApiError extends Error {
     status: number;
@@ -126,23 +126,32 @@ export type Customer = {
     name: string;
     phone: string;
     nid: string;  // National ID
-    sales?: Sale[];
+    sales?: SaleItem[];
     createdBy?: User;
     createdAt?: Date;
     updatedAt?: Date;
 }
 
-export type Sale = {
+export type Invoice = {
     id: number;
     sellDate: Date;
-    customer?: Customer;
-    product: Product;
-    quantity: number;  // Quantity sold
+    customer: Customer;
+    items: SaleItem[];
     payType: string;  // Payment type (e.g., 'credit', 'cash')
     description: string;  // Description of the sale (optional)
+    createdBy: User;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export type SaleItem = {
+    id: number;
+    invoice: Invoice;
+    product: Product;
+    quantity: number;
     spotPrice: number;  // Spot price at the time of sale
-    soldPrice: number;  // Final sold price
-    createdBy?: User;
+    soldPrice: number;
+    createdBy: User;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -154,13 +163,15 @@ export type Product = {
     previews: string[];  // Local file paths for preview images
     weight: number;  // In grams or kilograms, depending on your unit system
     type: GoldProductType;
+    subType: GoldProductSUBType;
+    inventoryItem: boolean;
     createdBy?: User;
     quantity: number;  // Available quantity of the product
     makingCharge: number;  // Charge for making the product
     vat: number;  // vat for making the product
     profit: number;  // profit for making the product
     tags?: Tag[];
-    sales?: Sale[];
+    saleItems?: SaleItem[];
     createdAt?: Date;
     updatedAt?: Date;
 }

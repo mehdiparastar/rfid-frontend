@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, apiUpload, type SortingState, getItems, type Page, type Product } from '../lib/api';
+import { api, apiUpload, getItems, type Page, type Product, type SortingState } from '../lib/api';
 import type { ProductFormValues } from '../store/useProductFormStore';
-import { productQueryKey, productsQueryKey, tagsQueryKey } from './queryKeys';
+import { productsByIdsQueryKey, productsQueryKey, tagsQueryKey } from './queryKeys';
 
 
 
@@ -44,6 +44,8 @@ export function useCreateProduct() {
             formData.append('name', payload.name);
             formData.append('weight', payload.weight);
             formData.append('type', payload.type);
+            formData.append('subType', payload.subType);
+            formData.append('inventoryItem', String(payload.inventoryItem));
             formData.append('quantity', payload.quantity);
             formData.append('makingCharge', payload.makingCharge);
             formData.append('vat', payload.vat);
@@ -67,18 +69,32 @@ export function useCreateProduct() {
     });
 }
 
+// batch fetch (comma-separated ids)
+export async function fetchProductsByIds(ids: Array<string | number>) {
+    const unique = Array.from(new Set(ids.map(String))).filter(Boolean);
+    if (unique.length === 0) return [] as Product[];
 
-export async function fetchProduct(id: string | number) { return api<Product>(`/api/products/${id}`) }
+    // /api/products?ids=1,2,3
+    const qs = new URLSearchParams({ ids: unique.join(",") });
+    return api<Product[]>(`/api/products?${qs.toString()}`);
+}
 
-export function useProduct(id: string | number, opts?: { initialData?: Product }) {
+// batch hook returning Product[]
+export function useProductsByIds(
+    ids: Array<string | number>,
+    opts?: { initialData?: Product[] }
+) {
+    const enabled = ids?.length > 0;
     return useQuery({
-        queryKey: productQueryKey(id),
-        queryFn: () => fetchProduct(id),
+        queryKey: productsByIdsQueryKey(ids),
+        queryFn: () => fetchProductsByIds(ids),
         initialData: opts?.initialData,
         ...serialSafeQueryDefaults,
+        enabled,
     });
 }
 
+// get all products
 export function useProducts({
     limit = 20,
     sorting = [{ id: 'createdAt', desc: true }],

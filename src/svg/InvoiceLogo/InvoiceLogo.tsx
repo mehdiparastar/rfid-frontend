@@ -1,11 +1,7 @@
-import { SvgIcon, type SvgIconProps } from '@mui/material';
-import INVOICELOGOSVG from './invoiceLogo.svg?react'
-import { keyframes } from '@mui/system'
+import { Box, SvgIcon, type SvgIconProps } from '@mui/material';
+import INVOICELOGOSVG from './invoiceLogo.svg?react';
+import invoiceLogoUrl from './invoiceLogo.svg?url';
 
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-`
 
 export const InvoiceLogo: React.FC<SvgIconProps> = (props) => {
     const { sx, ...rest } = props
@@ -14,15 +10,13 @@ export const InvoiceLogo: React.FC<SvgIconProps> = (props) => {
             component={INVOICELOGOSVG}
             inheritViewBox
             sx={{
-                // make CSS transforms work on the SVG group
-                '& #dots-ring': {
-                    transformBox: 'fill-box',
-                    transformOrigin: 'center',
-                    animation: `${spin} 24s linear infinite`,
-                },
                 ...sx
             }}
             {...rest}
         />
     );
 };
+
+export function InvoiceLogoImg(props: React.ComponentProps<'img'>) {
+    return <Box component="img" src={invoiceLogoUrl} alt="Invoice logo" {...props} />;
+}

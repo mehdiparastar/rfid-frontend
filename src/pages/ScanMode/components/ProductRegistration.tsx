@@ -9,6 +9,7 @@ import {
     CircularProgress,
     Collapse,
     FormControl,
+    FormControlLabel,
     FormHelperText,
     Grid,
     Input,
@@ -18,13 +19,14 @@ import {
     MenuItem,
     Paper,
     Select,
+    Switch,
     TextField,
     Typography
 } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 import { useCreateProduct, type Tag } from '../../../api/products';
 import SelectTags from '../../../components/SelectTags';
-import { GOLD_PRODUCT_TYPES, useProductFormStore, type GoldProductType } from '../../../store/useProductFormStore';
+import { GOLD_PRODUCT_SUB_TYPES, GOLD_PRODUCT_TYPES, useProductFormStore, type GoldProductSUBType, type GoldProductType } from '../../../store/useProductFormStore';
 import { generatePreview } from '../../../utils/imageUtils';
 
 const ProductRegistration: React.FC = () => {
@@ -150,7 +152,7 @@ const ProductRegistration: React.FC = () => {
             )}
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={1}>
-                    <Grid size={{ xs: 12 }}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
                             label="Name"
                             disabled={createNewProductMutation.isPending}
@@ -163,23 +165,6 @@ const ProductRegistration: React.FC = () => {
                             slotProps={{
                                 htmlInput: { min: 0.01, step: "0.01" },
                                 input: { endAdornment: <InputAdornment position="end"><FingerprintSharpIcon /></InputAdornment> }
-                            }}
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <TextField
-                            label="Weight"
-                            disabled={createNewProductMutation.isPending}
-                            value={values.weight}
-                            onChange={(e) => setValue('weight', e.target.value)}
-                            error={!!errors.weight}
-                            helperText={errors.weight || helpers.weight}
-                            fullWidth
-                            margin="normal"
-                            type='number'
-                            slotProps={{
-                                htmlInput: { min: 0.01, step: "0.01" },
-                                input: { endAdornment: <InputAdornment position="end">grams</InputAdornment> }
                             }}
                         />
                     </Grid>
@@ -201,6 +186,42 @@ const ProductRegistration: React.FC = () => {
                             </Select>
                             <FormHelperText>{errors.type || helpers.type}</FormHelperText>
                         </FormControl>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <FormControl fullWidth margin="normal" error={!!errors.type}>
+                            <InputLabel id="sub-type-select-label">SubType</InputLabel>
+                            <Select
+                                disabled={createNewProductMutation.isPending}
+                                labelId="sub-type-select-label"
+                                label="SubType"
+                                value={values.subType}
+                                onChange={(e) => setValue('subType', e.target.value as GoldProductSUBType)}
+                            >
+                                {GOLD_PRODUCT_SUB_TYPES.map((type) => (
+                                    <MenuItem key={type.symbol} value={type.symbol}>
+                                        {type.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                            <FormHelperText>{errors.type || helpers.type}</FormHelperText>
+                        </FormControl>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                            label="Weight"
+                            disabled={createNewProductMutation.isPending}
+                            value={values.weight}
+                            onChange={(e) => setValue('weight', e.target.value)}
+                            error={!!errors.weight}
+                            helperText={errors.weight || helpers.weight}
+                            fullWidth
+                            margin="normal"
+                            type='number'
+                            slotProps={{
+                                htmlInput: { min: 0.01, step: "0.01" },
+                                input: { endAdornment: <InputAdornment position="end">grams</InputAdornment> }
+                            }}
+                        />
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
@@ -268,6 +289,23 @@ const ProductRegistration: React.FC = () => {
                                 input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }
                             }}
                         />
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                        <FormControl sx={{ border: 1, borderColor: 'divider', borderRadius: 1, '&:hover': { borderColor: 'primary.main' } }} fullWidth margin="normal" error={!!errors.inventoryItem}>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        disabled={createNewProductMutation.isPending}
+                                        checked={values.inventoryItem}
+                                        onChange={(e) => setValue('inventoryItem', e.target.checked)}
+                                    />
+                                }
+                                label="Inventory Item"
+                                labelPlacement="start"
+                                sx={{ justifyContent: 'space-between', m: 1, alignItems: 'center', p: 0 }}
+                            />
+                            <FormHelperText>{errors.inventoryItem || helpers.inventoryItem}</FormHelperText>
+                        </FormControl>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <FormControl fullWidth margin="normal" error={!!errors.tags}>

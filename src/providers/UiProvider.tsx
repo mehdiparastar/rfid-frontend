@@ -73,6 +73,18 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
             createTheme({
                 direction: dir,
                 palette: { mode },
+                typography: {
+                    fontFamily: [
+                        'IRANSans', // Primary font for Persian
+                        '-apple-system',
+                        'BlinkMacSystemFont',
+                        '"Segoe UI"',
+                        'Roboto',
+                        '"Helvetica Neue"',
+                        'Arial',
+                        'sans-serif',
+                    ].join(','),
+                },
                 // Add your shared design tokens here to avoid recalculations elsewhere
                 // shape: { borderRadius: 12 },
             }),

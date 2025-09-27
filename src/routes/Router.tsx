@@ -19,17 +19,40 @@ const Tags = React.lazy(() => import("../pages/Tags"));
 const Users = React.lazy(() => import("../pages/Users"));
 const IssueInvoice = React.lazy(() => import("../pages/IssueInvoice"));
 
-import { fetchProduct } from "../api/products"; // your feature fetcher
+import { fetchProductsByIds } from "../api/products"; // your feature fetcher
 
-export async function invoiceLoader({ params }: LoaderFunctionArgs) {
-    const id = params.id;
-    if (!id) throw redirect("/products");
+export async function invoiceLoader({ request }: LoaderFunctionArgs) {
+    const url = new URL(request.url);
+    const idsParam = url.searchParams.getAll("ids");
+
+    const ids: number[] = [
+        ...idsParam.flatMap(v => v.split(",")),
+    ]
+        .map(s => Number(s))
+        .filter(n => Number.isInteger(n));
+    // basic guards
+    if (ids.length === 0) throw redirect("/products");
+    if (ids.length > 100) throw new Response("Too many ids (max 100).", { status: 400 });
+
+    // de-dup so the API/db doesn't do extra work
+    const uniqueIds = Array.from(new Set(ids));
+
     try {
-        const product = await fetchProduct(id);
-        if (!product) throw new Response("Not Found", { status: 404 });
-        return { product };
-    } catch {
-        throw new Response("Not Found", { status: 404 });
+        const products = await fetchProductsByIds(uniqueIds); // one request
+        if (!products || products.length === 0) {
+            throw new Response("Not Found", { status: 404 });
+        }
+        // (optional) ensure every requested id exists
+        const returnedIds = new Set(products.map(p => p.id));
+        const missing = uniqueIds.filter(id => !returnedIds.has(id));
+        if (missing.length) {
+            // you can choose to 404 or return partials depending on UX
+            throw new Response(`Missing ids: ${missing.join(",")}`, { status: 404 });
+        }
+
+        return { products };
+    } catch (e) {
+        throw e instanceof Response ? e : new Response("Not Found", { status: 404 });
     }
 }
 
@@ -54,7 +77,7 @@ const router = createBrowserRouter([
                     { path: "scan-mode", element: <ScanMode /> },
                     { path: "tags", element: <Tags /> },
                     { path: "users", element: <Users /> },
-                    { path: "issue-invoice/:id", loader: invoiceLoader, element: <IssueInvoice /> },
+                    { path: "issue-invoice", loader: invoiceLoader, element: <IssueInvoice /> },
                 ],
             },
         ],

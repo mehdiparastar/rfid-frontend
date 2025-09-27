@@ -10,3 +10,11 @@ export const tagsQueryKey = ['tags'];
 export const productsQueryKey = (limit?: number, sorting?: SortingState, filters?: Record<string, any>) => ['products', { limit, sorting, filters }];
 
 export const productQueryKey = (id: string | number) => ['product', String(id)];
+
+// NEW: multi id key
+export const productsByIdsQueryKey = (ids: Array<string | number>) => {
+    const sorted = Array.from(new Set(ids.map(String))).sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true })
+    );
+    return ["products", "byIds", ...sorted] as const;
+};

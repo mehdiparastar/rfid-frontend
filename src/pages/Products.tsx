@@ -1,14 +1,13 @@
-import { ArrowDownward, ArrowUpward, Search } from "@mui/icons-material";
-import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, CircularProgress, Container, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Snackbar, TextField, Tooltip, Typography, type SelectChangeEvent } from "@mui/material";
+import { ArrowDownward, ArrowUpward, Delete, Edit, Search } from "@mui/icons-material";
+import { Alert, Box, Button, Card, CardActionArea, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Snackbar, TextField, Tooltip, Typography, type SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useProducts } from "../api/products";
 import PhotoLightbox from "../components/PhotoLightbox";
 import { useSocketStore } from "../store/socketStore";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
-import { useNavigate } from "react-router-dom";
-import type { Product } from "../lib/api";
-
-const basePrice = 92700000;
+import { useGoldCurrency } from "../api/goldCurrency";
+import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 
 export default function Products() {
     const isConnected = useSocketStore((s) => s.isConnected);
@@ -20,6 +19,7 @@ export default function Products() {
     const [sortDirection, setSortDirection] = useState("desc");
     const [filters, setFilters] = useState({ q: "" }); // for search filter
     const [cursor, setCursor] = useState(null);
+    const [selectedProducts, setSelectedProducts] = useState<number[]>([])
 
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
@@ -29,6 +29,10 @@ export default function Products() {
         sorting: [{ id: sortField, desc: sortDirection === "desc" }],
         filters,
     })
+
+    const products = data?.pages.flatMap(p => p.items) ?? []
+
+    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError } = useGoldCurrency();
 
 
     const handleLoadMore = () => {
@@ -49,15 +53,14 @@ export default function Products() {
         setFilters({ ...filters, q: event.target.value });
     };
 
-    const handleSellClick = (product: Product) => {
-        navigate(`/issue-invoice/${product.id}`, {
+
+    const handleInvoiceInquiry = () => {
+        navigate(`/issue-invoice?${new URLSearchParams({ ids: selectedProducts.join(",") }).toString()}`, {
             state: {
-                snapshot: product
+                snapshot: products.filter(it => selectedProducts.includes(it.id))
             }
         })
     }
-
-
 
     useEffect(() => {
         // Reset the cursor when filters or sorting change
@@ -66,9 +69,7 @@ export default function Products() {
 
 
 
-    const items = data?.pages.flatMap(p => p.items) ?? []
-
-    if (status === 'pending' && items.length === 0)
+    if (status === 'pending' && products.length === 0)
         return (
             <>
                 <Box sx={{ width: 1, bgcolor: isConnected ? 'green' : 'red', height: 5 }} />
@@ -87,6 +88,7 @@ export default function Products() {
             </>
         )
 
+
     return (
         <>
             <Box sx={{ width: 1, bgcolor: isConnected ? 'green' : 'red', height: 5 }} />
@@ -99,12 +101,18 @@ export default function Products() {
                         variant="outlined"
                         value={filters.q}
                         onChange={handleSearchChange}
-                        sx={{ width: { xs: 1, md: 1 } }}
+                        sx={{ width: { xs: 1, md: 1 }, mr: 2 }}
                         slotProps={{ input: { endAdornment: <Search /> } }}
                         size="small"
                     />
 
                     <Box sx={{ display: 'flex', gap: 1 }}>
+                        {/* Sort direction */}
+                        <Tooltip title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}>
+                            <IconButton onClick={handleSortDirectionChange} size="small">
+                                {sortDirection === 'asc' ? <ArrowUpward /> : <ArrowDownward />}
+                            </IconButton>
+                        </Tooltip>
                         {/* Sort by dropdown */}
                         <FormControl>
                             <InputLabel>Sort By</InputLabel>
@@ -119,104 +127,126 @@ export default function Products() {
                                 <MenuItem value="name">Name</MenuItem>
                             </Select>
                         </FormControl>
-
-                        {/* Sort direction */}
-                        <Tooltip title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}>
-                            <IconButton onClick={handleSortDirectionChange} size="small">
-                                {sortDirection === 'asc' ? <ArrowUpward /> : <ArrowDownward />}
-                            </IconButton>
-                        </Tooltip>
                     </Box>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-start', gap: 1, mb: 2, pt: 0.5 }}>
-                    <Typography variant="caption" sx={{ borderBottom: '2px solid black' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 2, pt: 1 }}>
+                    <Typography variant="button" sx={{ borderBottom: '2px solid black' }}>
                         All: {data?.pages[0].total}
                     </Typography>
+                    {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}product(s) selected.</Typography>}
+                    <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>INVOICE</Button>
                 </Box>
 
                 {/* Product Grid */}
                 <Grid container spacing={2}>
-                    {data?.pages.flatMap((page) =>
-                        page.items.map((product) => (
-                            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={product.id}>
-                                <Card
-                                    sx={{
-                                        borderRadius: 1,
-                                        overflow: "hidden",
-                                        boxShadow: 3,
-                                        transition: "transform 0.2s, box-shadow 0.2s",
-                                        "&:hover": {
-                                            transform: "translateY(-5px)",
-                                            boxShadow: 6,
-                                        },
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    <CardMedia
-                                        component="img"
-                                        height={200}
-                                        image={`api${product.photos[0]}` || "/default-product-image.jpg"}
-                                        alt={product.name}
-                                        sx={{ width: "100%", objectFit: "cover", cursor: "pointer" }}
-                                        onClick={() => {
-                                            setLightboxPhotos(product.photos || []);
-                                            setLightboxOpen(true);
-                                        }}
-                                    />
-                                    <CardContent>
-                                        <Typography variant="h6">{product.name}</Typography>
-                                        <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                            Price: {getIRRCurrency(Math.round(product.weight * basePrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100)))}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Quantity: {product.quantity}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Weight: {product.weight}g
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Making Charge: {product.makingCharge}%
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Sold Quantity: {product.sales?.reduce((p, c) => p + c.quantity, 0)}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Created By: {product.createdBy?.email}
-                                        </Typography>
+                    {
+                        products.map((product) => {
+                            const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0)
+                            const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
 
-                                        {product && product.tags && product.tags.length > 0 && (
-                                            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
-                                                {product.tags.map((tag) => (
-                                                    <Box
-                                                        key={tag.id}
-                                                        sx={{
-                                                            bgcolor: "primary.main",
-                                                            color: "darkslategrey",
-                                                            px: 1,
-                                                            py: 0.3,
-                                                            borderRadius: 1,
-                                                            fontSize: 10,
-                                                            fontWeight: 800,
-                                                        }}
-                                                    >
-                                                        {tag.epc}
-                                                    </Box>
-                                                ))}
+                            return (
+                                <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={product.id}>
+                                    <Card
+                                        sx={{
+                                            borderRadius: 1,
+                                            overflow: "hidden",
+                                            boxShadow: 3,
+                                            transition: "transform 0.2s, box-shadow 0.2s",
+                                            "&:hover": {
+                                                transform: "translateY(-5px)",
+                                                boxShadow: 6,
+                                            },
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        <CardMedia
+                                            component="img"
+                                            height={200}
+                                            image={`api${product.photos[0]}` || "/default-product-image.jpg"}
+                                            alt={product.name}
+                                            sx={{ width: "100%", objectFit: "cover", cursor: "pointer" }}
+                                            onClick={() => {
+                                                setLightboxPhotos(product.photos || []);
+                                                setLightboxOpen(true);
+                                            }}
+                                        />
+                                        <CardContent sx={{ py: 0.5 }}>
+                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Tooltip title={product.createdBy?.email}>
+                                                    <Typography variant="h6">{product.name}</Typography>
+                                                </Tooltip>
+                                                <Chip label={product.type} />
+                                                <Checkbox disabled={product.quantity - soldQuantity === 0} checked={selectedProducts.includes(product.id)} onClick={() => setSelectedProducts(p => p.includes(product.id) ? p.filter(el => el !== product.id) : [...p, product.id])} />
                                             </Box>
-                                        )}
-                                    </CardContent>
-                                    <CardActions>
-                                        <Button
-                                            onClick={() => handleSellClick(product)}
-                                            disabled={product.quantity === 0}
-                                        >
-                                            {product.quantity !== 0 ? "Sale" : "Out of stock"}
-                                        </Button>
-                                    </CardActions>
-                                </Card>
-                            </Grid>
-                        ))
-                    )}
+                                            <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
+                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
+                                                    Unit Price: {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100)))}
+                                                </Typography>
+                                                <Chip
+                                                    label={(product.quantity - soldQuantity) > 0 ?
+                                                        <Typography variant="body2">
+                                                            Available: {product.quantity - soldQuantity}
+                                                        </Typography> :
+                                                        "Out of stock"
+                                                    }
+                                                    sx={{ borderRadius: 1 }}
+                                                    color={(product.quantity - soldQuantity) > 0 ? "success" : "warning"}
+                                                />
+                                            </Box>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Unit Weight: {product.weight}g
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Making Charge: {product.makingCharge}%
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Sold Quantity: {soldQuantity}
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Sub Type: {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Inventory Item: {<Checkbox checked={!!product.inventoryItem} />}
+                                            </Typography>
+                                        </CardContent>
+                                        <CardActions>
+                                            {
+                                                <>
+                                                    {product && product.tags && product.tags.length > 0 && (
+                                                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
+                                                            {product.tags.map((tag) => (
+                                                                <Box
+                                                                    key={tag.id}
+                                                                    sx={{
+                                                                        bgcolor: "primary.main",
+                                                                        color: "darkslategrey",
+                                                                        px: 1,
+                                                                        py: 0.3,
+                                                                        borderRadius: 1,
+                                                                        fontSize: 10,
+                                                                        fontWeight: 800,
+                                                                    }}
+                                                                >
+                                                                    {tag.epc}
+                                                                </Box>
+                                                            ))}
+                                                        </Box>
+                                                    )}
+                                                    <IconButton aria-label="edit">
+                                                        <Edit color="info" />
+                                                    </IconButton>
+                                                    <IconButton aria-label="delete">
+                                                        <Delete color="error" />
+                                                    </IconButton>
+                                                </>
+                                            }
+                                        </CardActions>
+                                    </Card>
+                                </Grid>
+                            )
+                        })
+                    }
 
                     {/* Loading Spinner */}
                     {isFetchingNextPage && (

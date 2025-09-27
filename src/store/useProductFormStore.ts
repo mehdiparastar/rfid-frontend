@@ -5,6 +5,8 @@ export interface ProductFormValues {
     name: string;
     weight: string;
     type: GoldProductType;
+    subType: GoldProductSUBType;
+    inventoryItem: boolean;
     quantity: string;
     makingCharge: string;
     vat: string;
@@ -36,11 +38,64 @@ export const GOLD_PRODUCT_TYPES = [
 ] as const;
 export type GoldProductType = typeof GOLD_PRODUCT_TYPES[number];
 
+export const GOLD_PRODUCT_SUB_TYPES = [
+    {
+        symbol: "IR_GOLD_18K",
+        name_en: "18K Gold",
+        name: "طلای 18 عیار"
+    },
+    {
+        symbol: "IR_GOLD_24K",
+        name_en: "24K Gold",
+        name: "طلای 24 عیار",
+    },
+    {
+        symbol: "IR_GOLD_MELTED",
+        name_en: "Melted Gold",
+        name: "طلای آب‌شده نقدی",
+    },
+    {
+        symbol: "XAUUSD",
+        name_en: "Gold Ounce",
+        name: "انس طلا",
+    },
+    {
+        symbol: "IR_COIN_1G",
+        name_en: "1g Coin",
+        name: "سکه یک گرمی",
+    },
+    {
+        symbol: "IR_COIN_QUARTER",
+        name_en: "Quarter Coin",
+        name: "ربع سکه",
+    },
+    {
+        symbol: "IR_COIN_HALF",
+        name_en: "Half Coin",
+        name: "نیم سکه",
+    },
+    {
+        symbol: "IR_COIN_EMAMI",
+        name_en: "Emami Coin",
+        name: "سکه امامی",
+    },
+    {
+        symbol: "IR_COIN_BAHAR",
+        name_en: "Bahar Azadi Coin",
+        name: "سکه بهار آزادی",
+    }
+
+] as const;
+
+export type GoldProductSUBType = typeof GOLD_PRODUCT_SUB_TYPES[number]["symbol"];
+
 
 const initialValues: ProductFormValues = {
     name: '',
     weight: "0.01",
     type: GOLD_PRODUCT_TYPES[0],
+    subType: GOLD_PRODUCT_SUB_TYPES[0].symbol,
+    inventoryItem: false,
     quantity: "1",
     makingCharge: '0',
     vat: '10',
@@ -64,6 +119,8 @@ export const useProductFormStore = create<FormState>((set, get) => ({
         if (!values.name) newErrors.name = 'Name is required';
         if (!values.weight || isNaN(parseFloat(values.weight))) newErrors.weight = 'Valid weight is required';
         if (!values.type) newErrors.type = 'Type is required';
+        if (!values.subType) newErrors.subType = 'SubType is required';
+        if (!values.inventoryItem) newErrors.inventoryItem = 'Inventory Item Status is required';
         if (!values.quantity || isNaN(parseInt(values.quantity))) newErrors.quantity = 'Valid quantity is required';
         if (!values.makingCharge || isNaN(parseFloat(values.makingCharge))) newErrors.makingCharge = 'Valid making charge is required';
         if (!values.vat || isNaN(parseFloat(values.vat))) newErrors.vat = 'Valid VAT is required';
