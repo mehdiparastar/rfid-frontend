@@ -9,7 +9,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import UsersIcon from "@mui/icons-material/People";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
-import SignUpIcon from "@mui/icons-material/SignLanguage";
+import SignUpIcon from "@mui/icons-material/PersonAdd";
 import {
     AppBar,
     Avatar,

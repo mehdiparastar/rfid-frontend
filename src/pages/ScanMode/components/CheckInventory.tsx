@@ -15,6 +15,7 @@ import {
     CardActions,
     CardContent,
     CardMedia,
+    Chip,
     Divider,
     Grid,
     IconButton,
@@ -38,6 +39,9 @@ import React, { useMemo, useState } from 'react';
 import { useScanResults, useScenarioState, useStartScenario, useStopScenario } from '../../../api/modules';
 import { useScanResultsLive } from '../../../features/useScanResultsLive';
 import ModuleSettings from './ModuleSettings';
+import { GOLD_PRODUCT_SUB_TYPES } from '../../../store/useProductFormStore';
+import { getIRRCurrency } from '../../../utils/getIRRCurrency';
+import { useGoldCurrency } from '../../../api/goldCurrency';
 
 
 // Define the Product interface
@@ -48,51 +52,10 @@ interface Product {
     weight: string;
 }
 
-// Sample product data for a gold jewelry store
-// const products_: Product[] = [
-//     {
-//         id: 1,
-//         name: 'Gold Necklace',
-//         image: 'https://www.shutterstock.com/shutterstock/photos/2256160991/display_1500/stock-photo-gold-pendant-with-blue-crystals-on-a-thin-chain-on-a-white-background-2256160991.jpg',
-//         weight: '20g',
-//     },
-//     {
-//         id: 2,
-//         name: 'Gold Ring',
-//         image: 'https://www.shutterstock.com/shutterstock/photos/2198896509/display_1500/stock-photo-diamond-ring-yellow-gold-isolated-on-white-engagement-solitaire-style-ring-2198896509.jpg',
-//         weight: '5g',
-//     },
-//     {
-//         id: 3,
-//         name: 'Gold Bracelet',
-//         image: 'https://www.shutterstock.com/shutterstock/photos/1926931343/display_1500/stock-photo-gold-bangle-on-white-background-1926931343.jpg',
-//         weight: '15g',
-//     },
-//     {
-//         id: 4,
-//         name: 'Gold Earrings',
-//         image: 'https://www.shutterstock.com/shutterstock/photos/2256160991/display_1500/stock-photo-gold-pendant-with-blue-crystals-on-a-thin-chain-on-a-white-background-2256160991.jpg',
-//         weight: '8g',
-//     },
-//     {
-//         id: 5,
-//         name: 'Gold Pendant',
-//         image: 'https://www.shutterstock.com/shutterstock/photos/2198896509/display_1500/stock-photo-diamond-ring-yellow-gold-isolated-on-white-engagement-solitaire-style-ring-2198896509.jpg',
-//         weight: '12g',
-//     },
-//     {
-//         id: 6,
-//         name: 'Gold Anklet',
-//         image: 'https://www.shutterstock.com/shutterstock/photos/1926931343/display_1500/stock-photo-gold-bangle-on-white-background-1926931343.jpg',
-//         weight: '18g',
-//     },
-// ];
-
-
 const CheckInventory: React.FC = () => {
     const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(3);
+    const [rowsPerPage, setRowsPerPage] = useState(30);
     const [sortBy, setSortBy] = useState<'name' | 'weight'>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [openSettings, setOpenSettings] = React.useState(false);
@@ -102,16 +65,13 @@ const CheckInventory: React.FC = () => {
     const { data: scenarioState } = useScenarioState()
     const { mutateAsync: stopScenarioMutateAsync } = useStopScenario()
     const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
-    const { data: scanResults = [] } = useScanResults("Inventory");
+    const { data: scanResults = { Inventory: [] } } = useScanResults("Inventory");
+
+    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError } = useGoldCurrency();
 
     useScanResultsLive("Inventory", 5000, true);
 
-    const products = scanResults.map((p, i) => ({
-        image: '/images/buttons/gold_jewelry_resized.png',
-        id: i,
-        name: p.epc || '',
-        weight: `${p.rssi}` || ''
-    }))
+    const products = scanResults.Inventory
 
     const handleCalculatePrice = (product: Product): void => {
         alert(`Calculating price for ${product.name} (${product.weight})...`);
@@ -151,15 +111,15 @@ const CheckInventory: React.FC = () => {
     }
 
     const sortedProducts = useMemo(() => {
-        const sorted = [...products];
+        const sorted = [...(products || [])];
         sorted.sort((a, b) => {
             if (sortBy === 'name') {
                 return sortOrder === 'asc'
                     ? a.name.localeCompare(b.name)
                     : b.name.localeCompare(a.name);
             } else {
-                const weightA = parseFloat(a.weight);
-                const weightB = parseFloat(b.weight);
+                const weightA = a.weight;
+                const weightB = b.weight;
                 return sortOrder === 'asc' ? weightA - weightB : weightB - weightA;
             }
         });
@@ -305,48 +265,98 @@ const CheckInventory: React.FC = () => {
             {viewMode === 'card' ? (
                 <>
                     <Grid container spacing={3}>
-                        {paginatedProducts.map((product) => (
-                            <Grid
-                                size={{
-                                    xs: 12,
-                                    sm: 6,
-                                    md: 4,
-                                }}
-                                key={product.id}
-                                component="div"
-                            >
-                                <Card sx={{ transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.05)' } }}>
-                                    <CardMedia
-                                        component="img"
-                                        height="140"
-                                        image={product.image}
-                                        alt={product.name}
-                                    />
-                                    <CardContent>
-                                        <Typography variant="h6" align="center">{product.name}</Typography>
-                                        <Typography variant="body2" color="text.secondary" align="center">
-                                            Weight: {product.weight}
-                                        </Typography>
-                                    </CardContent>
-                                    <CardActions sx={{ justifyContent: 'center' }}>
-                                        <Button
-                                            size="small"
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={() => handleCalculatePrice(product as any)}
-                                            sx={{ bgcolor: '#8b6508', '&:hover': { bgcolor: '#a67c00' } }}
-                                        >
-                                            Calculate Price
-                                        </Button>
-                                    </CardActions>
-                                </Card>
-                            </Grid>
-                        ))}
+                        {paginatedProducts.map((product) => {
+                            const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0)
+                            const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
+
+                            return (
+                                <Grid
+                                    size={{
+                                        xs: 12,
+                                        sm: 6,
+                                        md: 4,
+                                    }}
+                                    key={product.id}
+                                    component="div"
+                                >
+                                    <Card sx={{ transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.05)' } }}>
+                                        <CardMedia
+                                            component="img"
+                                            height={200}
+                                            image={`api${product.photos[0]}` || "/default-product-image.jpg"}
+                                            alt={product.name}
+                                        />
+                                        <CardContent>
+                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Tooltip title={product.createdBy?.email}>
+                                                    <Typography variant="h6">{product.name}</Typography>
+                                                </Tooltip>
+                                                <Chip label={product.type} />
+                                            </Box>
+                                            <Divider sx={{ mx: -2, my: 1 }} variant="fullWidth" />
+                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
+                                                    Unit Price: {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100)))}
+                                                </Typography>
+                                                <Chip
+                                                    label={(product.quantity - soldQuantity) > 0 ?
+                                                        <Typography variant="body2">
+                                                            Available: {product.quantity - soldQuantity}
+                                                        </Typography> :
+                                                        "Out of stock"
+                                                    }
+                                                    sx={{ borderRadius: 1 }}
+                                                    color={(product.quantity - soldQuantity) > 0 ? "success" : "warning"}
+                                                />
+                                            </Box>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Unit Weight: {product.weight}g
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Making Charge: {product.makingCharge}%
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Sold Quantity: {soldQuantity}
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary">
+                                                Sub Type: {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
+                                            </Typography>
+                                        </CardContent>
+                                        <CardActions>
+                                            {
+                                                <>
+                                                    {product && product.tags && product.tags.length > 0 && (
+                                                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
+                                                            {product.tags.map((tag) => (
+                                                                <Box
+                                                                    key={tag.id}
+                                                                    sx={{
+                                                                        bgcolor: "primary.main",
+                                                                        color: "darkslategrey",
+                                                                        px: 1,
+                                                                        py: 0.3,
+                                                                        borderRadius: 1,
+                                                                        fontSize: 10,
+                                                                        fontWeight: 800,
+                                                                    }}
+                                                                >
+                                                                    {tag.epc}
+                                                                </Box>
+                                                            ))}
+                                                        </Box>
+                                                    )}
+                                                </>
+                                            }
+                                        </CardActions>
+                                    </Card>
+                                </Grid>
+                            )
+                        })}
                     </Grid>
                     <TablePagination
-                        rowsPerPageOptions={[3, 6, 9]}
+                        rowsPerPageOptions={[30, 60, 90]}
                         component="div"
-                        count={products.length}
+                        count={(products || []).length}
                         rowsPerPage={rowsPerPage}
                         page={page}
                         onPageChange={handleChangePage}
@@ -462,7 +472,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Weight
+                                        Type
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -472,42 +482,161 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Action
+                                        Unit Price (ریال)
+                                    </TableCell>
+                                    <TableCell
+                                        align="center"
+                                        sx={{
+                                            bgcolor: 'linear-gradient(45deg, #8b6508, #a67c00)',
+                                            fontWeight: 'bold',
+                                            borderBottom: '2px solid #8b6508',
+                                        }}
+                                    >
+                                        Availability
+                                    </TableCell>
+                                    <TableCell
+                                        align="center"
+                                        sx={{
+                                            bgcolor: 'linear-gradient(45deg, #8b6508, #a67c00)',
+                                            fontWeight: 'bold',
+                                            borderBottom: '2px solid #8b6508',
+                                        }}
+                                    >
+                                        Unit Weight (g)
+                                    </TableCell>
+                                    <TableCell
+                                        align="center"
+                                        sx={{
+                                            bgcolor: 'linear-gradient(45deg, #8b6508, #a67c00)',
+                                            fontWeight: 'bold',
+                                            borderBottom: '2px solid #8b6508',
+                                        }}
+                                    >
+                                        Making Charge
+                                    </TableCell>
+                                    <TableCell
+                                        align="center"
+                                        sx={{
+                                            bgcolor: 'linear-gradient(45deg, #8b6508, #a67c00)',
+                                            fontWeight: 'bold',
+                                            borderBottom: '2px solid #8b6508',
+                                        }}
+                                    >
+                                        Sold Qty
+                                    </TableCell>
+                                    <TableCell
+                                        align="center"
+                                        sx={{
+                                            bgcolor: 'linear-gradient(45deg, #8b6508, #a67c00)',
+                                            fontWeight: 'bold',
+                                            borderBottom: '2px solid #8b6508',
+                                        }}
+                                    >
+                                        Sub Type
+                                    </TableCell>
+                                    <TableCell
+                                        align="center"
+                                        sx={{
+                                            bgcolor: 'linear-gradient(45deg, #8b6508, #a67c00)',
+                                            fontWeight: 'bold',
+                                            borderBottom: '2px solid #8b6508',
+                                        }}
+                                    >
+                                        Tags
                                     </TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {paginatedProducts.map((product) => (
-                                    <TableRow hover key={product.id}>
-                                        <TableCell align="center">
-                                            <img
-                                                src={product.image}
-                                                alt={product.name}
-                                                style={{ width: 50, height: 50, borderRadius: 4 }}
-                                            />
-                                        </TableCell>
-                                        <TableCell align="center">{product.name}</TableCell>
-                                        <TableCell align="center">{product.weight}</TableCell>
-                                        <TableCell align="center">
-                                            <Button
-                                                size="small"
-                                                variant="contained"
-                                                color="primary"
-                                                onClick={() => handleCalculatePrice(product as any)}
-                                                sx={{ bgcolor: '#8b6508', '&:hover': { bgcolor: '#a67c00' } }}
-                                            >
-                                                Online Price
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {paginatedProducts.map((product) => {
+                                    const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0)
+                                    const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
+
+                                    return (
+                                        <TableRow hover key={product.id}>
+                                            <TableCell align="center">
+                                                <Box
+                                                    component={'img'}
+                                                    src={`api${product.previews[0]}` || "/default-product-image.jpg"}
+                                                    alt={product.name}
+                                                    sx={{ width: 70, height: 70, borderRadius: 1, objectFit: "cover", }}
+                                                />
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <Tooltip title={product.createdBy?.email ?? ""}>
+                                                    <Typography variant="subtitle2">{product.name}</Typography>
+                                                </Tooltip>
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <Chip label={product.type} size="small" />
+                                            </TableCell>
+                                            <TableCell align="center" variant="body" color="textSecondary" sx={{ fontWeight: 'bold', fontFamily: "IRANSans, sans-serifRoboto, Arial, sans-serif" }} >
+                                                {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100))).replace("ریال", "")}
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <Chip
+                                                    size="small"
+                                                    color={(product.quantity - soldQuantity) > 0 ? "success" : "warning"}
+                                                    sx={{ borderRadius: 1 }}
+                                                    label={
+                                                        (product.quantity - soldQuantity) > 0 ? (
+                                                            <Typography variant="body2" component="span">
+                                                                Available: {product.quantity - soldQuantity}
+                                                            </Typography>
+                                                        ) : (
+                                                            "Out of stock"
+                                                        )
+                                                    }
+                                                    aria-label={(product.quantity - soldQuantity) > 0 ? `Available ${product.quantity - soldQuantity}` : "Out of stock"}
+                                                />
+                                            </TableCell>
+                                            <TableCell align="center" variant="body" color="textSecondary">
+                                                {product.weight}
+                                            </TableCell>
+                                            <TableCell align="center" variant="body" color="textSecondary">
+                                                {product.makingCharge}%
+                                            </TableCell>
+                                            <TableCell align="center" variant="body" color="textSecondary">
+                                                {soldQuantity}
+                                            </TableCell>
+                                            <TableCell align="center" variant="body" color="textSecondary">
+                                                {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                {product.tags?.length ? (
+                                                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, justifyContent: 'center' }}>
+                                                        {product.tags.map((tag) => (
+                                                            <Box
+                                                                key={tag.id}
+                                                                sx={{
+                                                                    bgcolor: "primary.main",
+                                                                    color: "darkslategrey",
+                                                                    px: 1,
+                                                                    py: 0.5,
+                                                                    borderRadius: 1,
+                                                                    fontSize: 12,
+                                                                    fontWeight: 800,
+                                                                }}
+                                                            >
+                                                                {tag.epc}
+                                                            </Box>
+                                                        ))}
+                                                    </Box>
+                                                ) : (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        —
+                                                    </Typography>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })}
                             </TableBody>
                         </Table>
                     </TableContainer>
                     <TablePagination
-                        rowsPerPageOptions={[3, 6, 9]}
+                        rowsPerPageOptions={[30, 60, 90]}
                         component="div"
-                        count={products.length}
+                        count={(products || []).length}
                         rowsPerPage={rowsPerPage}
                         page={page}
                         onPageChange={handleChangePage}

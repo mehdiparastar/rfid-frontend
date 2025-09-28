@@ -65,15 +65,12 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
     const { data: scenarioState } = useScenarioState()
     const { mutateAsync: stopScenarioMutateAsync } = useStopScenario()
     const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
-    const { data: scanResults = [] } = useScanResults("NewProduct");
+    const { data: scanResults = { NewProduct: [] } } = useScanResults("NewProduct");
 
     useScanResultsLive("NewProduct", 5000, true);
 
-    const tags = scanResults.map((p) => ({
-        epc: p.epc || '',
-        rssi: p.rssi || -1
-    }))
-        .reduce((acc: { epc: string, rssi: number }[], current) => {
+    const tags = (scanResults.NewProduct || [])
+        .reduce((acc: Tag[], current) => {
             // Check if the epc value is already in the accumulator
             if (!acc.some(item => item.epc === current.epc)) {
                 acc.push(current); // Add the item if unique
@@ -129,7 +126,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
 
 
     const sortedTags = useMemo(() => {
-        const sorted = [...tags];
+        const sorted = [...(tags || [])];
         sorted.sort((a, b) => {
             if (sortBy === 'epc' && !!a.epc && !!b.epc) {
                 return sortOrder === 'asc'
@@ -361,7 +358,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                             <TablePagination
                                 rowsPerPageOptions={[30, 60, 90]}
                                 component="div"
-                                count={tags.length}
+                                count={(tags || []).length}
                                 rowsPerPage={rowsPerPage}
                                 page={page}
                                 onPageChange={handleChangePage}
@@ -522,7 +519,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                             <TablePagination
                                 rowsPerPageOptions={[30, 60, 90]}
                                 component="div"
-                                count={tags.length}
+                                count={(tags || []).length}
                                 rowsPerPage={rowsPerPage}
                                 page={page}
                                 onPageChange={handleChangePage}

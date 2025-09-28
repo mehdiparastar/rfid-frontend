@@ -1,14 +1,12 @@
 // src/lib/socket.ts
 import { io, Socket } from "socket.io-client";
+import type { Tag } from "../api/products";
+import type { Product } from "./api";
 
-export type ScanResult = {
-    id: string;          // or EPC
-    name?: string;
-    image?: string;
-    weight?: string;
-    epc?: string;
-    rssi?: number;
-};
+export type ScanResult =
+    | { Scan: Product[]; Inventory?: Product[]; NewProduct?: Tag[] }
+    | { Inventory: Product[]; Scan?: Product[]; NewProduct?: Tag[] }
+    | { NewProduct: Tag[]; Scan?: Product[]; Inventory?: Product[] };
 
 export type ServerToClientEvents = {
     // Example events — add yours:

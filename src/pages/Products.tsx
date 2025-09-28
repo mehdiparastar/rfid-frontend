@@ -1,13 +1,13 @@
 import { ArrowDownward, ArrowUpward, Delete, Edit, Search } from "@mui/icons-material";
-import { Alert, Box, Button, Card, CardActionArea, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Snackbar, TextField, Tooltip, Typography, type SelectChangeEvent } from "@mui/material";
+import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Tooltip, Typography, type SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useGoldCurrency } from "../api/goldCurrency";
 import { useProducts } from "../api/products";
 import PhotoLightbox from "../components/PhotoLightbox";
 import { useSocketStore } from "../store/socketStore";
-import { getIRRCurrency } from "../utils/getIRRCurrency";
-import { useGoldCurrency } from "../api/goldCurrency";
 import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
+import { getIRRCurrency } from "../utils/getIRRCurrency";
 
 export default function Products() {
     const isConnected = useSocketStore((s) => s.isConnected);
@@ -93,7 +93,7 @@ export default function Products() {
         <>
             <Box sx={{ width: 1, bgcolor: isConnected ? 'green' : 'red', height: 5 }} />
             {/* controls you wire to setSorting / setFilters */}
-            <Container maxWidth="lg" sx={{ px: 1 }}>
+            <Container maxWidth="lg" sx={{ px: 1, mb: 2 }}>
                 {/* Filters Section */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
                     <TextField
@@ -210,37 +210,37 @@ export default function Products() {
                                                 Inventory Item: {<Checkbox checked={!!product.inventoryItem} />}
                                             </Typography>
                                         </CardContent>
-                                        <CardActions>
-                                            {
-                                                <>
-                                                    {product && product.tags && product.tags.length > 0 && (
-                                                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
-                                                            {product.tags.map((tag) => (
-                                                                <Box
-                                                                    key={tag.id}
-                                                                    sx={{
-                                                                        bgcolor: "primary.main",
-                                                                        color: "darkslategrey",
-                                                                        px: 1,
-                                                                        py: 0.3,
-                                                                        borderRadius: 1,
-                                                                        fontSize: 10,
-                                                                        fontWeight: 800,
-                                                                    }}
-                                                                >
-                                                                    {tag.epc}
-                                                                </Box>
-                                                            ))}
-                                                        </Box>
-                                                    )}
-                                                    <IconButton aria-label="edit">
-                                                        <Edit color="info" />
-                                                    </IconButton>
-                                                    <IconButton aria-label="delete">
-                                                        <Delete color="error" />
-                                                    </IconButton>
-                                                </>
-                                            }
+                                        <CardActions sx={{ display: "flex", justifyContent: 'space-between' }}>
+                                            <Box>
+                                                {product && product.tags && product.tags.length > 0 && (
+                                                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
+                                                        {product.tags.map((tag) => (
+                                                            <Box
+                                                                key={tag.id}
+                                                                sx={{
+                                                                    bgcolor: "primary.main",
+                                                                    color: "darkslategrey",
+                                                                    px: 1,
+                                                                    py: 0.3,
+                                                                    borderRadius: 1,
+                                                                    fontSize: 10,
+                                                                    fontWeight: 800,
+                                                                }}
+                                                            >
+                                                                {tag.epc}
+                                                            </Box>
+                                                        ))}
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                            <Stack direction={'row'}>
+                                                <IconButton aria-label="edit">
+                                                    <Edit color="info" />
+                                                </IconButton>
+                                                <IconButton aria-label="delete">
+                                                    <Delete color="error" />
+                                                </IconButton>
+                                            </Stack>
                                         </CardActions>
                                     </Card>
                                 </Grid>

@@ -109,7 +109,9 @@ export const useProductFormStore = create<FormState>((set, get) => ({
     values: initialValues,
     errors: {},
     helpers: {},
-    setValue: (key, value) => set((state) => ({ values: { ...state.values, [key]: value } })),
+    setValue: (key, value) => {
+        return set((state) => ({ values: { ...state.values, [key]: value } }))
+    },
     setError: (key, error) => set((state) => ({ errors: { ...state.errors, [key]: error } })),
     setHelper: (key, helper) => set((state) => ({ helpers: { ...state.helpers, [key]: helper } })),
     reset: () => set({ values: initialValues, errors: {}, helpers: {} }),
@@ -120,7 +122,7 @@ export const useProductFormStore = create<FormState>((set, get) => ({
         if (!values.weight || isNaN(parseFloat(values.weight))) newErrors.weight = 'Valid weight is required';
         if (!values.type) newErrors.type = 'Type is required';
         if (!values.subType) newErrors.subType = 'SubType is required';
-        if (!values.inventoryItem) newErrors.inventoryItem = 'Inventory Item Status is required';
+        if (values.inventoryItem === null) newErrors.inventoryItem = 'Inventory Item Status is required';
         if (!values.quantity || isNaN(parseInt(values.quantity))) newErrors.quantity = 'Valid quantity is required';
         if (!values.makingCharge || isNaN(parseFloat(values.makingCharge))) newErrors.makingCharge = 'Valid making charge is required';
         if (!values.vat || isNaN(parseFloat(values.vat))) newErrors.vat = 'Valid VAT is required';

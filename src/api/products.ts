@@ -9,6 +9,8 @@ export type Tag = {
     id?: number;
     epc: string;
     rssi: number;
+    pc: number;
+    pl: number;
 };
 
 // Serial-safe query defaults from your modules.ts

@@ -3,7 +3,7 @@ import { api } from "../lib/api";
 import { scanResultsKey, scenarioKey } from "./queryKeys";
 import type { ScanResult } from "../lib/socket";
 
-export type Mode = "Inventory" | "Invoice" | "NewProduct";
+export type Mode = "Inventory" | "Scan" | "NewProduct";
 
 export type ModuleRow = {
     path: string;
@@ -154,14 +154,14 @@ export function useStopScenario() {
         },
         onError: (_e, _v, ctx) => ctx?.prev && qc.setQueryData(scenarioKey, ctx.prev),
         onSuccess: (serverState) => qc.setQueryData(scenarioKey, serverState),
-        onSettled: () => qc.invalidateQueries({ queryKey: scenarioKey }),
+        onSettled: () => qc.invalidateQueries({ queryKey: [scenarioKey, scanResultsKey("Scan"), scanResultsKey("Inventory"), scanResultsKey("NewProduct")] }),
     });
 }
 
 export function useScanResults(mode: Mode) {
     return useQuery({
         queryKey: scanResultsKey(mode),
-        queryFn: ({ signal }) => api<ScanResult[]>(`/api/serial/modules/scan-results?mode=${encodeURIComponent(mode)}`, { signal }),
+        queryFn: ({ signal }) => api<ScanResult>(`/api/serial/modules/scan-results?mode=${encodeURIComponent(mode)}`, { signal }),
         ...serialSafeQueryDefaults,
     });
 }
