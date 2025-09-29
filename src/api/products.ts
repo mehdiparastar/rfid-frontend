@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, apiUpload, getItems, type Page, type Product, type SortingState } from '../lib/api';
+import { api, apiUpload, getProductItems, type Page, type Product, type SortingState } from '../lib/api';
 import type { ProductFormValues } from '../store/useProductFormStore';
 import { productsByIdsQueryKey, productsQueryKey, tagsQueryKey } from './queryKeys';
 
@@ -108,7 +108,7 @@ export function useProducts({
 }) {
     return useInfiniteQuery({
         queryKey: productsQueryKey(limit, sorting, filters),
-        queryFn: ({ pageParam }) => getItems({ cursor: pageParam ?? null, limit, sorting, filters }),
+        queryFn: ({ pageParam }) => getProductItems({ cursor: pageParam ?? null, limit, sorting, filters }),
         initialPageParam: null as string | null,
         // Return `undefined` when there's no next page
         getNextPageParam: (last: Page<Product>) => last.nextCursor ?? undefined,

@@ -11,6 +11,8 @@ export const productsQueryKey = (limit?: number, sorting?: SortingState, filters
 
 export const productQueryKey = (id: string | number) => ['product', String(id)];
 
+export const invoicesQueryKey = (limit?: number, sorting?: SortingState, filters?: Record<string, any>) => ['invoices', { limit, sorting, filters }];
+
 // NEW: multi id key
 export const productsByIdsQueryKey = (ids: Array<string | number>) => {
     const sorted = Array.from(new Set(ids.map(String))).sort((a, b) =>

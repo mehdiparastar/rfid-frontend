@@ -1,5 +1,5 @@
 import { Fingerprint, PhoneAndroid } from "@mui/icons-material";
-import { Alert, alpha, Box, Button, Container, Divider, Grid, InputAdornment, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from "@mui/material";
+import { Alert, alpha, Box, Button, Container, Divider, Grid, InputAdornment, MenuItem, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from "@mui/material";
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFnsJalali } from '@mui/x-date-pickers/AdapterDateFnsJalali';
 import { faIR } from 'date-fns-jalali/locale/fa-IR';
@@ -11,11 +11,11 @@ import { useProductsByIds } from "../api/products";
 import { useCreateSale } from "../api/sales";
 import type { Customer, Invoice, Product } from "../lib/api";
 import { useSocketStore } from "../store/socketStore";
+import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 import { InvoiceLogoImg } from "../svg/InvoiceLogo/InvoiceLogo";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { isValidIranianNationalId } from "../utils/nationalIdChecker";
 import { isValidIranMobile, normalizeIranMobileToE164 } from "../utils/phoneNumberChecker";
-import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 
 export default function IssueInvoice() {
 
@@ -35,7 +35,7 @@ export default function IssueInvoice() {
     const [issuedInvoice, setIssuedInvoice] = useState<Invoice | null>(null)
 
     const { data } = useProductsByIds(ids, { initialData: loaderProducts });
-    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError } = useGoldCurrency();
+    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
 
     // snapshot if present (fast), otherwise use loader result
     const products = data || loaderProducts || snapshot
@@ -121,8 +121,8 @@ export default function IssueInvoice() {
     return (
         <>
             <Box sx={{ width: 1, bgcolor: isConnected ? "green" : "red", height: 5 }} />
-            {!!spotPriceError && <Alert severity="error" variant="filled">{JSON.parse(spotPriceError?.message || '{"message":""}').message}</Alert>}
-            {!!serverErr && <Alert severity="error" variant="filled">{serverErr}</Alert>}
+            {!!spotPriceError && <Alert sx={{ borderRadius: 0 }} severity="error" variant="filled">{JSON.parse(spotPriceError?.message || '{"message":""}').message}</Alert>}
+            {!!serverErr && <Alert sx={{ borderRadius: 0 }} severity="error" variant="filled">{serverErr}</Alert>}
             < Container maxWidth="xl" sx={{ px: 3, pt: 2, pb: 5 }}>
                 <Grid container ref={contentRef}>
                     <Grid container sx={{ border: '1px dashed gold', height: 745 }} size={{ xs: 12, sm: 3 }}>
@@ -608,6 +608,13 @@ export default function IssueInvoice() {
                     <Button variant="outlined" sx={{ mt: 1, width: 1 }} onClick={() => reactToPrintFn()}>Print</Button>
                 </Box>
             </Container >
+
+            {/* Error Message */}
+            {spotPriceIsError && (
+                <Snackbar open={true} autoHideDuration={6000}>
+                    <Alert severity="error">{JSON.parse((spotPriceError as Error)?.message).message || "Something went wrong"}</Alert>
+                </Snackbar>
+            )}
         </>
     );
 }

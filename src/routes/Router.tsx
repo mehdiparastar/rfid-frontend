@@ -20,6 +20,7 @@ const Users = React.lazy(() => import("../pages/Users"));
 const IssueInvoice = React.lazy(() => import("../pages/IssueInvoice"));
 
 import { fetchProductsByIds } from "../api/products"; // your feature fetcher
+import Invoices from "../pages/Invoices";
 
 export async function invoiceLoader({ request }: LoaderFunctionArgs) {
     const url = new URL(request.url);
@@ -73,6 +74,7 @@ const router = createBrowserRouter([
             {
                 element: <RequireAuth />,
                 children: [
+                    { path: "invoices", element: <Invoices /> },
                     { path: "products", element: <Products /> },
                     { path: "scan-mode", element: <ScanMode /> },
                     { path: "tags", element: <Tags /> },

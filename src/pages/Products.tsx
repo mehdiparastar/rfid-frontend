@@ -14,7 +14,7 @@ export default function Products() {
 
     const navigate = useNavigate();
 
-    const [limit, setLimit] = useState(20); // number of products per page
+    const [limit, setLimit] = useState(2); // number of products per page
     const [sortField, setSortField] = useState("createdAt");
     const [sortDirection, setSortDirection] = useState("desc");
     const [filters, setFilters] = useState({ q: "" }); // for search filter
@@ -24,7 +24,7 @@ export default function Products() {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
 
-    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isError, error } = useProducts({
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isError: fetchingIsError, error: fetchingError } = useProducts({
         limit,
         sorting: [{ id: sortField, desc: sortDirection === "desc" }],
         filters,
@@ -32,7 +32,7 @@ export default function Products() {
 
     const products = data?.pages.flatMap(p => p.items) ?? []
 
-    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError } = useGoldCurrency();
+    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
 
 
     const handleLoadMore = () => {
@@ -83,7 +83,7 @@ export default function Products() {
             <>
                 <Box sx={{ width: 1, bgcolor: isConnected ? 'green' : 'red', height: 5 }} />
                 <Box sx={{ p: 3 }}>
-                    <Alert severity="error">{"Something went wrong. "}{error.message}</Alert>
+                    <Alert sx={{ borderRadius: 0 }} severity="error">{"Something went wrong. "}{fetchingError.message}</Alert>
                 </Box>
             </>
         )
@@ -269,9 +269,9 @@ export default function Products() {
                 )}
 
                 {/* Error Message */}
-                {isError && (
+                {fetchingIsError && (
                     <Snackbar open={true} autoHideDuration={6000}>
-                        <Alert severity="error">{(error as Error)?.message || "Something went wrong"}</Alert>
+                        <Alert severity="error">{JSON.parse((fetchingError as Error)?.message).message || "Something went wrong"}</Alert>
                     </Snackbar>
                 )}
             </Container >
@@ -281,6 +281,13 @@ export default function Products() {
                 open={lightboxOpen}
                 onClose={() => setLightboxOpen(false)}
             />
+
+            {/* Error Message */}
+            {spotPriceIsError && (
+                <Snackbar open={true} autoHideDuration={6000}>
+                    <Alert severity="error">{JSON.parse((spotPriceError as Error)?.message).message || "Something went wrong"}</Alert>
+                </Snackbar>
+            )}
         </>
     )
 }

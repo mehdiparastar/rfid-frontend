@@ -190,7 +190,7 @@ function encodeSort(sorting: SortingState | undefined) {
     return sorting.map(s => `${s.id}:${s.desc ? 'desc' : 'asc'}`).join(',')
 }
 
-export async function getItems({
+export async function getProductItems({
     cursor,
     limit,
     sorting,
@@ -217,5 +217,34 @@ export async function getItems({
     }
 
     return api<Page<Product>>(`/api/products/all?${params.toString()}`)
+}
+
+export async function getInvoiceItems({
+    cursor,
+    limit,
+    sorting,
+    filters,
+}: {
+    cursor?: string | null
+    limit?: number
+    sorting?: SortingState
+    filters?: Record<string, string | number | boolean | undefined>
+}) {
+    const params = new URLSearchParams()
+    if (cursor) params.set('cursor', JSON.stringify(cursor))
+    if (limit) params.set('limit', String(limit))
+    const sort = encodeSort(sorting)
+    if (sort) params.set('sort', sort)
+
+    // Object.entries(filters ?? {}).forEach(([k, v]) => {
+    //     if (v !== undefined && v !== null) params.set(k, String(v))
+    // })
+
+    // Properly stringify filters object before sending
+    if (filters && Object.keys(filters).length > 0) {
+        params.set('filters', JSON.stringify(filters));  // Send as JSON string
+    }
+
+    return api<Page<Invoice>>(`/api/invoices/all?${params.toString()}`)
 }
 

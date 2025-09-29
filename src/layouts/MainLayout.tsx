@@ -36,6 +36,8 @@ import { Outlet, Link as RouterLink, useLocation, useMatch, useNavigate } from "
 import { useLogout, useMe } from "../api/auth";
 import { useUi } from "../providers/UiProvider";
 import { useSocketStore } from "../store/socketStore";
+import { darkGradient, lightGradient, softBg } from "../utils/const";
+import ReceiptIcon from '@mui/icons-material/Receipt';
 
 const drawerWidth = 260;
 
@@ -43,6 +45,7 @@ type NavItem = { to: string; label: string; icon: React.ReactElement };
 
 const NAV_ITEMS: NavItem[] = [
     { to: "/home", label: "Home", icon: <DashboardIcon /> },
+    { to: "/invoices", label: "Invoices", icon: <ReceiptIcon /> },
     { to: "/products", label: "Products", icon: <Inventory2Icon /> },
     { to: "/scan-mode", label: "Scan Mode", icon: <QrCodeScannerIcon /> },
     { to: "/signin", label: "SignIn", icon: <SignInIcon /> },
@@ -92,7 +95,28 @@ const Sidebar = React.memo(function Sidebar({
     onNavigate?: () => void;
 }) {
     return (
-        <Box role="navigation" sx={{ width: drawerWidth }}>
+        <Box
+            role="navigation"
+            sx={{
+                width: drawerWidth,
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundImage: 'url("/images/bg/gold-drawer-tile-64.svg")',
+                    backgroundRepeat: 'repeat',
+                    backgroundSize: '4px 4px', // Match your SVG tile size
+                    // backgroundColor: '#676262ff', // Fallback color
+                    backgroundBlendMode: 'overlay',
+                    height: '100%',
+                    opacity: 0.1, // Very subtle
+                    zIndex: 0, // Behind everything
+                }
+            }}
+        >
             <Toolbar />
             <Divider />
             <List>
@@ -248,7 +272,9 @@ export default function MainLayout() {
                     onClose={() => setMobileOpen(false)}
                     ModalProps={{ keepMounted: true }}   // keep mounted for faster reopen on mobile
                     disableScrollLock
-                    sx={{ "& .MuiDrawer-paper": { width: drawerWidth } }}
+                    sx={{
+                        "& .MuiDrawer-paper": { width: drawerWidth },
+                    }}
                 >
                     {drawer}
                 </Drawer>
@@ -268,7 +294,9 @@ export default function MainLayout() {
             )}
 
             {/* Content + Footer */}
-            <Box component="main" sx={{ minHeight: "1000px", flexGrow: 1, display: "flex", flexDirection: "column", overflow: 'hidden' }}>
+            <Box component="main" sx={{ minHeight: "1000px", flexGrow: 1, display: "flex", flexDirection: "column", overflow: 'hidden', background: theme.palette.mode === "dark" ? darkGradient : lightGradient }}>
+                {/* Decorative background */}
+                <Box sx={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: softBg }} />
                 {/* Push content below AppBar */}
                 <Toolbar />
 
