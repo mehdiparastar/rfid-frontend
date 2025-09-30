@@ -105,8 +105,9 @@ const ProductRegistration: React.FC = () => {
     };
 
     const handleTagConfirm = (selected: Tag[]) => {
-        setValue('tags', selected);
-        setHelper('tags', `${selected.length} tags selected`);
+        const unique = [...new Map(selected.map(item => [item.epc, item])).values()];
+        setValue('tags', unique);
+        setHelper('tags', `${unique.length} tags selected`);
         setDialogOpen(false);
     };
 
@@ -319,11 +320,6 @@ const ProductRegistration: React.FC = () => {
                                         disabled={createNewProductMutation.isPending}
                                         key={tag.epc}
                                         label={tag.epc}
-                                        onDelete={() => {
-                                            const filteredTags = values.tags.filter((t) => t.epc !== tag.epc)
-                                            setValue('tags', filteredTags)
-                                            setHelper('tags', `${filteredTags.length} tags selected`);
-                                        }}
                                     />
                                 ))}
                             </Box>

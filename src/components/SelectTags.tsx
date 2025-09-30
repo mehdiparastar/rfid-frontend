@@ -121,7 +121,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
             newSelectedRows.splice(currentIndex, 1); // Deselect the row if already selected
         }
 
-        setSelectedRows(newSelectedRows);
+        setSelectedRows([...new Map(newSelectedRows.map(item => [item.epc, item])).values()]);
     };
 
 
