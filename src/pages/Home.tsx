@@ -14,7 +14,6 @@ import {
     Box,
     Button,
     Card,
-    CardActionArea,
     CardContent,
     Chip,
     Container,
@@ -27,7 +26,8 @@ import {
     Typography,
     useTheme
 } from '@mui/material';
-import { darkGoldGradient, darkGradient, lightGoldGradient, lightGradient, softBg } from '../utils/const'
+import { InvoiceLogoImg } from '../svg/InvoiceLogo/InvoiceLogo';
+import { darkGoldGradient, darkGradient, lightGoldGradient, lightGradient, softBg } from '../utils/const';
 
 const shine = keyframes`
   0% { transform: translateX(-100%) }
@@ -39,59 +39,6 @@ const marquee = keyframes`
   100% { transform: translateX(-50%) }
 `;
 
-function LogoKANAN({ size = 32 }) {
-    const theme = useTheme()
-
-    return (
-        <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
-            <Box
-                component="svg"
-                width={size}
-                height={size}
-                viewBox="0 0 64 64"
-                sx={{ mr: 1 }}
-            >
-                <defs>
-                    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-                        <stop offset="0%" stopColor={theme.palette.mode === 'dark' ? "#A67C00" : "#9c8400ff"} />
-                        <stop offset="40%" stopColor={theme.palette.mode === 'dark' ? "#D4AF37" : "#ffc824ff"} />
-                        <stop offset="70%" stopColor={theme.palette.mode === 'dark' ? "#FFF6B7" : "#b5b500ff"} />
-                        <stop offset="100%" stopColor={theme.palette.mode === 'dark' ? "#A67C00" : "#d8b800ff"} />
-                    </linearGradient>
-                    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur stdDeviation="2" result="b" />
-                        <feMerge>
-                            <feMergeNode in="b" />
-                            <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                    </filter>
-                </defs>
-                <circle cx="32" cy="32" r="28" fill="url(#g)" opacity="0.2" />
-                <path
-                    d="M32 10 L42 32 L32 54 L22 32 Z"
-                    fill="none"
-                    stroke="url(#g)"
-                    strokeWidth="3.5"
-                    filter="url(#glow)"
-                />
-                <circle cx="32" cy="32" r="6" fill="url(#g)" />
-            </Box>
-            <Typography
-                variant="h6"
-                sx={{
-                    fontWeight: 800,
-                    letterSpacing: 2,
-                    background: theme.palette.mode === 'dark' ? darkGoldGradient : lightGoldGradient,
-                    WebkitBackgroundClip: 'text',
-                    backgroundClip: 'text',
-                    color: 'transparent',
-                }}
-            >
-                KANAN
-            </Typography>
-        </Box>
-    );
-}
 
 function Feature({ icon, title, desc }: any) {
     return (
@@ -172,7 +119,7 @@ export default function KANANHomePage() {
             {/* App Bar */}
             <AppBar position="sticky" sx={{ top: 0, background: (t) => alpha(t.palette.background.paper, 0.6), borderBottom: (t) => `1px solid ${alpha(t.palette.common.white, 0.06)}`, backdropFilter: 'blur(8px)' }}>
                 <Toolbar sx={{ justifyContent: 'space-between' }}>
-                    <LogoKANAN />
+                    <InvoiceLogoImg width={100} height={100} />
 
                     <Stack direction={{ xs: 'row', md: 'row' }} spacing={1.5} alignItems="center">
                         <Box sx={{ display: { xs: 'block', md: 'block' } }}>
@@ -319,7 +266,7 @@ export default function KANANHomePage() {
                 <Container maxWidth="lg">
                     <Grid container spacing={3} alignItems="center">
                         <Grid sx={{ xs: 12, md: 6 }}>
-                            <LogoKANAN />
+                            <InvoiceLogoImg width={100} height={100} />
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>© {new Date().getFullYear()} KANAN Gold. All rights reserved.</Typography>
                         </Grid>
                         <Grid sx={{ xs: 12, md: 6 }}>

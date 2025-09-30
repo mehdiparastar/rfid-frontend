@@ -1,15 +1,13 @@
-import { ArrowDownward, ArrowUpward, Face, Phone, Search } from "@mui/icons-material";
-import { Alert, Avatar, Box, Button, Card, CardContent, CardHeader, Chip, CircularProgress, Container, Divider, FormControl, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Radio, Select, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
+import { ArrowDownward, ArrowUpward, Search } from "@mui/icons-material";
+import { Alert, Avatar, Box, Button, Card, CardContent, CardHeader, Chip, CircularProgress, Container, FormControl, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Radio, Select, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
+import { red } from "@mui/material/colors";
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFnsJalali } from '@mui/x-date-pickers/AdapterDateFnsJalali';
 import { faIR } from 'date-fns-jalali/locale/fa-IR';
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGoldCurrency } from "../api/goldCurrency";
 import { useInvoices } from "../api/invoices";
-import PhotoLightbox from "../components/PhotoLightbox";
 import { useSocketStore } from "../store/socketStore";
-import { red } from "@mui/material/colors";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 
 export default function Invoices() {
@@ -17,15 +15,12 @@ export default function Invoices() {
     const theme = useTheme()
     const navigate = useNavigate();
 
-    const [limit, setLimit] = useState(2); // number of invoices per page
+    const [limit, setLimit] = useState(10); // number of invoices per page
     const [sortField, setSortField] = useState("createdAt");
-    const [sortDirection, setSortDirection] = useState("asc");
+    const [sortDirection, setSortDirection] = useState("desc");
     const [filters, setFilters] = useState({ q: "" }); // for search filter
     const [cursor, setCursor] = useState(null);
     const [selectedInvoice, setSelectedInvoice] = useState<number | null>(null)
-
-    const [lightboxOpen, setLightboxOpen] = useState(false);
-    const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isError: fetchingIsError, error: fetchingError } = useInvoices({
         limit,
@@ -34,8 +29,6 @@ export default function Invoices() {
     })
 
     const invoices = data?.pages.flatMap(p => p.items) ?? []
-
-    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
 
 
     const handleLoadMore = () => {
@@ -271,19 +264,6 @@ export default function Invoices() {
                     </Snackbar>
                 )}
             </Container >
-
-            <PhotoLightbox
-                photos={lightboxPhotos}
-                open={lightboxOpen}
-                onClose={() => setLightboxOpen(false)}
-            />
-
-            {/* Error Message */}
-            {spotPriceIsError && (
-                <Snackbar open={true} autoHideDuration={6000}>
-                    <Alert severity="error">{JSON.parse((spotPriceError as Error)?.message).message || "Something went wrong"}</Alert>
-                </Snackbar>
-            )}
         </>
     )
 }

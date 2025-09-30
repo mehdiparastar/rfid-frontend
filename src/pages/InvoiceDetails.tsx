@@ -1,65 +1,36 @@
 import { Fingerprint, PhoneAndroid } from "@mui/icons-material";
-import { Alert, alpha, Box, Button, Container, Divider, Grid, InputAdornment, MenuItem, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from "@mui/material";
+import { alpha, Box, Button, Container, Divider, Grid, InputAdornment, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from "@mui/material";
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFnsJalali } from '@mui/x-date-pickers/AdapterDateFnsJalali';
 import { faIR } from 'date-fns-jalali/locale/fa-IR';
-import React, { useRef, useState } from "react";
+import { useRef } from "react";
 import { useLoaderData, useLocation } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
-import { useGoldCurrency } from "../api/goldCurrency";
-import { useProductsByIds } from "../api/products";
-import { useCreateSale } from "../api/sales";
-import type { Customer, Invoice, Product } from "../lib/api";
+import { useInvoicesByIds } from "../api/invoices";
+import type { Invoice } from "../lib/api";
 import { useSocketStore } from "../store/socketStore";
 import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 import { InvoiceLogoImg } from "../svg/InvoiceLogo/InvoiceLogo";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
-import { isValidIranianNationalId } from "../utils/nationalIdChecker";
-import { isValidIranMobile, normalizeIranMobileToE164 } from "../utils/phoneNumberChecker";
 
-export default function IssueInvoice() {
+export default function InvoiceDetails() {
 
     const theme = useTheme()
     const isConnected = useSocketStore((s) => s.isConnected);
 
     // data passed via navigate(..., { state: { snapshot } })
     const location = useLocation();
-    const snapshot = (location.state)?.snapshot as Product[];
+    const snapshot = (location.state)?.snapshot as Invoice[];
 
-    const { mutateAsync: createSaleAsync, isPending: createSaleIsPending } = useCreateSale();
-    const { products: loaderProducts } = useLoaderData() as { products: Product[] };
+    const { invoices: loaderInvoices } = useLoaderData() as { invoices: Invoice[] };
 
     // however you derived them from the URL earlier:
-    const ids = loaderProducts.map(p => p.id);
-    const [serverErr, setServerErr] = useState<string | null>(null)
-    const [issuedInvoice, setIssuedInvoice] = useState<Invoice | null>(null)
+    const ids = loaderInvoices.map(p => p.id);
 
-    const { data } = useProductsByIds(ids, { initialData: loaderProducts });
-    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
+    const { data } = useInvoicesByIds(ids, { initialData: loaderInvoices });
 
     // snapshot if present (fast), otherwise use loader result
-    const products = data || loaderProducts || snapshot
-
-
-    // State for customer info form
-    const [customer, setCustomer] = useState<Customer>({
-        id: 0,
-        name: "",
-        phone: "",
-        nid: "",
-    });
-
-    const [quantityPerProduct, setQuantityPerProduct] = useState<{ [key: string]: number }>(products.reduce((p, c) => ({ ...p, [`quantity_${c.id}`]: 1 }), {}))
-    const [payType, setPayType] = useState<'cash' | 'credit'>('cash');
-    const [desc, setDesc] = useState<string>("")
-
-    // Handle form input changes
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCustomer({
-            ...customer,
-            [e.target.name]: e.target.value,
-        });
-    };
+    const invoices = data || loaderInvoices || snapshot
 
     const contentRef = useRef<HTMLDivElement>(null);
     const reactToPrintFn = useReactToPrint({
@@ -67,64 +38,17 @@ export default function IssueInvoice() {
         documentTitle: 'kanani-invoice',
     });
 
-    const onlinePrice = (spotPrice?.gold.find(el => el.name_en === "18K Gold")?.price || 0)
 
-    const canIssue =
-        !spotPriceIsError &&
-        products.length > 0 &&
-        customer.name.length > 0 &&
-        isValidIranMobile(customer.phone) &&
-        isValidIranianNationalId(customer.nid) &&
-        !Object.entries(quantityPerProduct)
-            .map(([k, v]) => {
-                const productQuantity = Number(products.find((p) => p.id === Number(k.toString().replace("quantity_", "")))?.quantity)
-                const productSold = Number(products.find((p) => p.id === Number(k.toString().replace("quantity_", "")))?.saleItems?.reduce((p, c) => p + c.quantity, 0))
+    const invoice = invoices[0]
 
-                return v >= 1 && v <= productQuantity - productSold
-            }).includes(false)
-
-    const handleIssueInvoice = async () => {
-        if (canIssue && !spotPriceIsError) {
-            try {
-                const create = await createSaleAsync({
-                    customer: { name: customer.name, nid: customer.nid, phone: customer.phone },
-                    sellDate: new Date(),
-                    payType: payType,
-                    items: products.map(p => {
-                        const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === p.subType)?.price || 0)
-
-                        return ({
-                            productId: p.id,
-                            quantity: quantityPerProduct[`quantity_${p.id}`],
-                            soldPrice: Math.round(
-                                10 *
-                                productSpotPrice *
-                                quantityPerProduct[`quantity_${p.id}`] *
-                                Number(p.weight) * (1 + (Number(p.makingCharge) / 100) + (Number(p.profit) / 100) + (Number(p.vat) / 100))
-                            ),
-                            spotPrice: productSpotPrice
-                        })
-                    }),
-                    description: desc
-                })
-                setServerErr(null)
-                setIssuedInvoice(create)
-            }
-            catch (ex) {
-                console.log(ex)
-                const msg = JSON.parse((ex as Error).message || '{}').message
-                setServerErr(msg)
-            }
-            console.log()
-        }
-    }
+    if (!invoice)
+        return <Box>Nothing exist to show.</Box>
 
     return (
         <>
             <Box sx={{ width: 1, bgcolor: isConnected ? "green" : "red", height: 5 }} />
-            {!!spotPriceError && <Alert sx={{ borderRadius: 0 }} severity="error" variant="filled">{JSON.parse(spotPriceError?.message || '{"message":""}').message}</Alert>}
-            {!!serverErr && <Alert sx={{ borderRadius: 0 }} severity="error" variant="filled">{serverErr}</Alert>}
-            < Container maxWidth="xl" sx={{ px: 3, pt: 2, pb: 5 }}>
+            <Container maxWidth="xl" sx={{ px: 3, pt: 2, pb: 5 }}>
+
                 <Grid container ref={contentRef}>
                     <Grid container sx={{ border: '1px dashed gold', height: 745 }} size={{ xs: 12, sm: 3 }}>
                         <Grid size={{ xs: 12 }} sx={{ display: 'flex' }}>
@@ -168,9 +92,9 @@ export default function IssueInvoice() {
                                                 <DatePicker
                                                     name="date"
                                                     label=""
-                                                    value={new Date()}
+                                                    value={new Date(invoice.createdAt!)}
                                                     onChange={() => { }}
-                                                    format="yyyy/MM/dd"                    // Jalali formatting via adapter                                                
+                                                    format="yyyy/MM/dd HH:mm"                    // Jalali formatting via adapter                                                
                                                     slotProps={{
                                                         openPickerButton: {
                                                             sx: { color: 'common.white' }
@@ -212,7 +136,7 @@ export default function IssueInvoice() {
                                             </LocalizationProvider>
                                             <TextField
                                                 name="no"
-                                                placeholder={!!issuedInvoice ? issuedInvoice.id.toString() : "Proforma Invoice"}
+                                                placeholder={invoice.id.toString()}
                                                 size="small"
                                                 fullWidth
                                                 variant="standard"
@@ -249,8 +173,8 @@ export default function IssueInvoice() {
                                             <TextField
                                                 name="payType"
                                                 select
-                                                value={!!issuedInvoice ? issuedInvoice.payType : payType}
-                                                onChange={e => setPayType(e.target.value as "cash" | "credit")}
+                                                value={invoice.payType}
+                                                onChange={() => { }}
                                                 size="small"
                                                 fullWidth
                                                 variant="standard"
@@ -286,8 +210,8 @@ export default function IssueInvoice() {
                                             </TextField>
                                             <TextField
                                                 name="desc"
-                                                value={!!issuedInvoice ? issuedInvoice.description : desc}
-                                                onChange={e => setDesc(e.target.value)}
+                                                value={invoice.description}
+                                                onChange={() => { }}
                                                 size="small"
                                                 fullWidth
                                                 variant="standard"
@@ -320,18 +244,6 @@ export default function IssueInvoice() {
                                                     }
                                                 }}
                                             />
-                                        </Grid>
-                                        <Grid size={{ xs: 12 }}>
-                                            <Alert color="warning" icon={false}>
-                                                <Stack direction={'row'} alignItems={'center'}>
-                                                    <Typography variant="h6" sx={{}}>
-                                                        Spot Price:
-                                                    </Typography>
-                                                    <Typography variant="body2" sx={{ ml: 2 }}>
-                                                        {getIRRCurrency(10 * onlinePrice)}
-                                                    </Typography>
-                                                </Stack>
-                                            </Alert>
                                         </Grid>
                                         <Grid size={{ xs: 12 }} sx={{ width: 1, justifyContent: 'center', display: 'flex', flexDirection: 'column' }}>
                                             <Typography width={1} variant="caption" color="common.white">
@@ -404,8 +316,8 @@ export default function IssueInvoice() {
                                 name="name"
                                 size="small"
                                 fullWidth
-                                value={!!issuedInvoice ? issuedInvoice.customer.name : customer.name}
-                                onChange={handleChange}
+                                value={invoice.customer.name}
+                                onChange={() => { }}
                                 variant="standard"
                                 slotProps={{
                                     input: {
@@ -423,11 +335,8 @@ export default function IssueInvoice() {
                         <Grid size={{ xs: 3 }} sx={{ p: 2 }}>
                             <TextField
                                 name="phone"
-                                value={!!issuedInvoice ? issuedInvoice.customer.phone : customer.phone}
-                                onChange={(e) => {
-                                    const next = e.target.value.replace(/\D/g, '').slice(0, 11);
-                                    setCustomer(p => ({ ...p, phone: next }));
-                                }}
+                                value={invoice.customer.phone}
+                                onChange={() => { }}
                                 size="small"
                                 fullWidth
                                 variant="standard"
@@ -442,27 +351,14 @@ export default function IssueInvoice() {
                                         ),
                                     },
                                 }}
-                                error={customer.phone.length > 0 && !isValidIranMobile(customer.phone) && customer.phone.length >= 10}
-                                helperText={
-                                    isValidIranMobile(customer.phone)
-                                        ? `✓ ${normalizeIranMobileToE164(customer.phone)}`
-                                        : customer.phone.length === 0
-                                            ? 'Enter 10–11 digits'
-                                            : customer.phone.length < 10
-                                                ? 'Keep typing…'
-                                                : 'Invalid mobile number'
-                                }
                             />
 
                         </Grid>
                         <Grid size={{ xs: 3 }} sx={{ p: 2 }}>
                             <TextField
                                 name="nid"
-                                value={!!issuedInvoice ? issuedInvoice.customer.nid : customer.nid}
-                                onChange={(e) => {
-                                    const next = e.target.value.replace(/\D/g, '').slice(0, 10);
-                                    setCustomer(p => ({ ...p, nid: next }));
-                                }}
+                                value={invoice.customer.nid}
+                                onChange={() => { }}
                                 size="small"
                                 fullWidth
                                 variant="standard"
@@ -477,14 +373,6 @@ export default function IssueInvoice() {
                                         ),
                                     },
                                 }}
-                                error={customer.nid.length === 10 && !isValidIranianNationalId(customer.nid)}
-                                helperText={
-                                    customer.nid.length === 10
-                                        ? isValidIranianNationalId(customer.nid)
-                                            ? '✓ Looks good'
-                                            : 'Invalid national ID'
-                                        : 'Enter 10 digits'
-                                }
                             />
 
                         </Grid>
@@ -506,14 +394,13 @@ export default function IssueInvoice() {
                                         </TableHead>
 
                                         <TableBody>
-                                            {products.map((product, i) => {
-                                                const productSpotPrice = spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0
-                                                const productIRRSpotPrice = getIRRCurrency(10 * productSpotPrice).replace('ریال', '')
-                                                const availableQuantity = Number(product.quantity) - Number(product.saleItems?.reduce((p, c) => p + c.quantity, 0))
+                                            {invoice.items.map((item, i) => {
+                                                const itemSpotPrice = item.spotPrice
+                                                const itemIRRSpotPrice = getIRRCurrency(10 * itemSpotPrice).replace('ریال', '')
 
                                                 return (
                                                     <TableRow
-                                                        key={product.id}
+                                                        key={item.id}
                                                         sx={{
                                                             '&:nth-of-type(odd)': {
                                                                 backgroundColor: theme.palette.action.hover,
@@ -521,29 +408,27 @@ export default function IssueInvoice() {
                                                         }}
                                                     >
                                                         <TableCell sx={{ height: 48 }} align="center">{i + 1}</TableCell>
-                                                        <TableCell sx={{ height: 48 }} align="center">{product.name} - {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}</TableCell>
+                                                        <TableCell sx={{ height: 48 }} align="center">{item.product.name} - {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === item.product.subType)?.name}</TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">
                                                             <TextField
-                                                                name={`quantity_${product.id}`}
+                                                                name={`quantity_${item.id}`}
                                                                 size="small"
                                                                 variant="standard"
-                                                                value={!!issuedInvoice ?
-                                                                    issuedInvoice.items.find(el => el.product.id === product.id)?.quantity :
-                                                                    Number(quantityPerProduct[`quantity_${product.id}`])}
+                                                                value={item.quantity}
                                                                 type="number"
-                                                                slotProps={{ htmlInput: { min: 1, max: availableQuantity, sx: { textAlign: 'center' }, readOnly: !!issuedInvoice } }}
-                                                                onChange={(e) => setQuantityPerProduct(p => ({ ...p, [e.target.name]: Number(e.target.value) > availableQuantity ? availableQuantity : Number(e.target.value) < 1 ? 1 : Number(e.target.value) }))}
+                                                                slotProps={{ htmlInput: { sx: { textAlign: 'center' }, readOnly: true } }}
+                                                                onChange={() => { }}
                                                             />
                                                         </TableCell>
-                                                        <TableCell sx={{ height: 48 }} align="center">{Number(product.weight).toString()}</TableCell>
-                                                        <TableCell sx={{ height: 48 }} align="center">{Number(product.makingCharge).toString()}% + {Number(product.profit).toString()}% + {Number(product.vat).toString()}%</TableCell>
-                                                        <TableCell sx={{ height: 48 }} align="center">{productIRRSpotPrice}</TableCell>
-                                                        <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{getIRRCurrency(10 * Number(productSpotPrice * 10) * Number(product.weight) * quantityPerProduct[`quantity_${product.id}`] * (1 + (Number(product.makingCharge) / 100) + (Number(product.profit) / 100) + (Number(product.vat) / 100))).replace('ریال', '')}</TableCell>
+                                                        <TableCell sx={{ height: 48 }} align="center">{Number(item.product.weight).toString()}</TableCell>
+                                                        <TableCell sx={{ height: 48 }} align="center">{Number(item.product.makingCharge).toString()}% + {Number(item.product.profit).toString()}% + {Number(item.product.vat).toString()}%</TableCell>
+                                                        <TableCell sx={{ height: 48 }} align="center">{itemIRRSpotPrice}</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{getIRRCurrency(item.soldPrice).replace('ریال', '')}</TableCell>
                                                     </TableRow>
                                                 )
                                             })}
                                             {/* empty rows to mimic the blank form grid */}
-                                            {Array.from({ length: products.length >= 5 ? 0 : 5 - products.length }).map((_, i) => (
+                                            {Array.from({ length: invoices.length >= 5 ? 0 : 5 - invoices.length }).map((_, i) => (
                                                 <TableRow
                                                     key={`empty-${i}`}
                                                     sx={{
@@ -577,11 +462,9 @@ export default function IssueInvoice() {
                                 <Stack direction="row" gap={2} alignItems={'center'}>
                                     <Typography color="warning.light">
                                         {
-                                            getIRRCurrency(10 * products.reduce((p, c) => p + (onlinePrice * Number(c.weight) * quantityPerProduct[`quantity_${c.id}`] * (1 + (Number(c.makingCharge) / 100) + (Number(c.profit) / 100) + (Number(c.vat) / 100))), 0))
+                                            getIRRCurrency(invoice.items.reduce((p, c) => Number(p) + Number(c.soldPrice), 0))
                                         }
                                     </Typography>
-                                    {!issuedInvoice && <Divider flexItem orientation="vertical" />}
-                                    {!issuedInvoice && <Button loading={createSaleIsPending} disabled={!canIssue} variant="text" sx={{ width: 100, mx: -1 }} onClick={handleIssueInvoice}>Issue</Button>}
                                 </Stack>
                             </Box>
                         </Grid>
@@ -608,14 +491,8 @@ export default function IssueInvoice() {
                 <Box className="no-print" sx={{ textAlign: 'left', mb: 2 }}>
                     <Button variant="outlined" sx={{ mt: 1, width: 1 }} onClick={() => reactToPrintFn()}>Print</Button>
                 </Box>
-            </Container >
 
-            {/* Error Message */}
-            {spotPriceIsError && (
-                <Snackbar open={true} autoHideDuration={6000}>
-                    <Alert severity="error">{JSON.parse((spotPriceError as Error)?.message).message || "Something went wrong"}</Alert>
-                </Snackbar>
-            )}
+            </Container>
         </>
     );
 }

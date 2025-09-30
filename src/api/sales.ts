@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, type Invoice, type SaleItem } from "../lib/api";
+import { api, type Invoice } from "../lib/api";
 
 export type CreateSalePayload = {
     sellDate: Date;

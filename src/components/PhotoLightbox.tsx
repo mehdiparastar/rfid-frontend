@@ -1,5 +1,5 @@
-import { Dialog, Box, IconButton } from "@mui/material";
-import { Close, ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
+import { ArrowBackIos, ArrowForwardIos, Close } from "@mui/icons-material";
+import { Box, Dialog, IconButton } from "@mui/material";
 import { useState } from "react";
 
 interface PhotoLightboxProps {

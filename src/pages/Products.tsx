@@ -14,7 +14,7 @@ export default function Products() {
 
     const navigate = useNavigate();
 
-    const [limit, setLimit] = useState(2); // number of products per page
+    const [limit, setLimit] = useState(10); // number of products per page
     const [sortField, setSortField] = useState("createdAt");
     const [sortDirection, setSortDirection] = useState("desc");
     const [filters, setFilters] = useState({ q: "" }); // for search filter

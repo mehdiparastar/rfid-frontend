@@ -8,8 +8,9 @@ import SignInIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import UsersIcon from "@mui/icons-material/People";
-import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import SignUpIcon from "@mui/icons-material/PersonAdd";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
+import ReceiptIcon from '@mui/icons-material/Receipt';
 import {
     AppBar,
     Avatar,
@@ -37,7 +38,6 @@ import { useLogout, useMe } from "../api/auth";
 import { useUi } from "../providers/UiProvider";
 import { useSocketStore } from "../store/socketStore";
 import { darkGradient, lightGradient, softBg } from "../utils/const";
-import ReceiptIcon from '@mui/icons-material/Receipt';
 
 const drawerWidth = 260;
 

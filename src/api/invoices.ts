@@ -1,6 +1,41 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { getInvoiceItems, type Page, type Invoice, type SortingState } from '../lib/api';
-import { invoicesQueryKey } from './queryKeys';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { api, getInvoiceItems, type Invoice, type Page, type SortingState } from '../lib/api';
+import { invoicesByIdsQueryKey, invoicesQueryKey } from './queryKeys';
+
+// Serial-safe query defaults from your modules.ts
+const serialSafeQueryDefaults = {
+    staleTime: 0 as const,
+    gcTime: 0 as const,
+    refetchOnMount: 'always' as const,
+    refetchOnWindowFocus: 'always' as const,
+    structuralSharing: false as const,
+    retry: false as const,
+};
+
+// batch fetch (comma-separated ids)
+export async function fetchInvoicesByIds(ids: Array<string | number>) {
+    const unique = Array.from(new Set(ids.map(String))).filter(Boolean);
+    if (unique.length === 0) return [] as Invoice[];
+
+    // /api/invoices?ids=1,2,3
+    const qs = new URLSearchParams({ ids: unique.join(",") });
+    return api<Invoice[]>(`/api/invoices?${qs.toString()}`);
+}
+
+// batch hook returning Invoice[]
+export function useInvoicesByIds(
+    ids: Array<string | number>,
+    opts?: { initialData?: Invoice[] }
+) {
+    const enabled = ids?.length > 0;
+    return useQuery({
+        queryKey: invoicesByIdsQueryKey(ids),
+        queryFn: () => fetchInvoicesByIds(ids),
+        initialData: opts?.initialData,
+        ...serialSafeQueryDefaults,
+        enabled,
+    });
+}
 
 
 

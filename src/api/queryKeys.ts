@@ -20,3 +20,11 @@ export const productsByIdsQueryKey = (ids: Array<string | number>) => {
     );
     return ["products", "byIds", ...sorted] as const;
 };
+
+// NEW: multi id key
+export const invoicesByIdsQueryKey = (ids: Array<string | number>) => {
+    const sorted = Array.from(new Set(ids.map(String))).sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true })
+    );
+    return ["invoices", "byIds", ...sorted] as const;
+};

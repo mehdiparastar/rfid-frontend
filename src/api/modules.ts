@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { scanResultsKey, scenarioKey } from "./queryKeys";
 import type { ScanResult } from "../lib/socket";
+import { scanResultsKey, scenarioKey } from "./queryKeys";
 
 export type Mode = "Inventory" | "Scan" | "NewProduct";
 
