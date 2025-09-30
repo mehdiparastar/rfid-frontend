@@ -33,8 +33,11 @@ $ sudo nano /etc/nginx/sites-available/default  # then pase config below:
         listen 80;
         server_name _;  # You can set a domain or keep it as is for LAN use
 
+        # Set maximum allowed size for uploaded files
+        client_max_body_size 800M;  # Adjust this value as needed (e.g., 50M for 50MB)
+
         # Serve static files from the dist directory
-        root /var/www/rfid-frontend;  # New path to the dist directory
+        root /var/www/rfid-frontend/dist;  # New path to the dist directory
         index index.html;
 
         # Serve the Vite app
