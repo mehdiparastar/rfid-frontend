@@ -35,7 +35,7 @@ export default function IssueInvoice() {
     const [issuedInvoice, setIssuedInvoice] = useState<Invoice | null>(null)
 
     const { data } = useProductsByIds(ids, { initialData: loaderProducts });
-    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
+    const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
 
     // snapshot if present (fast), otherwise use loader result
     const products = data || loaderProducts || snapshot

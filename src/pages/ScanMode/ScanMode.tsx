@@ -1,13 +1,13 @@
-import { Alert, AppBar, Box, ButtonBase, CircularProgress, Collapse, Container, Grid, Slide, styled, Tab, Tabs, Typography, useTheme, Zoom } from "@mui/material";
+import { AddBox, FactCheck } from "@mui/icons-material";
+import { Alert, AppBar, Box, CircularProgress, Container, Grid, Tab, Tabs, useTheme, Zoom } from "@mui/material";
 import React, { useState } from "react";
 import { useMe } from "../../api/auth";
 import type { Mode } from "../../api/modules";
 import { useSocketStore } from "../../store/socketStore";
+import { RFIDIcon } from "../../svg/RFIDIcon/RFIDIcon";
 import CheckInventory from "./components/CheckInventory";
 import ProductRegistration from "./components/ProductRegistration";
 import Scan from "./components/Scan";
-import { AddAPhoto, AddBox, Checklist, FactCheck, NewReleases, Scanner } from "@mui/icons-material";
-import { RFIDIcon } from "../../svg/RFIDIcon/RFIDIcon";
 
 
 const ScanMode: React.FC = () => {

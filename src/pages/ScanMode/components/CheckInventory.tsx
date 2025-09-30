@@ -10,7 +10,6 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import {
     Alert,
     Box,
-    Button,
     Card,
     CardActions,
     CardContent,
@@ -36,21 +35,14 @@ import {
     useTheme
 } from '@mui/material';
 import React, { useMemo, useState } from 'react';
+import { useGoldCurrency } from '../../../api/goldCurrency';
 import { useScanResults, useScenarioState, useStartScenario, useStopScenario } from '../../../api/modules';
 import { useScanResultsLive } from '../../../features/useScanResultsLive';
-import ModuleSettings from './ModuleSettings';
 import { GOLD_PRODUCT_SUB_TYPES } from '../../../store/useProductFormStore';
 import { getIRRCurrency } from '../../../utils/getIRRCurrency';
-import { useGoldCurrency } from '../../../api/goldCurrency';
+import ModuleSettings from './ModuleSettings';
 
 
-// Define the Product interface
-interface Product {
-    id: number;
-    name: string;
-    image: string;
-    weight: string;
-}
 
 const CheckInventory: React.FC = () => {
     const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
@@ -67,15 +59,11 @@ const CheckInventory: React.FC = () => {
     const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
     const { data: scanResults = { Inventory: [] } } = useScanResults("Inventory");
 
-    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError } = useGoldCurrency();
+    const { data: spotPrice, /*isLoading: spotPriceIsLoading, error: spotPriceError*/ } = useGoldCurrency();
 
     useScanResultsLive("Inventory", 5000, true);
 
     const products = scanResults.Inventory
-
-    const handleCalculatePrice = (product: Product): void => {
-        alert(`Calculating price for ${product.name} (${product.weight})...`);
-    };
 
     const handleChangePage = (_event: unknown, newPage: number) => {
         setPage(newPage);

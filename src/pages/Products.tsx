@@ -14,11 +14,11 @@ export default function Products() {
 
     const navigate = useNavigate();
 
-    const [limit, setLimit] = useState(10); // number of products per page
+    const [limit,/* setLimit*/] = useState(10); // number of products per page
     const [sortField, setSortField] = useState("createdAt");
     const [sortDirection, setSortDirection] = useState("desc");
     const [filters, setFilters] = useState({ q: "" }); // for search filter
-    const [cursor, setCursor] = useState(null);
+    const [/*cursor*/, setCursor] = useState(null);
     const [selectedProducts, setSelectedProducts] = useState<number[]>([])
 
     const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -32,7 +32,7 @@ export default function Products() {
 
     const products = data?.pages.flatMap(p => p.items) ?? []
 
-    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
+    const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
 
 
     const handleLoadMore = () => {

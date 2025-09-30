@@ -15,11 +15,11 @@ export default function Invoices() {
     const theme = useTheme()
     const navigate = useNavigate();
 
-    const [limit, setLimit] = useState(10); // number of invoices per page
+    const [limit, /*setLimit*/] = useState(10); // number of invoices per page
     const [sortField, setSortField] = useState("createdAt");
     const [sortDirection, setSortDirection] = useState("desc");
     const [filters, setFilters] = useState({ q: "" }); // for search filter
-    const [cursor, setCursor] = useState(null);
+    const [/*cursor*/, setCursor] = useState(null);
     const [selectedInvoice, setSelectedInvoice] = useState<number | null>(null)
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isError: fetchingIsError, error: fetchingError } = useInvoices({

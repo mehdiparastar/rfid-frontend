@@ -6,13 +6,11 @@ import { useGoldCurrency } from "../../../api/goldCurrency";
 import { useScanResults, useScenarioState, useStartScenario, useStopScenario } from "../../../api/modules";
 import PhotoLightbox from "../../../components/PhotoLightbox";
 import { useScanResultsLive } from "../../../features/useScanResultsLive";
-import { useSocketStore } from "../../../store/socketStore";
 import { GOLD_PRODUCT_SUB_TYPES } from "../../../store/useProductFormStore";
 import { getIRRCurrency } from "../../../utils/getIRRCurrency";
 import ModuleSettings from "./ModuleSettings";
 
 const Scan: React.FC = () => {
-    const isConnected = useSocketStore((s) => s.isConnected);
 
     const navigate = useNavigate();
     const theme = useTheme();
@@ -28,7 +26,7 @@ const Scan: React.FC = () => {
     const { data: scanResults = { Scan: [] } } = useScanResults("Scan");
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
-    const { data: spotPrice, isLoading: spotPriceIsLoading, error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
+    const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
 
     useScanResultsLive("Scan", 5000, true);
 
