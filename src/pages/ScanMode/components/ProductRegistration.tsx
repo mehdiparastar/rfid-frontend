@@ -1,10 +1,11 @@
-import { AddPhotoAlternate } from '@mui/icons-material';
+import { AddPhotoAlternate, CameraAlt } from '@mui/icons-material';
 import FingerprintSharpIcon from '@mui/icons-material/FingerprintSharp';
 import {
     Alert,
     AlertTitle,
     Box,
     Button,
+    ButtonGroup,
     Chip,
     CircularProgress,
     Collapse,
@@ -21,13 +22,16 @@ import {
     Select,
     Switch,
     TextField,
-    Typography
+    Typography,
+    useTheme
 } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 import { useCreateProduct, type Tag } from '../../../api/products';
 import SelectTags from '../../../components/SelectTags';
 import { GOLD_PRODUCT_SUB_TYPES, GOLD_PRODUCT_TYPES, useProductFormStore, type GoldProductSUBType, type GoldProductType } from '../../../store/useProductFormStore';
 import { generatePreview } from '../../../utils/imageUtils';
+import { translate } from '../../../utils/translate';
+import CameraFilePicker, { type CapturedFile } from '../../../components/CameraFilePicker';
 
 const ProductRegistration: React.FC = () => {
     const {
@@ -41,6 +45,10 @@ const ProductRegistration: React.FC = () => {
         reset,
     } = useProductFormStore();
 
+    const theme = useTheme()
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)!
+
     const serverErrRef = useRef<HTMLDivElement | null>(null);
     const [serverErr, setServerErr] = useState(null)
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -48,6 +56,8 @@ const ProductRegistration: React.FC = () => {
 
     const [uploadPct, setUploadPct] = useState<number | null>(null);
     const [uploadInfo, setUploadInfo] = useState<{ loaded: number; total: number } | null>(null);
+
+    const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
 
     const createNewProductMutation = useCreateProduct();
 
@@ -136,7 +146,7 @@ const ProductRegistration: React.FC = () => {
         <Paper elevation={3} sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto', mb: 2 }}>
             <Collapse in={!!serverErr}>
                 <Alert ref={serverErrRef} variant='filled' severity='error' onClose={() => { setServerErr(null) }}>
-                    <AlertTitle>Server Error</AlertTitle>
+                    <AlertTitle>{t["Server Error"]}</AlertTitle>
                     {serverErr}
                 </Alert>
             </Collapse>
@@ -147,7 +157,7 @@ const ProductRegistration: React.FC = () => {
                 <Box sx={{ mb: 2 }}>
                     <LinearProgress variant="determinate" value={uploadPct} />
                     <Typography variant="caption">
-                        Uploading… {uploadPct}%{uploadInfo ? ` (${Math.round(uploadInfo.loaded / 1024)} KB / ${Math.round(uploadInfo.total / 1024)} KB)` : ''}
+                        {t["Uploading…"]} {uploadPct}%{uploadInfo ? ` (${Math.round(uploadInfo.loaded / 1024)} KB / ${Math.round(uploadInfo.total / 1024)} KB)` : ''}
                     </Typography>
                 </Box>
             )}
@@ -155,7 +165,7 @@ const ProductRegistration: React.FC = () => {
                 <Grid container spacing={1}>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
-                            label="Name"
+                            label={t["Name"]}
                             disabled={createNewProductMutation.isPending}
                             value={values.name}
                             onChange={(e) => setValue('name', e.target.value)}
@@ -171,17 +181,17 @@ const ProductRegistration: React.FC = () => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <FormControl fullWidth margin="normal" error={!!errors.type}>
-                            <InputLabel id="type-select-label">Type</InputLabel>
+                            <InputLabel id="type-select-label">{t["Type"]}</InputLabel>
                             <Select
                                 disabled={createNewProductMutation.isPending}
                                 labelId="type-select-label"
-                                label="Type"
+                                label={t["Type"]}
                                 value={values.type}
                                 onChange={(e) => setValue('type', e.target.value as GoldProductType)}
                             >
                                 {GOLD_PRODUCT_TYPES.map((type) => (
                                     <MenuItem key={type} value={type}>
-                                        {type}
+                                        {t[type]}
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -190,17 +200,17 @@ const ProductRegistration: React.FC = () => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <FormControl fullWidth margin="normal" error={!!errors.type}>
-                            <InputLabel id="sub-type-select-label">SubType</InputLabel>
+                            <InputLabel id="sub-type-select-label">{t["SubType"]}</InputLabel>
                             <Select
                                 disabled={createNewProductMutation.isPending}
                                 labelId="sub-type-select-label"
-                                label="SubType"
+                                label={t["SubType"]}
                                 value={values.subType}
                                 onChange={(e) => setValue('subType', e.target.value as GoldProductSUBType)}
                             >
                                 {GOLD_PRODUCT_SUB_TYPES.map((type) => (
                                     <MenuItem key={type.symbol} value={type.symbol}>
-                                        {type.name}
+                                        {theme.direction === "ltr" ? type.name_en : type.name}
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -209,7 +219,7 @@ const ProductRegistration: React.FC = () => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
-                            label="Weight"
+                            label={t["Weight"]}
                             disabled={createNewProductMutation.isPending}
                             value={values.weight}
                             onChange={(e) => setValue('weight', e.target.value)}
@@ -220,13 +230,13 @@ const ProductRegistration: React.FC = () => {
                             type='number'
                             slotProps={{
                                 htmlInput: { min: 0.01, step: "0.01" },
-                                input: { endAdornment: <InputAdornment position="end">grams</InputAdornment> }
+                                input: { endAdornment: <InputAdornment position="end">{t["grams"]}</InputAdornment> }
                             }}
                         />
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
-                            label="Quantity"
+                            label={t["Quantity"]}
                             disabled={createNewProductMutation.isPending}
                             value={values.quantity}
                             onChange={(e) => setValue('quantity', e.target.value)}
@@ -242,7 +252,7 @@ const ProductRegistration: React.FC = () => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
-                            label="Making Charge"
+                            label={t["Making Charge"]}
                             disabled={createNewProductMutation.isPending}
                             value={values.makingCharge}
                             onChange={(e) => setValue('makingCharge', e.target.value)}
@@ -259,7 +269,7 @@ const ProductRegistration: React.FC = () => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
-                            label="VAT"
+                            label={t["VAT"]}
                             disabled={createNewProductMutation.isPending}
                             value={values.vat}
                             onChange={(e) => setValue('vat', e.target.value)}
@@ -276,7 +286,7 @@ const ProductRegistration: React.FC = () => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
-                            label="PROFIT"
+                            label={t["PROFIT"]}
                             disabled={createNewProductMutation.isPending}
                             value={values.profit}
                             onChange={(e) => setValue('profit', e.target.value)}
@@ -301,7 +311,7 @@ const ProductRegistration: React.FC = () => {
                                         onChange={(e) => setValue('inventoryItem', e.target.checked)}
                                     />
                                 }
-                                label="Inventory Item"
+                                label={t["Inventory Item"]}
                                 labelPlacement="start"
                                 sx={{ justifyContent: 'space-between', m: 1, alignItems: 'center', p: 0 }}
                             />
@@ -310,9 +320,9 @@ const ProductRegistration: React.FC = () => {
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <FormControl fullWidth margin="normal" error={!!errors.tags}>
-                            <Typography mb={-1} variant="subtitle1">Tags</Typography>
+                            <Typography mb={-1} variant="subtitle1">{t["Tags"]}</Typography>
                             <Button variant="outlined" onClick={() => setDialogOpen(true)} sx={{ mt: 1 }}>
-                                Select Tags
+                                {t["Select Tags"]}
                             </Button>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
                                 {values.tags.map((tag) => (
@@ -326,32 +336,48 @@ const ProductRegistration: React.FC = () => {
                             <FormHelperText>{errors.tags || helpers.tags}</FormHelperText>
                         </FormControl>
                     </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <FormControl fullWidth margin="normal" error={!!errors.photos}>
-                            <Typography variant="subtitle1">Photos</Typography>
-                            <Input id="photos-upload" style={{ display: 'none' }} type="file" inputProps={{ multiple: true, accept: 'image/*' }} onChange={handleFileChange} />
-                            <label htmlFor="photos-upload">
+                    <Grid size={{ xs: 12, md: 6 }} sx={{ mt: 2 }}>
+                        <Typography sx={{ mb: -2 }} variant="subtitle1">{t["Photos"]}</Typography>
+                        <ButtonGroup fullWidth>
+                            <FormControl fullWidth margin="normal" error={!!errors.photos}>
+                                <Input id="photos-upload" sx={{ display: 'none' }} type="file" inputProps={{ multiple: true, accept: 'image/*' }} onChange={handleFileChange} />
+                                <label htmlFor="photos-upload">
+                                    <Button
+                                        disabled={createNewProductMutation.isPending}
+                                        fullWidth
+                                        variant="outlined"
+                                        component="span"
+                                        startIcon={<AddPhotoAlternate />}
+                                        sx={{ width: 1 }}
+                                    >
+                                        {t["Upload Photos"]}
+                                    </Button>
+                                </label>
+                            </FormControl>
+                            <FormControl fullWidth margin="normal" error={!!errors.photos}>
                                 <Button
                                     disabled={createNewProductMutation.isPending}
                                     fullWidth
                                     variant="outlined"
-                                    component="span"
-                                    startIcon={<AddPhotoAlternate />}
+                                    onClick={() => setCameraDialogOpen(true)}
+                                    startIcon={<CameraAlt />}
+                                    sx={{ width: 1 }}
                                 >
-                                    Upload Photos
+                                    {t["Capture Photos from Camera"]}
                                 </Button>
-                            </label>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                                {previewUrls.map((url, idx) => (
-                                    <img key={idx} src={url} alt={`preview ${idx}`} style={{ width: 100, height: 100, objectFit: 'cover' }} />
-                                ))}
-                            </Box>
-                            <FormHelperText>{errors.photos || helpers.photos}</FormHelperText>
-                        </FormControl>
+                            </FormControl>
+                        </ButtonGroup>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                            {previewUrls.map((url, idx) => (
+                                <Box component={"img"} key={idx} src={url} alt={`preview ${idx}`} sx={{ width: 100, height: 100, objectFit: 'cover' }} />
+                            ))}
+                        </Box>
+                        <FormHelperText>{errors.photos || helpers.photos}</FormHelperText>
                     </Grid>
+
                 </Grid>
                 <Button type="submit" variant="contained" disabled={createNewProductMutation.isPending} fullWidth sx={{ mt: 3 }}>
-                    {createNewProductMutation.isPending ? <CircularProgress size={24} /> : 'Register Product'}
+                    {createNewProductMutation.isPending ? <CircularProgress size={24} /> : t['Register Product']}
                 </Button>
             </form>
             <SelectTags
@@ -359,6 +385,26 @@ const ProductRegistration: React.FC = () => {
                 onClose={() => setDialogOpen(false)}
                 onConfirm={handleTagConfirm}
                 selectedTags={values.tags}
+            />
+            <CameraFilePicker
+                open={cameraDialogOpen}
+                onClose={() => setCameraDialogOpen(false)}
+                onConfirm={async (captured: CapturedFile[]) => {
+                    const files = captured.map(({ previewUrl, ...rest }) => rest as File);
+                    setValue('photos', files);
+                    setPreviewUrls(captured.map(f => f.previewUrl!));
+
+                    try {
+                        const previews = await Promise.all(files.map((file) => generatePreview(file)));
+                        setValue('previews', previews);
+                        setHelper('photos', `${files.length} photos captured, previews generated`);
+                        setError('photos', '');
+                        setError('previews', '');
+                    } catch (err) {
+                        setError('previews', 'Failed to generate previews');
+                    }
+                }}
+                initialFiles={values.photos || []}
             />
         </Paper>
     );

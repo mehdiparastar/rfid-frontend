@@ -15,16 +15,23 @@ import {
     Stack,
     TextField,
     Typography,
+    useTheme,
 } from "@mui/material";
 import * as React from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { useLogin } from "../api/auth";
+import { translate } from "../utils/translate";
+import TagNamaLogo from "../svg/TagNamaLogo";
 
 // only store email (never password)
 const REMEMBER_KEY = "rfid-remember-email";
 const emailOk = (v: string) => /.+@.+\..+/.test(v);
 
 export default function SignIn() {
+    const theme = useTheme()
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)!
+
     const navigate = useNavigate();
     const location = useLocation() as { state?: { from?: Location } };
 
@@ -111,15 +118,8 @@ export default function SignIn() {
                 <Stack spacing={3}>
                     {/* Brand */}
                     <Stack direction="row" alignItems="center" spacing={1.5} justifyContent="center">
-                        <QrCodeScannerIcon fontSize="large" />
-                        <Typography variant="h5" fontWeight={700}>
-                            RFID Scanner
-                        </Typography>
+                        <TagNamaLogo sx={{ fontSize: 120, color: "primary.main" }} />
                     </Stack>
-
-                    <Typography variant="h6" textAlign="center">
-                        Sign in
-                    </Typography>
 
                     {(errorMsg || login.error) && (
                         <Alert severity="error" variant="outlined">
@@ -131,7 +131,7 @@ export default function SignIn() {
                         <Stack spacing={2.2}>
                             <TextField
                                 inputRef={emailRef}
-                                label="Email"
+                                label={t["Email"]}
                                 type="email"
                                 autoComplete="email"
                                 fullWidth
@@ -141,7 +141,7 @@ export default function SignIn() {
 
                             <TextField
                                 inputRef={passRef}
-                                label="Password"
+                                label={t["Password"]}
                                 type={showPassword ? "text" : "password"}
                                 autoComplete="current-password"
                                 fullWidth
@@ -166,11 +166,11 @@ export default function SignIn() {
 
                             <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 0.5 }}>
                                 <FormControlLabel
-                                    control={<Checkbox size="small" inputRef={rememberRef} defaultChecked={!!defaultEmail} />}
-                                    label="Remember me"
+                                    control={<Checkbox size="small" slotProps={{ input: { ref: rememberRef } }} defaultChecked={!!defaultEmail} />}
+                                    label={t["Remember me"]}
                                 />
                                 <MuiLink component={RouterLink} to="/forgot-password" underline="hover">
-                                    Forgot password?
+                                    {t["Forgot password?"]}
                                 </MuiLink>
                             </Stack>
 
@@ -178,7 +178,7 @@ export default function SignIn() {
                                 {submitting ? (
                                     <Stack direction="row" spacing={1} alignItems="center">
                                         <CircularProgress size={20} />
-                                        <span>Signing in…</span>
+                                        <span>{t["Signing in…"]}</span>
                                     </Stack>
                                 ) : (
                                     "Sign in"
@@ -188,14 +188,10 @@ export default function SignIn() {
                     </form>
 
                     <Typography variant="body2" textAlign="center" color="text.secondary">
-                        Don’t have an account?{" "}
+                        {t["Don’t have an account?"]}{" "}
                         <MuiLink component={RouterLink} to="/signup" underline="hover">
-                            Sign up
+                            {t["Sign up"]}
                         </MuiLink>
-                    </Typography>
-
-                    <Typography variant="caption" color="text.secondary" textAlign="center">
-                        Secure session via httpOnly cookies. Dark/RTL ready.
                     </Typography>
                 </Stack>
             </Paper>

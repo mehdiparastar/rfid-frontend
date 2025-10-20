@@ -174,6 +174,8 @@ export type Product = {
     saleItems?: SaleItem[];
     createdAt?: Date;
     updatedAt?: Date;
+    scantimestamp: number
+    deviceId: string
 }
 
 export type Page<T> = {

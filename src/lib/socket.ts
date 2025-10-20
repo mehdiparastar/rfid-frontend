@@ -4,9 +4,9 @@ import type { Tag } from "../api/products";
 import type { Product } from "./api";
 
 export type ScanResult =
-    | { Scan: Product[]; Inventory?: Product[]; NewProduct?: Tag[] }
-    | { Inventory: Product[]; Scan?: Product[]; NewProduct?: Tag[] }
-    | { NewProduct: Tag[]; Scan?: Product[]; Inventory?: Product[] };
+    | { Scan: Product[]; Inventory?: Product[]; NewProduct?: Tag[], deviceId: string }
+    | { Inventory: Product[]; Scan?: Product[]; NewProduct?: Tag[], deviceId: string }
+    | { NewProduct: Tag[]; Scan?: Product[]; Inventory?: Product[], deviceId: string };
 
 export type ServerToClientEvents = {
     // Example events — add yours:

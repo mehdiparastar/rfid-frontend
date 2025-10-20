@@ -35,7 +35,7 @@ export type ScenarioState = {
  *  - structuralSharing: false => never re-use old arrays/objects
  *  - retry: false => fail fast (hardware can be fickle)
  */
-const serialSafeQueryDefaults = {
+export const serialSafeQueryDefaults = {
     staleTime: 0 as const,
     gcTime: 0 as const,
     refetchOnMount: "always" as const,

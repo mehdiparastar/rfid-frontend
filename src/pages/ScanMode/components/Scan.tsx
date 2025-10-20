@@ -3,24 +3,29 @@ import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoldCurrency } from "../../../api/goldCurrency";
-import { useScanResults, useScenarioState, useStartScenario, useStopScenario } from "../../../api/modules";
+import { useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from "../../../api/jrdDevices";
 import PhotoLightbox from "../../../components/PhotoLightbox";
 import { useScanResultsLive } from "../../../features/useScanResultsLive";
 import { GOLD_PRODUCT_SUB_TYPES } from "../../../store/useProductFormStore";
 import { getIRRCurrency } from "../../../utils/getIRRCurrency";
+import { translate } from "../../../utils/translate";
 import ModuleSettings from "./ModuleSettings";
 
 const Scan: React.FC = () => {
 
     const navigate = useNavigate();
-    const theme = useTheme();
+    const theme = useTheme()
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)!
+
     const fullScreenSettingsDialog = useMediaQuery(theme.breakpoints.down('md'));
     const [openSettings, setOpenSettings] = useState(false);
-    const [sortField, setSortField] = useState("createdAt");
+    const [sortField, setSortField] = useState("latest");
     const [sortDirection, setSortDirection] = useState("desc");
     const [selectedProducts, setSelectedProducts] = useState<number[]>([])
     const [searchQuery, setSearchQuery] = useState(""); // New state for search query
-    const { data: scenarioState } = useScenarioState()
+
+    const { data: scenarioState } = useCurrentScenario()
     const { mutateAsync: stopScenarioMutateAsync } = useStopScenario()
     const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
     const { data: scanResults = { Scan: [] } } = useScanResults("Scan");
@@ -30,13 +35,15 @@ const Scan: React.FC = () => {
 
     useScanResultsLive("Scan", 5000, true);
 
+    const scanCurrentScenario = scenarioState?.filter(el => el.state.isActive && el.state.mode === "Scan")
+
 
     const handleStartScenario = async () => {
-        await startScenarioMutateAsync({ mode: "Scan" })
+        await startScenarioMutateAsync({ mode: "Scan", ids: (scanCurrentScenario || [])?.map(el => el.id) })
     }
 
     const handleStopScenario = async () => {
-        await stopScenarioMutateAsync()
+        await stopScenarioMutateAsync({ mode: "Scan" })
     }
 
     const handleInvoiceInquiry = () => {
@@ -63,9 +70,15 @@ const Scan: React.FC = () => {
                 const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
                 const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                 return directionMultiplier * (aDate - bDate);
-            } else if (sortField === "name") {
-                return directionMultiplier * a.name.localeCompare(b.name);
-            }
+            } else
+                if (sortField === 'latest') {
+                    const scantimestampA = a.scantimestamp;
+                    const scantimestampB = b.scantimestamp;
+                    return sortDirection === 'asc' ? scantimestampA - scantimestampB : scantimestampB - scantimestampA;
+                } else
+                    if (sortField === "name") {
+                        return directionMultiplier * a.name.localeCompare(b.name);
+                    }
             return 0;
         });
 
@@ -102,24 +115,13 @@ const Scan: React.FC = () => {
                         variant="button"
                         fontWeight="bold"
                         sx={{
-                            animation: 'shake 0.2s ease-in-out infinite',
                             display: 'inline-block',
                             color: 'warning.main',
-                            '@keyframes shake': {
-                                '0%, 100%': {
-                                    transform: 'translateX(0)',
-                                    // color: 'warning.main'
-                                },
-                                '50%': {
-                                    transform: 'translateX(1px)',
-                                    // color: 'error.main'
-                                }
-                            }
                         }}
                     >
-                        Checking Mode
+                        {t["Scanning IDs"]}
                     </Typography>
-                    <Typography variant='caption'>{scenarioState?.scanMode}</Typography>
+                    <Typography variant='caption'>{scanCurrentScenario?.map(el => el.id).join("-")}</Typography>
                 </Alert>
                 <Alert
                     icon={false}
@@ -144,7 +146,7 @@ const Scan: React.FC = () => {
                         alignItems="center"
                         width="100%"
                     >
-                        <ToggleButtonGroup disabled={!(scenarioState?.scanMode === "Scan")} value={scenarioState?.isActiveScenario ? 'started' : 'stopped'}>
+                        <ToggleButtonGroup disabled={(scanCurrentScenario || []).length === 0} value={(scanCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
                             <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
                             <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
                         </ToggleButtonGroup>
@@ -158,7 +160,7 @@ const Scan: React.FC = () => {
                 {/* Filters Section */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
                     <TextField
-                        label="Search Products"
+                        label={t["Search Products"]}
                         variant="outlined"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -176,25 +178,26 @@ const Scan: React.FC = () => {
                         </Tooltip>
                         {/* Sort by dropdown */}
                         <FormControl>
-                            <InputLabel>Sort By</InputLabel>
+                            <InputLabel>{t["Sort By"]}</InputLabel>
                             <Select
                                 value={sortField}
                                 onChange={(event) => setSortField(event.target.value as string)}
-                                label="Sort By"
+                                label={t["Sort By"]}
                                 size="small"
                                 sx={{ width: 125 }}
                             >
-                                <MenuItem value="createdAt">Created At</MenuItem>
-                                <MenuItem value="name">Name</MenuItem>
+                                <MenuItem value="latest">{t["Latest"]}</MenuItem>
+                                <MenuItem value="createdAt">{t["Created At"]}</MenuItem>
+                                <MenuItem value="name">{t["Name"]}</MenuItem>
                             </Select>
                         </FormControl>
                     </Box>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 2, pt: 1 }}>
                     <Typography variant="button" sx={{ borderBottom: '2px solid black' }}>
-                        All: {filteredScanResults.length || 0}
+                        {t["All"]}: {filteredScanResults.length || 0}
                     </Typography>
-                    {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}product(s) selected.</Typography>}
+                    {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}{t["product(s) selected."]}</Typography>}
                     <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>INVOICE</Button>
                 </Box>
 
@@ -236,39 +239,39 @@ const Scan: React.FC = () => {
                                                 <Tooltip title={product.createdBy?.email}>
                                                     <Typography variant="h6">{product.name}</Typography>
                                                 </Tooltip>
-                                                <Chip label={product.type} />
+                                                <Chip label={t[product.type]} />
                                                 <Checkbox disabled={product.quantity - soldQuantity === 0} checked={selectedProducts.includes(product.id)} onClick={() => setSelectedProducts(p => p.includes(product.id) ? p.filter(el => el !== product.id) : [...p, product.id])} />
                                             </Box>
                                             <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    Unit Price: {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100)))}
+                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100)))}
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?
                                                         <Typography variant="body2">
-                                                            Available: {product.quantity - soldQuantity}
+                                                            {t["Available:"]} {product.quantity - soldQuantity}
                                                         </Typography> :
-                                                        "Out of stock"
+                                                        t["Out of stock"]
                                                     }
                                                     sx={{ borderRadius: 1 }}
                                                     color={(product.quantity - soldQuantity) > 0 ? "success" : "warning"}
                                                 />
                                             </Box>
                                             <Typography variant="body2" color="textSecondary">
-                                                Unit Weight: {product.weight}g
+                                                {t["Unit Weight:"]} {product.weight}g
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Making Charge: {product.makingCharge}%
+                                                {t["Making Charge:"]} {product.makingCharge}%
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Sold Quantity: {soldQuantity}
+                                                {t["Sold Quantity:"]} {soldQuantity}
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Sub Type: {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
+                                                {t["Sub Type:"]} {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Inventory Item: {<Checkbox checked={!!product.inventoryItem} />}
+                                                {t["Inventory Item:"]} {<Checkbox checked={!!product.inventoryItem} />}
                                             </Typography>
                                         </CardContent>
                                         <CardActions sx={{ display: "flex", justifyContent: 'space-between' }}>

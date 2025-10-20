@@ -37,10 +37,11 @@ import {
     useTheme
 } from '@mui/material';
 import React, { useMemo, useState } from 'react';
-import { useScanResults, useScenarioState, useStartScenario, useStopScenario } from '../api/modules';
+import { useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from '../api/jrdDevices';
 import type { Tag } from '../api/products';
 import { useScanResultsLive } from '../features/useScanResultsLive';
 import ModuleSettings, { DialogTransition } from '../pages/ScanMode/components/ModuleSettings';
+import { translate } from '../utils/translate';
 
 
 interface SelectTagsProps {
@@ -51,6 +52,10 @@ interface SelectTagsProps {
 }
 
 const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, onConfirm }) => {
+    const theme = useTheme()
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)! as any
+
     const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(30);
@@ -59,15 +64,16 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
     const [openSettings, setOpenSettings] = React.useState(false);
     const [selectedRows, setSelectedRows] = useState<Tag[]>(selectedTags); // Track the selected row
 
-    const theme = useTheme();
     const fullScreenSettingsDialog = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const { data: scenarioState } = useScenarioState()
+    const { data: scenarioState } = useCurrentScenario()
     const { mutateAsync: stopScenarioMutateAsync } = useStopScenario()
     const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
     const { data: scanResults = { NewProduct: [] } } = useScanResults("NewProduct");
 
     useScanResultsLive("NewProduct", 5000, true);
+
+    const newProductCurrentScenario = scenarioState?.filter(el => el.state.isActive && el.state.mode === "NewProduct")
 
     const tags = (scanResults.NewProduct || [])
         .reduce((acc: Tag[], current) => {
@@ -104,11 +110,11 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
     };
 
     const handleStartScenario = async () => {
-        await startScenarioMutateAsync({ mode: "NewProduct" })
+        await startScenarioMutateAsync({ mode: "NewProduct", ids: (newProductCurrentScenario || [])?.map(el => el.id) })
     }
 
     const handleStopScenario = async () => {
-        await stopScenarioMutateAsync()
+        await stopScenarioMutateAsync({ mode: "NewProduct" })
     }
 
     const handleRowClick = (tag: Tag) => {
@@ -187,7 +193,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                 transition: DialogTransition,
             }}
         >
-            <DialogTitle>Select RFID Tags</DialogTitle>
+            <DialogTitle>{t["Select RFID Tags"]}</DialogTitle>
             <DialogContent sx={{ px: 1 }}>
                 <Box sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto' }}>
                     <Stack width={1} spacing={0} direction={{ xs: 'column', sm: 'row' }}>
@@ -222,24 +228,13 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                 variant="button"
                                 fontWeight="bold"
                                 sx={{
-                                    animation: 'shake 0.2s ease-in-out infinite',
                                     display: 'inline-block',
                                     color: 'warning.main',
-                                    '@keyframes shake': {
-                                        '0%, 100%': {
-                                            transform: 'translateX(0)',
-                                            // color: 'warning.main'
-                                        },
-                                        '50%': {
-                                            transform: 'translateX(1px)',
-                                            // color: 'error.main'
-                                        }
-                                    }
                                 }}
                             >
-                                Checking Mode
+                                {t["Scanning IDs"]}
                             </Typography>
-                            <Typography variant='caption'>{scenarioState?.scanMode}</Typography>
+                            <Typography variant='caption'>{newProductCurrentScenario?.map(el => el.id).join("-")}</Typography>
                         </Alert>
                         <Alert
                             icon={false}
@@ -264,7 +259,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                 alignItems="center"
                                 width="100%"
                             >
-                                <ToggleButtonGroup disabled={!(scenarioState?.scanMode === "NewProduct")} value={scenarioState?.isActiveScenario ? 'started' : 'stopped'}>
+                                <ToggleButtonGroup disabled={(newProductCurrentScenario || []).length === 0} value={(newProductCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
                                     <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
                                     <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
                                 </ToggleButtonGroup>
@@ -424,7 +419,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                         }
                                     }
                                 }}
-                                labelRowsPerPage="page rows"
+                                labelRowsPerPage={t["page rows"]}
                                 labelDisplayedRows={({ from, to, count }) => {
                                     return (
                                         <Stack direction={"column"} p={0} m={0} width={70} color='#8b6508'>
@@ -585,7 +580,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                         }
                                     }
                                 }}
-                                labelRowsPerPage="page rows"
+                                labelRowsPerPage={t["page rows"]}
                                 labelDisplayedRows={({ from, to, count }) => {
                                     return (
                                         <Stack direction={"column"} p={0} m={0} width={70} color='#8b6508'>
@@ -613,9 +608,9 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                         handleStopScenario()
                     }}
                 >
-                    Cancel
+                    {t["Cancel"]}
                 </Button>
-                <Button onClick={handleConfirm}>Confirm</Button>
+                <Button onClick={handleConfirm}>{t["Confirm"]}</Button>
             </DialogActions>
         </Dialog>
     );

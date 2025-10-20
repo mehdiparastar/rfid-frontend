@@ -1,28 +1,34 @@
-import * as React from "react";
-import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Stack,
-  InputAdornment,
-  IconButton,
-  Alert,
-  CircularProgress,
-  Link as MuiLink,
-} from "@mui/material";
-import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  Link as MuiLink,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+  useTheme,
+} from "@mui/material";
+import * as React from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { useRegister } from "../api/auth";  // make sure you have this hook (snippet below)
+import { useRegister } from "../api/auth"; // make sure you have this hook (snippet below)
+import TagNamaLogo from "../svg/TagNamaLogo";
+import { translate } from "../utils/translate";
 
 const emailOk = (v: string) => /.+@.+\..+/.test(v);
 // same rule as backend DTO: at least 1 letter + 1 digit
 const passOk = (v: string) => /^(?=.*[A-Za-z])(?=.*\d).{8,72}$/.test(v);
 
 export default function SignUp() {
+  const theme = useTheme()
+  const ln = theme.direction === "ltr" ? "en" : "fa"
+  const t = translate(ln)!
+
   const navigate = useNavigate();
   const registerMut = useRegister();
 
@@ -95,14 +101,13 @@ export default function SignUp() {
         <Stack spacing={3}>
           {/* Brand */}
           <Stack direction="row" alignItems="center" spacing={1.5} justifyContent="center">
-            <QrCodeScannerIcon fontSize="large" />
-            <Typography variant="h5" fontWeight={700}>
-              RFID Scanner
-            </Typography>
+            <Stack direction="row" alignItems="center" spacing={1.5} justifyContent="center">
+              <TagNamaLogo sx={{ fontSize: 120, color: "primary.main" }} />
+            </Stack>
           </Stack>
 
           <Typography variant="h6" textAlign="center">
-            Create your account
+            {t["Create your account"]}
           </Typography>
 
           {(errorMsg || registerMut.error) && (
@@ -115,7 +120,7 @@ export default function SignUp() {
             <Stack spacing={2.2}>
               <TextField
                 inputRef={emailRef}
-                label="Email"
+                label={t["Email"]}
                 type="email"
                 autoComplete="email"
                 fullWidth
@@ -124,7 +129,7 @@ export default function SignUp() {
 
               <TextField
                 inputRef={passRef}
-                label="Password"
+                label={t["Password"]}
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
                 fullWidth
@@ -149,7 +154,7 @@ export default function SignUp() {
 
               <TextField
                 inputRef={confirmRef}
-                label="Confirm password"
+                label={t["Confirm password"]}
                 type={showConfirm ? "text" : "password"}
                 autoComplete="new-password"
                 fullWidth
@@ -176,24 +181,24 @@ export default function SignUp() {
                 {submitting ? (
                   <Stack direction="row" spacing={1} alignItems="center">
                     <CircularProgress size={20} />
-                    <span>Creating account…</span>
+                    <span>{t["Creating account…"]}</span>
                   </Stack>
                 ) : (
-                  "Sign up"
+                  t["Sign up"]
                 )}
               </Button>
             </Stack>
           </form>
 
           <Typography variant="body2" textAlign="center" color="text.secondary">
-            Already have an account?{" "}
+            {t["Already have an account?"]}{" "}
             <MuiLink component={RouterLink} to="/signin" underline="hover">
-              Sign in
+              {t["Sign in"]}
             </MuiLink>
           </Typography>
 
           <Typography variant="caption" color="text.secondary" textAlign="center">
-            We’ll sign you in automatically after creating your account.
+            {t["We’ll sign you in automatically after creating your account."]}
           </Typography>
         </Stack>
       </Paper>

@@ -36,25 +36,28 @@ import {
 } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { useGoldCurrency } from '../../../api/goldCurrency';
-import { useScanResults, useScenarioState, useStartScenario, useStopScenario } from '../../../api/modules';
+import { useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from '../../../api/jrdDevices';
 import { useScanResultsLive } from '../../../features/useScanResultsLive';
 import { GOLD_PRODUCT_SUB_TYPES } from '../../../store/useProductFormStore';
 import { getIRRCurrency } from '../../../utils/getIRRCurrency';
+import { translate } from '../../../utils/translate';
 import ModuleSettings from './ModuleSettings';
 
 
 
 const CheckInventory: React.FC = () => {
+    const theme = useTheme()
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)!
     const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(30);
-    const [sortBy, setSortBy] = useState<'name' | 'weight'>('name');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const [sortBy, setSortBy] = useState<'name' | 'weight' | 'latest'>('latest');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [openSettings, setOpenSettings] = React.useState(false);
-    const theme = useTheme();
     const fullScreenSettingsDialog = useMediaQuery(theme.breakpoints.down('md'));
 
-    const { data: scenarioState } = useScenarioState()
+    const { data: scenarioState } = useCurrentScenario()
     const { mutateAsync: stopScenarioMutateAsync } = useStopScenario()
     const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
     const { data: scanResults = { Inventory: [] } } = useScanResults("Inventory");
@@ -64,6 +67,9 @@ const CheckInventory: React.FC = () => {
     useScanResultsLive("Inventory", 5000, true);
 
     const products = scanResults.Inventory
+
+    const inventoryCurrentScenario = scenarioState?.filter(el => el.state.isActive && el.state.mode === "Inventory")
+
 
     const handleChangePage = (_event: unknown, newPage: number) => {
         setPage(newPage);
@@ -91,11 +97,11 @@ const CheckInventory: React.FC = () => {
     };
 
     const handleStartScenario = async () => {
-        await startScenarioMutateAsync({ mode: "Inventory" })
+        await startScenarioMutateAsync({ mode: "Inventory", ids: (inventoryCurrentScenario || [])?.map(el => el.id) })
     }
 
     const handleStopScenario = async () => {
-        await stopScenarioMutateAsync()
+        await stopScenarioMutateAsync({ mode: "Inventory" })
     }
 
     const sortedProducts = useMemo(() => {
@@ -106,9 +112,15 @@ const CheckInventory: React.FC = () => {
                     ? a.name.localeCompare(b.name)
                     : b.name.localeCompare(a.name);
             } else {
-                const weightA = a.weight;
-                const weightB = b.weight;
-                return sortOrder === 'asc' ? weightA - weightB : weightB - weightA;
+                if (sortBy === 'latest') {
+                    const scantimestampA = a.scantimestamp;
+                    const scantimestampB = b.scantimestamp;
+                    return sortOrder === 'asc' ? scantimestampA - scantimestampB : scantimestampB - scantimestampA;
+                } else {
+                    const weightA = a.weight;
+                    const weightB = b.weight;
+                    return sortOrder === 'asc' ? weightA - weightB : weightB - weightA;
+                }
             }
         });
         return sorted;
@@ -118,6 +130,7 @@ const CheckInventory: React.FC = () => {
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
     );
+
 
     return (
         <Paper elevation={3} sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto' }}>
@@ -152,24 +165,13 @@ const CheckInventory: React.FC = () => {
                         variant="button"
                         fontWeight="bold"
                         sx={{
-                            animation: 'shake 0.2s ease-in-out infinite',
                             display: 'inline-block',
                             color: 'warning.main',
-                            '@keyframes shake': {
-                                '0%, 100%': {
-                                    transform: 'translateX(0)',
-                                    // color: 'warning.main'
-                                },
-                                '50%': {
-                                    transform: 'translateX(1px)',
-                                    // color: 'error.main'
-                                }
-                            }
                         }}
                     >
-                        Checking Mode
+                        {t["Scanning IDs"]}
                     </Typography>
-                    <Typography variant='caption'>{scenarioState?.scanMode}</Typography>
+                    <Typography variant='caption'>{inventoryCurrentScenario?.map(el => el.id).join(" - ")}</Typography>
                 </Alert>
                 <Alert
                     icon={false}
@@ -194,7 +196,7 @@ const CheckInventory: React.FC = () => {
                         alignItems="center"
                         width="100%"
                     >
-                        <ToggleButtonGroup disabled={!(scenarioState?.scanMode === "Inventory")} value={scenarioState?.isActiveScenario ? 'started' : 'stopped'}>
+                        <ToggleButtonGroup disabled={(inventoryCurrentScenario || []).length === 0} value={(inventoryCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
                             <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
                             <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
                         </ToggleButtonGroup>
@@ -212,14 +214,19 @@ const CheckInventory: React.FC = () => {
                         size="small"
                         aria-label="sort by"
                     >
+                        <ToggleButton value="latest" aria-label="sort by latest">
+                            <Tooltip title="Sort by Latest">
+                                <Typography>{t["Latest"]}</Typography>
+                            </Tooltip>
+                        </ToggleButton>
                         <ToggleButton value="name" aria-label="sort by name">
                             <Tooltip title="Sort by Name">
-                                <Typography>Name</Typography>
+                                <Typography>{t["Name"]}</Typography>
                             </Tooltip>
                         </ToggleButton>
                         <ToggleButton value="weight" aria-label="sort by weight">
                             <Tooltip title="Sort by Weight">
-                                <Typography>Weight</Typography>
+                                <Typography>{t["Weight"]}</Typography>
                             </Tooltip>
                         </ToggleButton>
                     </ToggleButtonGroup>
@@ -279,7 +286,7 @@ const CheckInventory: React.FC = () => {
                                                 <Tooltip title={product.createdBy?.email}>
                                                     <Typography variant="h6">{product.name}</Typography>
                                                 </Tooltip>
-                                                <Chip label={product.type} />
+                                                <Chip label={t[product.type]} />
                                             </Box>
                                             <Divider sx={{ mx: -2, my: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -289,25 +296,25 @@ const CheckInventory: React.FC = () => {
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?
                                                         <Typography variant="body2">
-                                                            Available: {product.quantity - soldQuantity}
+                                                            {t["Available"]}: {product.quantity - soldQuantity}
                                                         </Typography> :
-                                                        "Out of stock"
+                                                        t["Out of stock"]
                                                     }
                                                     sx={{ borderRadius: 1 }}
                                                     color={(product.quantity - soldQuantity) > 0 ? "success" : "warning"}
                                                 />
                                             </Box>
                                             <Typography variant="body2" color="textSecondary">
-                                                Unit Weight: {product.weight}g
+                                                {t["Unit Weight:"]} {product.weight}g
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Making Charge: {product.makingCharge}%
+                                                {t["Making Charge:"]} {product.makingCharge}%
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Sold Quantity: {soldQuantity}
+                                                {t["Sold Quantity:"]} {soldQuantity}
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Sub Type: {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
+                                                {t["Sub Type:"]} {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
                                             </Typography>
                                         </CardContent>
                                         <CardActions>
@@ -410,7 +417,7 @@ const CheckInventory: React.FC = () => {
                                 }
                             }
                         }}
-                        labelRowsPerPage="page rows"
+                        labelRowsPerPage={t["page rows"]}
                         labelDisplayedRows={({ from, to, count }) => {
                             return (
                                 <Stack direction={"column"} p={0} m={0} width={70} color='#8b6508'>
@@ -440,7 +447,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Preview
+                                        {t["Preview"]}
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -450,7 +457,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Name
+                                        {t["Name"]}
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -460,7 +467,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Type
+                                        {t["Type"]}
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -470,7 +477,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Unit Price (ریال)
+                                        {t["Unit Price (ریال)"]}
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -480,7 +487,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Availability
+                                        {t["Availability"]}
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -490,7 +497,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Unit Weight (g)
+                                        {t["Unit Weight (g)"]}
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -500,7 +507,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Making Charge
+                                        {t["Making Charge"]}
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -510,7 +517,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Sold Qty
+                                        {t["Sold Qty"]}
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -520,7 +527,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Sub Type
+                                        {t["Sub Type"]}
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -530,7 +537,7 @@ const CheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        Tags
+                                        {t["Tags"]}
                                     </TableCell>
                                 </TableRow>
                             </TableHead>
@@ -540,7 +547,7 @@ const CheckInventory: React.FC = () => {
                                     const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
 
                                     return (
-                                        <TableRow hover key={product.id}>
+                                        <TableRow title={product.deviceId} hover key={product.id}>
                                             <TableCell align="center">
                                                 <Box
                                                     component={'img'}
@@ -555,7 +562,7 @@ const CheckInventory: React.FC = () => {
                                                 </Tooltip>
                                             </TableCell>
                                             <TableCell align="center">
-                                                <Chip label={product.type} size="small" />
+                                                <Chip label={t[product.type]} size="small" />
                                             </TableCell>
                                             <TableCell align="center" variant="body" color="textSecondary" sx={{ fontWeight: 'bold', fontFamily: "IRANSans, sans-serifRoboto, Arial, sans-serif" }} >
                                                 {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100))).replace("ریال", "")}
@@ -568,13 +575,13 @@ const CheckInventory: React.FC = () => {
                                                     label={
                                                         (product.quantity - soldQuantity) > 0 ? (
                                                             <Typography variant="body2" component="span">
-                                                                Available: {product.quantity - soldQuantity}
+                                                                {t["Available"]}: {product.quantity - soldQuantity}
                                                             </Typography>
                                                         ) : (
-                                                            "Out of stock"
+                                                            t["Out of stock"]
                                                         )
                                                     }
-                                                    aria-label={(product.quantity - soldQuantity) > 0 ? `Available ${product.quantity - soldQuantity}` : "Out of stock"}
+                                                    aria-label={(product.quantity - soldQuantity) > 0 ? `${t["Available"]} ${product.quantity - soldQuantity}` : "Out of stock"}
                                                 />
                                             </TableCell>
                                             <TableCell align="center" variant="body" color="textSecondary">
@@ -603,6 +610,7 @@ const CheckInventory: React.FC = () => {
                                                                     borderRadius: 1,
                                                                     fontSize: 12,
                                                                     fontWeight: 800,
+                                                                    border: (products || []).reduce((max, obj) => obj.scantimestamp > (max?.scantimestamp ?? -Infinity) ? obj : max).scantimestamp === product.scantimestamp ? '1px solid red' : ''
                                                                 }}
                                                             >
                                                                 {tag.epc}
@@ -690,7 +698,7 @@ const CheckInventory: React.FC = () => {
                                 }
                             }
                         }}
-                        labelRowsPerPage="page rows"
+                        labelRowsPerPage={t["page rows"]}
                         labelDisplayedRows={({ from, to, count }) => {
                             return (
                                 <Stack direction={"column"} p={0} m={0} width={70} color='#8b6508'>

@@ -28,3 +28,9 @@ export const invoicesByIdsQueryKey = (ids: Array<string | number>) => {
     );
     return ["invoices", "byIds", ...sorted] as const;
 };
+
+export const jrdKeys = {
+    all: ['jrd'] as const,
+    modules: () => [...jrdKeys.all, 'modules'] as const,
+    list: () => [...jrdKeys.modules(), 'list'] as const,
+};

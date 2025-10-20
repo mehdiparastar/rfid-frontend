@@ -28,13 +28,14 @@ import {
 } from '@mui/material';
 import { InvoiceLogoImg } from '../svg/InvoiceLogo/InvoiceLogo';
 import { darkGoldGradient, darkGradient, lightGoldGradient, lightGradient, softBg } from '../utils/const';
+import { translate } from '../utils/translate';
 
 const shine = keyframes`
   0% { transform: translateX(-100%) }
   100% { transform: translateX(200%) }
 `;
 
-const marquee = keyframes`
+export const marquee = keyframes`
   0% { transform: translateX(0) }
   100% { transform: translateX(-50%) }
 `;
@@ -56,6 +57,9 @@ function Feature({ icon, title, desc }: any) {
 
 function ProductCard({ title, price, tag, Illustration }: any) {
     const theme = useTheme()
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)!
+
     return (
         <Card
             sx={{
@@ -95,12 +99,12 @@ function ProductCard({ title, price, tag, Illustration }: any) {
                 </Box>
                 <CardContent sx={{ px: 0 }}>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>{title}</Typography>
-                    <Typography variant="body2" color="text.secondary">Handcrafted 22K artistry</Typography>
+                    <Typography variant="body2" color="text.secondary">{t["Handcrafted 22K artistry"]}</Typography>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1.5 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 800, background: theme.palette.mode === 'dark' ? darkGoldGradient : lightGoldGradient, WebkitBackgroundClip: 'text', color: 'transparent' }}>
                             {price}
                         </Typography>
-                        <Button endIcon={<ArrowForwardRoundedIcon />} sx={{ borderRadius: 999, textTransform: 'none' }}>View</Button>
+                        <Button endIcon={<ArrowForwardRoundedIcon />} sx={{ borderRadius: 999, textTransform: 'none' }}>{t["View"]}</Button>
                     </Stack>
                 </CardContent>
             </Box>
@@ -110,6 +114,8 @@ function ProductCard({ title, price, tag, Illustration }: any) {
 
 export default function KANANHomePage() {
     const theme = useTheme()
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)!
 
     return (
         <Box sx={{ minHeight: '100vh', background: theme.palette.mode === "dark" ? darkGradient : lightGradient }}>
@@ -125,7 +131,7 @@ export default function KANANHomePage() {
                         <Box sx={{ display: { xs: 'block', md: 'block' } }}>
                             <TextField
                                 size="small"
-                                placeholder="Search jewelry"
+                                placeholder={t["Search jewelry"]}
                                 slotProps={{
                                     input: {
                                         startAdornment: (
@@ -151,13 +157,13 @@ export default function KANANHomePage() {
                     <Grid container spacing={6} alignItems="center">
                         <Grid sx={{ xs: 12, md: 7 }}>
                             <Stack spacing={3}>
-                                <Chip label="NEW SEASON" sx={{ width: 'fit-content', background: theme.palette.mode === 'dark' ? 'rgba(212,175,55,0.2)' : 'rgba(136, 105, 0, 0.2)', color: theme.palette.mode === 'dark' ? '#FFF6B7' : '#fd8c1bff', border: '1px solid rgba(212,175,55,0.45)', fontWeight: 700 }} />
+                                <Chip label={t["NEW SEASON"]} sx={{ width: 'fit-content', background: theme.palette.mode === 'dark' ? 'rgba(212,175,55,0.2)' : 'rgba(136, 105, 0, 0.2)', color: theme.palette.mode === 'dark' ? '#FFF6B7' : '#fd8c1bff', border: '1px solid rgba(212,175,55,0.45)', fontWeight: 700 }} />
                                 <Typography variant="h2" sx={{ fontWeight: 900, lineHeight: 1, letterSpacing: -1 }}>
-                                    Timeless Gold by{' '}
-                                    <Box component="span" sx={{ background: theme.palette.mode === 'dark' ? darkGoldGradient : lightGoldGradient, WebkitBackgroundClip: 'text', color: 'transparent' }}>KANAN</Box>
+                                    {t["Timeless Gold by"]}{' '}
+                                    <Box component="span" sx={{ background: theme.palette.mode === 'dark' ? darkGoldGradient : lightGoldGradient, WebkitBackgroundClip: 'text', color: 'transparent' }}>{t["KANAN"]}</Box>
                                 </Typography>
                                 <Typography variant="h6" color="text.secondary">
-                                    Discover handcrafted 22K & 18K pieces inspired by heritage motifs and modern minimalism. Designed to be worn for a lifetime.
+                                    {t["Discover handcrafted 22K & 18K pieces inspired by heritage motifs and modern minimalism. Designed to be worn for a lifetime."]}
                                 </Typography>
                                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                                     <Button size="large" variant="contained" sx={{
@@ -166,20 +172,20 @@ export default function KANANHomePage() {
                                         background: theme.palette.mode === 'dark' ? darkGoldGradient : lightGoldGradient,
                                         fontWeight: 800,
                                         '&:hover': { filter: 'brightness(1.05)' }
-                                    }}>Shop Collections</Button>
-                                    <Button size="large" variant="outlined" sx={{ px: 3.5, borderRadius: 999, borderColor: 'rgba(212,175,55,0.5)', color: theme.palette.mode === 'dark' ? '#FFF6B7' : '#fd8c1bff' }}>Book Appointment</Button>
+                                    }}>{t["Shop Collections"]}</Button>
+                                    <Button size="large" variant="outlined" sx={{ px: 3.5, borderRadius: 999, borderColor: 'rgba(212,175,55,0.5)', color: theme.palette.mode === 'dark' ? '#FFF6B7' : '#fd8c1bff' }}>{t["Book Appointment"]}</Button>
                                 </Stack>
 
                                 {/* Feature bullets */}
                                 <Grid container spacing={3} sx={{ mt: 1 }}>
                                     <Grid sx={{ xs: 12, sm: 4 }}>
-                                        <Feature icon={<SecurityRoundedIcon />} title="Assured Purity" desc="BIS-hallmarked & authenticated." />
+                                        <Feature icon={<SecurityRoundedIcon />} title={t["Assured Purity"]} desc={t["BIS-hallmarked & authenticated."]} />
                                     </Grid>
                                     <Grid sx={{ xs: 12, sm: 4 }}>
-                                        <Feature icon={<VerifiedRoundedIcon />} title="Certified" desc="GIA/IGI certified stones." />
+                                        <Feature icon={<VerifiedRoundedIcon />} title={t["Certified"]} desc={t["GIA/IGI certified stones."]} />
                                     </Grid>
                                     <Grid sx={{ xs: 12, sm: 4 }}>
-                                        <Feature icon={<PaidRoundedIcon />} title="Buyback" desc="Lifetime exchange & upgrades." />
+                                        <Feature icon={<PaidRoundedIcon />} title={t["Buyback"]} desc={t["Lifetime exchange & upgrades."]} />
                                     </Grid>
                                 </Grid>
                             </Stack>
@@ -194,7 +200,7 @@ export default function KANANHomePage() {
                     {Array.from({ length: 20 }).map((_, i) => (
                         <Stack key={i} direction="row" alignItems="center" spacing={1.2} sx={{ mr: 4 }}>
                             <StarRoundedIcon fontSize="small" />
-                            <Typography variant="caption" sx={{ letterSpacing: 2 }}>KANAN • HERITAGE • 22K • 18K • DIAMONDS</Typography>
+                            <Typography variant="caption" sx={{ letterSpacing: 2 }}>{t["KANAN • HERITAGE • 22K • 18K • DIAMONDS"]}</Typography>
                         </Stack>
                     ))}
                 </Box>
@@ -203,18 +209,18 @@ export default function KANANHomePage() {
             {/* Collections Grid */}
             <Container maxWidth="lg" sx={{ py: { xs: 8, md: 10 } }}>
                 <Stack spacing={3} sx={{ mb: 3 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 900 }}>Featured Collections</Typography>
-                    <Typography color="text.secondary">A curated selection of rings, necklaces, and bracelets — designed in-house and made with ethically sourced gold.</Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 900 }}>{t["Featured Collections"]}</Typography>
+                    <Typography color="text.secondary">{t["A curated selection of rings, necklaces, and bracelets — designed in-house and made with ethically sourced gold."]}</Typography>
                 </Stack>
                 <Grid container spacing={3}>
                     <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
-                        <ProductCard title="Heritage Rings" price="$1,280" tag="Bestseller" Illustration={<Box width={190} component={'img'} src='images/bg/ring.png' alt='bestseller' />} />
+                        <ProductCard title={t["Heritage Rings"]} price="$1,280" tag="Bestseller" Illustration={<Box width={190} component={'img'} src='images/bg/ring.png' alt='bestseller' />} />
                     </Grid>
                     <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
-                        <ProductCard title="Minimal Necklaces" price="$980" tag="New" Illustration={<Box width={180} component={'img'} src='images/bg/minimalnecklace.png' alt='newproduct' />} />
+                        <ProductCard title={t["Minimal Necklaces"]} price="$980" tag="New" Illustration={<Box width={180} component={'img'} src='images/bg/minimalnecklace.png' alt='newproduct' />} />
                     </Grid>
                     <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
-                        <ProductCard title="Classic Bracelets" price="$1,150" Illustration={<Box pb={1} width={175} component={'img'} src='images/bg/cartierbracelet.png' alt='newproduct' />} />
+                        <ProductCard title={t["Classic Bracelets"]} price="$1,150" Illustration={<Box pb={1} width={175} component={'img'} src='images/bg/cartierbracelet.png' alt='newproduct' />} />
                     </Grid>
                 </Grid>
             </Container>
@@ -229,14 +235,14 @@ export default function KANANHomePage() {
                             background: 'linear-gradient(180deg, rgba(212,175,55,0.12), rgba(255,246,183,0.04))',
                             border: '1px solid rgba(212,175,55,0.35)'
                         }}>
-                            <Typography variant="overline" sx={{ letterSpacing: 2 }}>The KANAN Way</Typography>
-                            <Typography variant="h4" sx={{ fontWeight: 900, mt: 1 }}>Crafted with Purpose</Typography>
+                            <Typography variant="overline" sx={{ letterSpacing: 2 }}>{t["The KANAN Way"]}</Typography>
+                            <Typography variant="h4" sx={{ fontWeight: 900, mt: 1 }}>{t["Crafted with Purpose"]}</Typography>
                             <Typography sx={{ mt: 1.5 }} color="text.secondary">
-                                Every KANAN piece begins with a sketch and a story. Our artisans bring heritage techniques to contemporary forms, finishing each surface to a soft glow — never brash, always elegant.
+                                {t["Every KANAN piece begins with a sketch and a story. Our artisans bring heritage techniques to contemporary forms, finishing each surface to a soft glow — never brash, always elegant."]}
                             </Typography>
                             <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-                                <Button variant="contained" sx={{ background: theme.palette.mode === 'dark' ? darkGoldGradient : lightGoldGradient, color: '#111', borderRadius: 999, fontWeight: 800 }}>Visit a Boutique</Button>
-                                <Button variant="text" endIcon={<ArrowForwardRoundedIcon />} sx={{ color: theme.palette.mode === 'dark' ? '#FFF6B7' : '#fd8c1bff' }}>Our Story</Button>
+                                <Button variant="contained" sx={{ background: theme.palette.mode === 'dark' ? darkGoldGradient : lightGoldGradient, color: '#111', borderRadius: 999, fontWeight: 800 }}>{t["Visit a Boutique"]}</Button>
+                                <Button variant="text" endIcon={<ArrowForwardRoundedIcon />} sx={{ color: theme.palette.mode === 'dark' ? '#FFF6B7' : '#fd8c1bff' }}>{t["Our Story"]}</Button>
                             </Stack>
                         </Box>
                     </Grid>
@@ -252,11 +258,16 @@ export default function KANANHomePage() {
                     background: 'rgba(255,255,255,0.03)',
                     textAlign: 'center'
                 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 900 }}>Join the KANAN Circle</Typography>
-                    <Typography color="text.secondary" sx={{ mt: 1 }}>Be the first to know about new drops, private previews, and atelier events.</Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 900 }}>{t["Join the KANAN Circle"]}</Typography>
+                    <Typography color="text.secondary" sx={{ mt: 1 }}>{t["Be the first to know about new drops, private previews, and atelier events."]}</Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 2, justifyContent: 'center' }}>
-                        <TextField placeholder="you@email.com" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999 } }} />
-                        <Button variant="contained" sx={{ background: theme.palette.mode === 'dark' ? darkGoldGradient : lightGoldGradient, color: '#111', borderRadius: 999, px: 3, fontWeight: 800 }}>Subscribe</Button>
+                        <TextField
+                            placeholder='09141501251'
+                            type="tel"
+                            slotProps={{ input: { inputMode: 'numeric' } }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999 } }}
+                        />
+                        <Button variant="contained" sx={{ background: theme.palette.mode === 'dark' ? darkGoldGradient : lightGoldGradient, color: '#111', borderRadius: 999, px: 3, fontWeight: 800 }}>{t["Subscribe"]}</Button>
                     </Stack>
                 </Box>
             </Container>
@@ -267,7 +278,7 @@ export default function KANANHomePage() {
                     <Grid container spacing={3} alignItems="center">
                         <Grid sx={{ xs: 12, md: 6 }}>
                             <InvoiceLogoImg width={100} height={100} />
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>© {new Date().getFullYear()} KANAN Gold. All rights reserved.</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>© {theme.direction === "ltr" ? new Date().getFullYear() : new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric' }).format(new Date())} {t["KANAN Gold. All rights reserved."]}</Typography>
                         </Grid>
                         <Grid sx={{ xs: 12, md: 6 }}>
                             <Stack direction="row" spacing={1.5} justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>

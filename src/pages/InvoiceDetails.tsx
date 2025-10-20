@@ -12,10 +12,13 @@ import { useSocketStore } from "../store/socketStore";
 import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 import { InvoiceLogoImg } from "../svg/InvoiceLogo/InvoiceLogo";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
+import { translate } from "../utils/translate";
 
 export default function InvoiceDetails() {
 
     const theme = useTheme()
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)!
     const isConnected = useSocketStore((s) => s.isConnected);
 
     // data passed via navigate(..., { state: { snapshot } })
@@ -42,7 +45,7 @@ export default function InvoiceDetails() {
     const invoice = invoices[0]
 
     if (!invoice)
-        return <Box>Nothing exist to show.</Box>
+        return <Box>{t["Nothing exist to show."]}</Box>
 
     return (
         <>
@@ -124,7 +127,7 @@ export default function InvoiceDetails() {
                                                                     startAdornment: (
                                                                         <InputAdornment position="start">
                                                                             <Typography pb={0.25} fontSize={14} variant="body2" color="common.white">
-                                                                                Date:
+                                                                                {t["Date:"]}
                                                                             </Typography>
                                                                         </InputAdornment>
                                                                     )
@@ -161,7 +164,7 @@ export default function InvoiceDetails() {
                                                         startAdornment: (
                                                             <InputAdornment position="start">
                                                                 <Typography variant="body2" color="common.white" gutterBottom>
-                                                                    No:
+                                                                    {t["No:"]}
                                                                 </Typography>
                                                             </InputAdornment>
                                                         )
@@ -198,15 +201,15 @@ export default function InvoiceDetails() {
                                                         startAdornment: (
                                                             <InputAdornment position="start">
                                                                 <Typography variant="body2" color="common.white" gutterBottom>
-                                                                    Pay Type:
+                                                                    {t["Pay Type:"]}
                                                                 </Typography>
                                                             </InputAdornment>
                                                         )
                                                     }
                                                 }}
                                             >
-                                                <MenuItem value="cash">Cash</MenuItem>
-                                                <MenuItem value="credit">Credit</MenuItem>
+                                                <MenuItem value="cash">{t["Cash"]}</MenuItem>
+                                                <MenuItem value="credit">{t["Credit"]}</MenuItem>
                                             </TextField>
                                             <TextField
                                                 name="desc"
@@ -237,7 +240,7 @@ export default function InvoiceDetails() {
                                                         startAdornment: (
                                                             <InputAdornment position="start">
                                                                 <Typography variant="body2" color="common.white" gutterBottom>
-                                                                    Desc:
+                                                                    {t["Desc:"]}
                                                                 </Typography>
                                                             </InputAdornment>
                                                         )
@@ -247,10 +250,10 @@ export default function InvoiceDetails() {
                                         </Grid>
                                         <Grid size={{ xs: 12 }} sx={{ width: 1, justifyContent: 'center', display: 'flex', flexDirection: 'column' }}>
                                             <Typography width={1} variant="caption" color="common.white">
-                                                Address: Tabriz, Milad Noor
+                                                {t["Address: Tabriz, Milad Noor"]}
                                             </Typography>
                                             <Typography variant="caption" color="common.white">
-                                                PHONE: 09141501251
+                                                {t["PHONE: 09141501251"]}
                                             </Typography>
                                         </Grid>
                                     </Grid>
@@ -304,8 +307,8 @@ export default function InvoiceDetails() {
 
                             size={{ xs: 12 }}
                         >
-                            <Typography textAlign={'center'} fontFamily={'Pacifico, Segoe Script, Vazirmatn, Poppins, cursive'} variant="h3" p={6} color="gold" fontWeight={800}>
-                                Kanani jewelry
+                            <Typography textAlign={'center'} fontFamily={theme.direction === "ltr" ? 'Pacifico, Segoe Script, Vazirmatn, Poppins, cursive' : 'IRANSans'} variant="h3" p={6} color="gold" fontWeight={800}>
+                                {t["Kanani jewelry"]}
                             </Typography>
                         </Grid>
                         <Grid size={{ xs: 12 }} sx={{ mb: 1 }}>
@@ -324,7 +327,7 @@ export default function InvoiceDetails() {
                                         startAdornment: (
                                             <InputAdornment position="start">
                                                 <Typography variant="body2" gutterBottom>
-                                                    Customer:
+                                                    {t["Customer:"]}
                                                 </Typography>
                                             </InputAdornment>
                                         )
@@ -383,13 +386,13 @@ export default function InvoiceDetails() {
                                     <Table stickyHeader aria-label="sticky table" size="small" sx={{ border: 1, borderColor: 'divider' }}>
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 70 }}>No</TableCell>
-                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700 }}>Name</TableCell>
-                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>Quantity</TableCell>
-                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 100 }}>Weight(g)</TableCell>
-                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>Making Charge + Profit + VAT</TableCell>
-                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>Spot Price (ریال)</TableCell>
-                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>Total (ریال)</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 70 }}>{t["No"]}</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700 }}>{t["Name"]}</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Quantity"]}</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 100 }}>{t["Weight(g)"]}</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge + Profit + VAT"]}</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Spot Price (ریال)"]}</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["Total (ریال)"]}</TableCell>
                                             </TableRow>
                                         </TableHead>
 
@@ -458,7 +461,7 @@ export default function InvoiceDetails() {
                                     alignItems: 'center'
                                 }}
                             >
-                                <Typography fontWeight={800} color="warning">Total Price</Typography>
+                                <Typography fontWeight={800} color="warning">{t["Total Price"]}</Typography>
                                 <Stack direction="row" gap={2} alignItems={'center'}>
                                     <Typography color="warning.light">
                                         {
@@ -482,14 +485,14 @@ export default function InvoiceDetails() {
                                 boxShadow: `0 8px 20px ${alpha(theme.palette.warning.main, 0.12)}`
                             })}
                         >
-                            <Typography variant="subtitle1" fontWeight={700}>Customer Sign</Typography>
-                            <Typography variant="subtitle1" fontWeight={700}>Store Sign</Typography>
+                            <Typography variant="subtitle1" fontWeight={700}>{t["Customer Sign"]}</Typography>
+                            <Typography variant="subtitle1" fontWeight={700}>{t["Store Sign"]}</Typography>
                         </Stack>
 
                     </Grid>
                 </Grid>
                 <Box className="no-print" sx={{ textAlign: 'left', mb: 2 }}>
-                    <Button variant="outlined" sx={{ mt: 1, width: 1 }} onClick={() => reactToPrintFn()}>Print</Button>
+                    <Button variant="outlined" sx={{ mt: 1, width: 1 }} onClick={() => reactToPrintFn()}>{t["Print"]}</Button>
                 </Box>
 
             </Container>

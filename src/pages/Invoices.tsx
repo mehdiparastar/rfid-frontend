@@ -9,10 +9,13 @@ import { useNavigate } from "react-router-dom";
 import { useInvoices } from "../api/invoices";
 import { useSocketStore } from "../store/socketStore";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
+import { translate } from "../utils/translate";
 
 export default function Invoices() {
     const isConnected = useSocketStore((s) => s.isConnected);
     const theme = useTheme()
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)! as any
     const navigate = useNavigate();
 
     const [limit, /*setLimit*/] = useState(10); // number of invoices per page
@@ -80,7 +83,7 @@ export default function Invoices() {
             <>
                 <Box sx={{ width: 1, bgcolor: isConnected ? 'green' : 'red', height: 5 }} />
                 <Box sx={{ p: 3 }}>
-                    <Alert sx={{ borderRadius: 0 }} severity="error">{"Something went wrong. "}{fetchingError.message}</Alert>
+                    <Alert sx={{ borderRadius: 0 }} severity="error">{t["Something went wrong."]}{fetchingError.message}</Alert>
                 </Box>
             </>
         )
@@ -94,7 +97,7 @@ export default function Invoices() {
                 {/* Filters Section */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
                     <TextField
-                        label="Search Invoices"
+                        label={t["Search Invoices"]}
                         variant="outlined"
                         value={filters.q}
                         onChange={handleSearchChange}
@@ -112,25 +115,25 @@ export default function Invoices() {
                         </Tooltip>
                         {/* Sort by dropdown */}
                         <FormControl>
-                            <InputLabel>Sort By</InputLabel>
+                            <InputLabel>{t["Sort By"]}</InputLabel>
                             <Select
                                 value={sortField}
                                 onChange={handleSortChange}
-                                label="Sort By"
+                                label={t["Sort By"]}
                                 size="small"
                                 sx={{ width: 125 }}
                             >
-                                <MenuItem value="createdAt">Created At</MenuItem>
-                                <MenuItem value="customer.name">Customer Name</MenuItem>
+                                <MenuItem value="createdAt">{t["Created At"]}</MenuItem>
+                                <MenuItem value="customer.name">{t["Customer Name"]}</MenuItem>
                             </Select>
                         </FormControl>
                     </Box>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 2, pt: 1 }}>
                     <Typography variant="button" sx={{ borderBottom: '2px solid black' }}>
-                        All: {data?.pages[0].total}
+                        {t["All:"]} {data?.pages[0].total}
                     </Typography>
-                    <Button variant="contained" sx={{ width: 125 }} disabled={!selectedInvoice} onClick={handleInvoiceInquiry}>Detail</Button>
+                    <Button variant="contained" sx={{ width: 125 }} disabled={!selectedInvoice} onClick={handleInvoiceInquiry}>{t["Detail"]}</Button>
                 </Box>
 
                 {/* Invoice Grid */}
@@ -201,7 +204,7 @@ export default function Invoices() {
                                                                         startAdornment: (
                                                                             <InputAdornment position="start">
                                                                                 <Typography pb={0.25} fontSize={14} variant="body2">
-                                                                                    Date:
+                                                                                    {t["Date:"]}
                                                                                 </Typography>
                                                                             </InputAdornment>
                                                                         )
@@ -213,21 +216,21 @@ export default function Invoices() {
                                                 </LocalizationProvider>
                                                 {/* <Divider sx={{ mx: -2, my: 1 }} variant="fullWidth" /> */}
                                                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    Items:
+                                                    {t["Items:"]}
                                                     <Chip
                                                         label={invoice.items.length}
                                                         sx={{ borderRadius: 1 }}
                                                     />
                                                 </Box>
                                                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    Total:
+                                                    {t["Total:"]}
                                                     <Chip
                                                         label={getIRRCurrency(invoice.items.reduce((p, c) => Number(p) + Number(c.soldPrice), 0))}
                                                         sx={{ borderRadius: 1 }}
                                                     />
                                                 </Box>
                                                 <Typography variant="body2" color="textSecondary">
-                                                    Pay Type: <b>{invoice.payType}</b>
+                                                    {t["Pay Type:"]} <b>{t[invoice.payType]}</b>
                                                 </Typography>
                                             </Stack>
                                         </CardContent>
@@ -253,14 +256,14 @@ export default function Invoices() {
                         variant="outlined"
                         sx={{ marginTop: 2 }}
                     >
-                        Load More
+                        {t["Load More"]}
                     </Button>
                 )}
 
                 {/* Error Message */}
                 {fetchingIsError && (
                     <Snackbar open={true} autoHideDuration={6000}>
-                        <Alert severity="error">{JSON.parse((fetchingError as Error)?.message).message || "Something went wrong"}</Alert>
+                        <Alert severity="error">{JSON.parse((fetchingError as Error)?.message).message || t["Something went wrong."]}</Alert>
                     </Snackbar>
                 )}
             </Container >

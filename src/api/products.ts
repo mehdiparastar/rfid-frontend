@@ -11,6 +11,8 @@ export type Tag = {
     rssi: number;
     pc: number;
     pl: number;
+    scantimestamp: number
+    deviceId: string
 };
 
 // Serial-safe query defaults from your modules.ts

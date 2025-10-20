@@ -1,5 +1,5 @@
 import { ArrowDownward, ArrowUpward, Delete, Edit, Search } from "@mui/icons-material";
-import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Tooltip, Typography, type SelectChangeEvent } from "@mui/material";
+import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoldCurrency } from "../api/goldCurrency";
@@ -8,8 +8,12 @@ import PhotoLightbox from "../components/PhotoLightbox";
 import { useSocketStore } from "../store/socketStore";
 import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
+import { translate } from "../utils/translate";
 
 export default function Products() {
+    const theme = useTheme()
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)!
     const isConnected = useSocketStore((s) => s.isConnected);
 
     const navigate = useNavigate();
@@ -115,7 +119,7 @@ export default function Products() {
                         </Tooltip>
                         {/* Sort by dropdown */}
                         <FormControl>
-                            <InputLabel>Sort By</InputLabel>
+                            <InputLabel>{t["Sort By"]}</InputLabel>
                             <Select
                                 value={sortField}
                                 onChange={handleSortChange}
@@ -123,18 +127,18 @@ export default function Products() {
                                 size="small"
                                 sx={{ width: 125 }}
                             >
-                                <MenuItem value="createdAt">Created At</MenuItem>
-                                <MenuItem value="name">Name</MenuItem>
+                                <MenuItem value="createdAt">{t["Created At"]}</MenuItem>
+                                <MenuItem value="name">{t["Name"]}</MenuItem>
                             </Select>
                         </FormControl>
                     </Box>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, mb: 2, pt: 1 }}>
                     <Typography variant="button" sx={{ borderBottom: '2px solid black' }}>
-                        All: {data?.pages[0].total}
+                        {t["All"]}: {data?.pages[0].total}
                     </Typography>
-                    {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}product(s) selected.</Typography>}
-                    <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>INVOICE</Button>
+                    {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}{t["product(s) selected."]}</Typography>}
+                    <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>{t["INVOICE"]}</Button>
                 </Box>
 
                 {/* Product Grid */}
@@ -175,39 +179,39 @@ export default function Products() {
                                                 <Tooltip title={product.createdBy?.email}>
                                                     <Typography variant="h6">{product.name}</Typography>
                                                 </Tooltip>
-                                                <Chip label={product.type} />
+                                                <Chip label={t[product.type]} />
                                                 <Checkbox disabled={product.quantity - soldQuantity === 0} checked={selectedProducts.includes(product.id)} onClick={() => setSelectedProducts(p => p.includes(product.id) ? p.filter(el => el !== product.id) : [...p, product.id])} />
                                             </Box>
                                             <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    Unit Price: {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100)))}
+                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100)))}
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?
                                                         <Typography variant="body2">
-                                                            Available: {product.quantity - soldQuantity}
+                                                            {t["Available:"]} {product.quantity - soldQuantity}
                                                         </Typography> :
-                                                        "Out of stock"
+                                                        t["Out of stock"]
                                                     }
                                                     sx={{ borderRadius: 1 }}
                                                     color={(product.quantity - soldQuantity) > 0 ? "success" : "warning"}
                                                 />
                                             </Box>
                                             <Typography variant="body2" color="textSecondary">
-                                                Unit Weight: {product.weight}g
+                                                {t["Unit Weight:"]} {product.weight}{t["g"]}
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Making Charge: {product.makingCharge}%
+                                                {t["Making Charge:"]} {product.makingCharge}%
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Sold Quantity: {soldQuantity}
+                                                {t["Sold Quantity:"]} {soldQuantity}
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Sub Type: {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
+                                                {t["Sub Type:"]} {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary">
-                                                Inventory Item: {<Checkbox checked={!!product.inventoryItem} />}
+                                                {t["Inventory Item:"]} {<Checkbox checked={!!product.inventoryItem} />}
                                             </Typography>
                                         </CardContent>
                                         <CardActions sx={{ display: "flex", justifyContent: 'space-between' }}>
@@ -264,14 +268,14 @@ export default function Products() {
                         variant="outlined"
                         sx={{ marginTop: 2 }}
                     >
-                        Load More
+                        {t["Load More"]}
                     </Button>
                 )}
 
                 {/* Error Message */}
                 {fetchingIsError && (
                     <Snackbar open={true} autoHideDuration={6000}>
-                        <Alert severity="error">{JSON.parse((fetchingError as Error)?.message).message || "Something went wrong"}</Alert>
+                        <Alert severity="error">{JSON.parse((fetchingError as Error)?.message).message || t["Something went wrong."]}</Alert>
                     </Snackbar>
                 )}
             </Container >
@@ -285,7 +289,7 @@ export default function Products() {
             {/* Error Message */}
             {spotPriceIsError && (
                 <Snackbar open={true} autoHideDuration={6000}>
-                    <Alert severity="error">{JSON.parse((spotPriceError as Error)?.message).message || "Something went wrong"}</Alert>
+                    <Alert severity="error">{JSON.parse((spotPriceError as Error)?.message).message || t["Something went wrong."]}</Alert>
                 </Snackbar>
             )}
         </>
