@@ -59,6 +59,7 @@ export function useScanResultsLive(mode: Mode, maxItems = 5000, refetchOnReconne
                     Inventory: [] as Product[],
                     Scan: [] as Product[],
                     NewProduct: [] as Tag[],
+                    deviceId: ""
                 };
                 // Clone top object and each array so references change
                 const next: ScanResult = {

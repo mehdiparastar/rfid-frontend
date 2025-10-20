@@ -25,8 +25,8 @@ export const DialogTransition = forwardRef(function Transition(
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullScreenSettingsDialog, scanMode }) => {
-    const { powerById, activeById, modeById, setPowerFor, setActiveFor, setModeFor, cycleMode } = useModulePrefs();
+const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullScreenSettingsDialog, /*scanMode*/ }) => {
+    const { powerById, activeById, modeById, setPowerFor, setActiveFor, setModeFor, /*cycleMode*/ } = useModulePrefs();
 
     const theme = useTheme()
     const ln = theme.direction === "ltr" ? "en" : "fa"

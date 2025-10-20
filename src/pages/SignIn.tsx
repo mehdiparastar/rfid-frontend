@@ -1,4 +1,3 @@
-import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import {
@@ -20,8 +19,8 @@ import {
 import * as React from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { useLogin } from "../api/auth";
-import { translate } from "../utils/translate";
 import TagNamaLogo from "../svg/TagNamaLogo";
+import { translate } from "../utils/translate";
 
 // only store email (never password)
 const REMEMBER_KEY = "rfid-remember-email";

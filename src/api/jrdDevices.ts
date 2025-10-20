@@ -48,7 +48,7 @@ export function useInitJrdModules() {
             }),
 
         // Option A: optimistic update if you know exactly what changes
-        onMutate: async (vars) => {
+        onMutate: async () => {
             await qc.cancelQueries({ queryKey: jrdKeys.list() });
             const prev = qc.getQueryData<JrdStateResponse[]>(jrdKeys.list());
 
