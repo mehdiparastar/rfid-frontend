@@ -26,14 +26,25 @@ import {
     useTheme
 } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
-import { useCreateProduct, type Tag } from '../../../api/products';
+import { useCreateProduct, useUpdateProduct } from '../../../api/products';
+import CameraFilePicker, { type CapturedFile } from '../../../components/CameraFilePicker';
 import SelectTags from '../../../components/SelectTags';
-import { GOLD_PRODUCT_SUB_TYPES, GOLD_PRODUCT_TYPES, useProductFormStore, type GoldProductSUBType, type GoldProductType } from '../../../store/useProductFormStore';
+import { GOLD_PRODUCT_SUB_TYPES, GOLD_PRODUCT_TYPES, useProductFormStore, type GoldProductSUBType, type GoldProductType, type ProductFormValues } from '../../../store/useProductFormStore';
 import { generatePreview } from '../../../utils/imageUtils';
 import { translate } from '../../../utils/translate';
-import CameraFilePicker, { type CapturedFile } from '../../../components/CameraFilePicker';
+import { isEqual } from 'lodash';
+import type { Product } from '../../../lib/api';
+import type { Tag } from '../../../api/tags';
 
-const ProductRegistration: React.FC = () => {
+interface ProductRegistrationProps {
+    mode: "New" | "Edit",
+    toEditData?: ProductFormValues,
+    setProductToEdit?: React.Dispatch<React.SetStateAction<Product | null>>
+}
+
+const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
+    const { mode, toEditData, setProductToEdit } = props
+
     const {
         values,
         errors,
@@ -42,12 +53,13 @@ const ProductRegistration: React.FC = () => {
         setError,
         setHelper,
         validate,
+        initialize,
         reset,
     } = useProductFormStore();
 
     const theme = useTheme()
     const ln = theme.direction === "ltr" ? "en" : "fa"
-    const t = translate(ln)!
+    const t = translate(ln) as any
 
     const serverErrRef = useRef<HTMLDivElement | null>(null);
     const [serverErr, setServerErr] = useState(null)
@@ -60,6 +72,7 @@ const ProductRegistration: React.FC = () => {
     const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
 
     const createNewProductMutation = useCreateProduct();
+    const updateProductMutation = useUpdateProduct();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -68,32 +81,113 @@ const ProductRegistration: React.FC = () => {
         setUploadPct(0);
         setUploadInfo(null);
 
-        createNewProductMutation.mutate(
-            {
-                payload: { ...values },
-                onProgress: (pct, loaded, total) => {
+        const isEditMode = mode === "Edit";
+        if (isEditMode) {
+            // Compute only changed fields
+            const changedPayload = computeChangedFields(values, toEditData as ProductFormValues);
+            if (Object.keys(changedPayload).length === 0) {
+                // No changes: Early exit with message
+                alert('No changes detected. Product is up to date.');
+                return;
+            }
+
+            const mutationArgs = {
+                id: (toEditData as any)?.id,  // Ensure 'id' is in toEditData props/type
+                payload: changedPayload,
+                onProgress: (pct: number, loaded: number, total: number) => {
                     setUploadPct(pct);
                     setUploadInfo({ loaded, total });
                 },
-            },
-            {
+            };
+
+            updateProductMutation.mutate(mutationArgs as any, {
                 onSuccess: () => {
+                    // Optionally: Re-initialize with server response if it returns updated data
                     reset();
                     setPreviewUrls([]);
                     setUploadPct(null);
                     setUploadInfo(null);
-                    setServerErr(null)
-                    alert('Product registered successfully');
+                    setServerErr(null);
+                    if (setProductToEdit) setProductToEdit(null)
+                    alert(t['Product updated successfully']);
                 },
                 onError: (error: any) => {
                     setUploadPct(null);
                     setUploadInfo(null);
                     const parsedError = JSON.parse(error?.message || "{}");
-                    const errorMessage = parsedError?.message || "An error occurred submitting new product.";
-                    setServerErr(errorMessage);
+                    const errorMessage = parsedError?.message || t[`An error occurred updating product.`];
+                    setServerErr(t[errorMessage] || errorMessage);
                 },
+            });
+        } else {
+            // New mode: Send full payload (unchanged)
+            createNewProductMutation.mutate(
+                {
+                    payload: { ...values },
+                    onProgress: (pct: number, loaded: number, total: number) => {
+                        setUploadPct(pct);
+                        setUploadInfo({ loaded, total });
+                    },
+                },
+                {
+                    onSuccess: () => {
+                        reset();
+                        setPreviewUrls([]);
+                        setUploadPct(null);
+                        setUploadInfo(null);
+                        setServerErr(null);
+                        alert(t['Product registered successfully']);
+                    },
+                    onError: (error: any) => {
+                        setUploadPct(null);
+                        setUploadInfo(null);
+                        const parsedError = JSON.parse(error?.message || "{}");
+                        const errorMessage = parsedError?.message || t[`An error occurred submitting new product.`];
+                        setServerErr(errorMessage);
+                    },
+                }
+            );
+        }
+    };
+
+    // Helper: Compute diff (add this inside the component or as a util)
+    const computeChangedFields = (
+        current: ProductFormValues,
+        original: ProductFormValues
+    ): Partial<ProductFormValues> => {
+        const changes: Partial<ProductFormValues> = {};
+
+        // Primitives: Simple string/number/boolean comparison
+        const primitiveFields: (keyof Pick<ProductFormValues, 'name' | 'weight' | 'quantity' | 'makingCharge' | 'vat' | 'profit'>)[] = [
+            'name', 'weight', 'quantity', 'makingCharge', 'vat', 'profit'
+        ];
+        primitiveFields.forEach(field => {
+            if (current[field] !== original[field]) {
+                changes[field] = current[field];
             }
-        );
+        });
+
+        // Enums: Treat as strings
+        if (current.type !== original.type) changes.type = current.type;
+        if (current.subType !== original.subType) changes.subType = current.subType;
+
+        // Boolean
+        if (current.inventoryItem !== original.inventoryItem) changes.inventoryItem = current.inventoryItem;
+
+        // Arrays: Deep comparison (use lodash isEqual or JSON.stringify for simplicity)
+        if (!isEqual(current.tags, original.tags)) {  // Or: JSON.stringify(current.tags) !== JSON.stringify(original.tags)
+            changes.tags = current.tags;
+        }
+        // Photos/Previews: Compare lengths first (files are mutable, so length/content change indicates update)
+        // For edits, assume original.photos are URLs/IDs; if new files uploaded, always include
+        const photosChanged = current.photos.length !== original.photos.length ||
+            current.photos.some((file, idx) => file.size !== (original.photos[idx] as any)?.size);  // Rough check; adjust if original has metadata
+        if (photosChanged) {
+            changes.photos = current.photos;
+            changes.previews = current.previews;  // Include if photos changed (they're paired)
+        }
+
+        return changes;
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,20 +200,33 @@ const ProductRegistration: React.FC = () => {
         try {
             const previews = await Promise.all(files.map((file) => generatePreview(file)));
             setValue('previews', previews);
-            setHelper('photos', `${files.length} photos selected, previews generated`);
+            setHelper('photos', `${files.length} ${t["photos selected, previews generated"]}`);
             setError('photos', '');
             setError('previews', '');
         } catch (err) {
-            setError('previews', 'Failed to generate previews');
+            setError('previews', t['Failed to generate previews']);
         }
     };
 
     const handleTagConfirm = (selected: Tag[]) => {
         const unique = [...new Map(selected.map(item => [item.epc, item])).values()];
         setValue('tags', unique);
-        setHelper('tags', `${unique.length} tags selected`);
+        setHelper('tags', `${unique.length} ${t['tags selected']}`);
         setDialogOpen(false);
     };
+
+    useEffect(() => {
+        if (mode === "Edit" && toEditData) {
+            initialize(toEditData);
+            // Handle previews for edit (assuming toEditData.previews are URLs or base64)
+            if (toEditData.previews?.length) {
+                setPreviewUrls(toEditData.previews.map(p => typeof p === 'string' ? `api${p}` : URL.createObjectURL(p as File)));
+            }
+        } else {
+            initialize();  // Reset to defaults for new
+            setPreviewUrls([]);
+        }
+    }, [mode, toEditData, initialize]);
 
     useEffect(() => {
         return () => {
@@ -262,7 +369,7 @@ const ProductRegistration: React.FC = () => {
                             margin="normal"
                             type='number'
                             slotProps={{
-                                htmlInput: { min: 0, step: "0.25", max: 100 },
+                                htmlInput: { min: 0, step: "1", max: 100 },
                                 input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }
                             }}
                         />
@@ -279,7 +386,7 @@ const ProductRegistration: React.FC = () => {
                             margin="normal"
                             type='number'
                             slotProps={{
-                                htmlInput: { min: 0, step: "0.25", max: 100 },
+                                htmlInput: { min: 0, step: "1", max: 100 },
                                 input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }
                             }}
                         />
@@ -296,7 +403,7 @@ const ProductRegistration: React.FC = () => {
                             margin="normal"
                             type='number'
                             slotProps={{
-                                htmlInput: { min: 0, step: "0.25", max: 100 },
+                                htmlInput: { min: 0, step: "1", max: 100 },
                                 input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }
                             }}
                         />
@@ -368,7 +475,7 @@ const ProductRegistration: React.FC = () => {
                             </FormControl>
                         </ButtonGroup>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                            {previewUrls.map((url, idx) => (
+                            {(previewUrls || []).map((url, idx) => (
                                 <Box component={"img"} key={idx} src={url} alt={`preview ${idx}`} sx={{ width: 100, height: 100, objectFit: 'cover' }} />
                             ))}
                         </Box>
@@ -377,7 +484,7 @@ const ProductRegistration: React.FC = () => {
 
                 </Grid>
                 <Button type="submit" variant="contained" disabled={createNewProductMutation.isPending} fullWidth sx={{ mt: 3 }}>
-                    {createNewProductMutation.isPending ? <CircularProgress size={24} /> : t['Register Product']}
+                    {createNewProductMutation.isPending ? <CircularProgress size={24} /> : (mode === "Edit" ? t["Edit Product"] : t['Register Product'])}
                 </Button>
             </form>
             <SelectTags
@@ -390,12 +497,13 @@ const ProductRegistration: React.FC = () => {
                 open={cameraDialogOpen}
                 onClose={() => setCameraDialogOpen(false)}
                 onConfirm={async (captured: CapturedFile[]) => {
-                    const files = captured.map(({ previewUrl, ...rest }) => rest as File);
+                    const files = captured.map(({ file }) => file);
+                    const previewUrls = captured.map(({ previewUrl }) => previewUrl!);
+                    const previews = captured.map(({ preview }) => preview!);
                     setValue('photos', files);
-                    setPreviewUrls(captured.map(f => f.previewUrl!));
+                    setPreviewUrls(previewUrls);
 
                     try {
-                        const previews = await Promise.all(files.map((file) => generatePreview(file)));
                         setValue('previews', previews);
                         setHelper('photos', `${files.length} photos captured, previews generated`);
                         setError('photos', '');
@@ -404,7 +512,7 @@ const ProductRegistration: React.FC = () => {
                         setError('previews', 'Failed to generate previews');
                     }
                 }}
-                initialFiles={values.photos || []}
+                initialFiles={(values.photos || []).filter(el => typeof (el) !== "string")}
             />
         </Paper>
     );

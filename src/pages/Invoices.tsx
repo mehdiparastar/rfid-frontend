@@ -18,7 +18,7 @@ export default function Invoices() {
     const t = translate(ln)! as any
     const navigate = useNavigate();
 
-    const [limit, /*setLimit*/] = useState(10); // number of invoices per page
+    const [limit, /*setLimit*/] = useState(20); // number of invoices per page
     const [sortField, setSortField] = useState("createdAt");
     const [sortDirection, setSortDirection] = useState("desc");
     const [filters, setFilters] = useState({ q: "" }); // for search filter
@@ -67,6 +67,13 @@ export default function Invoices() {
         setCursor(null);
     }, [filters, sortField, sortDirection]);
 
+    useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth'
+        });
+    }, []);
 
 
     if (status === 'pending' && invoices.length === 0)

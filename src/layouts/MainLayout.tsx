@@ -40,6 +40,7 @@ import { useSocketStore } from "../store/socketStore";
 import { darkGradient, lightGradient, softBg } from "../utils/const";
 import { translate } from "../utils/translate";
 import TagNamaLogo from "../svg/TagNamaLogo";
+import { Backup, DataArray } from "@mui/icons-material";
 
 const drawerWidth = 260;
 
@@ -47,13 +48,14 @@ type NavItem = { to: string; label: string; icon: React.ReactElement };
 
 const NAV_ITEMS: NavItem[] = [
     { to: "/home", label: "Home", icon: <DashboardIcon /> },
-    { to: "/invoices", label: "Invoices", icon: <ReceiptIcon /> },
-    { to: "/products", label: "Products", icon: <Inventory2Icon /> },
     { to: "/scan-mode", label: "Scan Mode", icon: <QrCodeScannerIcon /> },
-    { to: "/signin", label: "SignIn", icon: <SignInIcon /> },
-    { to: "/signup", label: "SignUp", icon: <SignUpIcon /> },
+    { to: "/products", label: "Products", icon: <Inventory2Icon /> },
+    { to: "/invoices", label: "Invoices", icon: <ReceiptIcon /> },
     { to: "/tags", label: "Tags", icon: <LabelIcon /> },
     { to: "/users", label: "Users", icon: <UsersIcon /> },
+    { to: "/backupDB", label: "Backup DB", icon: <Backup /> },
+    { to: "/signin", label: "SignIn", icon: <SignInIcon /> },
+    { to: "/signup", label: "SignUp", icon: <SignUpIcon /> },
 ] as const;
 
 

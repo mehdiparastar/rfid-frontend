@@ -13,9 +13,12 @@ import {
 } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 import { translate } from '../utils/translate';
+import { generatePreview } from '../utils/imageUtils';
 
-export interface CapturedFile extends File {
+export interface CapturedFile {
+    file: File,
     previewUrl?: string;
+    preview?: File
 }
 
 interface CameraFilePickerProps {
@@ -43,7 +46,18 @@ const CameraFilePicker: React.FC<CameraFilePickerProps> = ({
     useEffect(() => {
         if (open) {
             setConfirmed(false);
-            setCapturedFiles(initialFiles.map(file => ({ ...file, previewUrl: URL.createObjectURL(file) } as CapturedFile)));
+            const generatePreviews = async () => {
+                const filesWithPreviews = await Promise.all(
+                    initialFiles.map(async (file) => ({
+                        file,
+                        preview: await generatePreview(file),
+                        previewUrl: URL.createObjectURL(file)
+                    } as CapturedFile))
+                );
+                setCapturedFiles(filesWithPreviews);
+            };
+            // setCapturedFiles(initialFiles.map(async (file) => ({ ...file, preview: await generatePreview(file) /*previewUrl: URL.createObjectURL(file) */ } as CapturedFile)));
+            generatePreviews();
             startCamera();
         } else {
             setCapturedFiles([]);
@@ -105,15 +119,20 @@ const CameraFilePicker: React.FC<CameraFilePickerProps> = ({
         if (context) {
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             canvas.toBlob(
-                (blob) => {
+                async (blob) => {
                     if (blob) {
                         const timestamp = Date.now();
-                        const file = new File([blob], `captured-photo-${timestamp}.jpg`, {
+                        const buffer = await blob.arrayBuffer();
+                        const file_ = new File([blob], `captured-photo-${timestamp}.jpg`, {
+                            type: 'image/jpeg',
+                        });
+                        const file = new File([buffer], `captured-photo-${timestamp}.jpg`, {
                             type: 'image/jpeg',
                         });
                         const fileWithPreview = {
-                            ...file,
+                            file,
                             previewUrl: URL.createObjectURL(file),
+                            preview: await generatePreview(file)
                         };
                         setCapturedFiles(prev => [...prev, fileWithPreview]);
                     }
@@ -146,7 +165,7 @@ const CameraFilePicker: React.FC<CameraFilePickerProps> = ({
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle>
-                <Typography variant="h6">{t['Capture Photos']}</Typography>
+                {t['Capture Photos']}
                 <IconButton
                     aria-label="close"
                     onClick={onClose}
@@ -206,10 +225,11 @@ const CameraFilePicker: React.FC<CameraFilePickerProps> = ({
                                     elevation={1}
                                     sx={{ position: 'relative', width: 100, height: 100 }}
                                 >
-                                    <img
+                                    <Box
+                                        component={'img'}
                                         src={file.previewUrl}
                                         alt={`Captured ${index + 1}`}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     />
                                     <IconButton
                                         size="small"

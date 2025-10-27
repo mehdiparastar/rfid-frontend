@@ -1,9 +1,9 @@
-import { ArrowDownward, ArrowUpward, Delete, Edit, PlayArrow, Search, Settings, Stop } from "@mui/icons-material";
+import { ArrowDownward, ArrowUpward, Clear, Delete, Edit, PlayArrow, Search, Settings, Stop } from "@mui/icons-material";
 import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoldCurrency } from "../../../api/goldCurrency";
-import { useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from "../../../api/jrdDevices";
+import { clearScenarioHistory, useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from "../../../api/jrdDevices";
 import PhotoLightbox from "../../../components/PhotoLightbox";
 import { useScanResultsLive } from "../../../features/useScanResultsLive";
 import { GOLD_PRODUCT_SUB_TYPES } from "../../../store/useProductFormStore";
@@ -26,6 +26,7 @@ const Scan: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState(""); // New state for search query
 
     const { data: scenarioState } = useCurrentScenario()
+    const { mutateAsync: clearScenarioHistoryMutateAsync } = clearScenarioHistory()
     const { mutateAsync: stopScenarioMutateAsync } = useStopScenario()
     const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
     const { data: scanResults = { Scan: [] } } = useScanResults("Scan");
@@ -52,6 +53,11 @@ const Scan: React.FC = () => {
                 snapshot: (scanResults.Scan || []).filter(it => selectedProducts.includes(it.id))
             }
         })
+    }
+
+
+    const handleClearScenarioHistory = async () => {
+        await clearScenarioHistoryMutateAsync({ mode: "Scan" })
     }
 
     // Filter scan results based on search query
@@ -81,6 +87,19 @@ const Scan: React.FC = () => {
                     }
             return 0;
         });
+
+    useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth'
+        });
+        // This cleanup function runs when the component unmounts
+        return () => {
+            handleStopScenario();
+        };
+    }, []);
+
 
     return (
         <Paper elevation={3} sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto', mb: 2 }}>
@@ -146,10 +165,13 @@ const Scan: React.FC = () => {
                         alignItems="center"
                         width="100%"
                     >
-                        <ToggleButtonGroup disabled={(scanCurrentScenario || []).length === 0} value={(scanCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
-                            <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
-                            <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
-                        </ToggleButtonGroup>
+                        <Stack gap={0.5} direction={'row'} alignItems={'center'} display={'flex'} >
+                            <ToggleButtonGroup disabled={(scanCurrentScenario || []).length === 0} value={(scanCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
+                                <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
+                                <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
+                            </ToggleButtonGroup>
+                            <IconButton onClick={handleClearScenarioHistory} title='stop'><Clear /></IconButton>
+                        </Stack>
                         <IconButton onClick={() => setOpenSettings(true)}><Settings /></IconButton>
                     </Stack>
                 </Alert>

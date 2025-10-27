@@ -1,6 +1,7 @@
 import {
     ArrowDownward as ArrowDownwardIcon,
     ArrowUpward as ArrowUpwardIcon,
+    Clear,
     PlayArrow,
     Settings,
     Stop
@@ -36,8 +37,8 @@ import {
     useMediaQuery,
     useTheme
 } from '@mui/material';
-import React, { useMemo, useState } from 'react';
-import { useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from '../api/jrdDevices';
+import React, { useEffect, useMemo, useState } from 'react';
+import { clearScenarioHistory, useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from '../api/jrdDevices';
 import type { Tag } from '../api/products';
 import { useScanResultsLive } from '../features/useScanResultsLive';
 import ModuleSettings, { DialogTransition } from '../pages/ScanMode/components/ModuleSettings';
@@ -59,14 +60,15 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
     const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(30);
-    const [sortBy, setSortBy] = useState<'epc' | 'rssi'>('epc');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const [sortBy, setSortBy] = useState<'epc' | 'latest'>('latest');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [openSettings, setOpenSettings] = React.useState(false);
     const [selectedRows, setSelectedRows] = useState<Tag[]>(selectedTags); // Track the selected row
 
     const fullScreenSettingsDialog = useMediaQuery(theme.breakpoints.down('sm'));
 
     const { data: scenarioState } = useCurrentScenario()
+    const { mutateAsync: clearScenarioHistoryMutateAsync } = clearScenarioHistory()
     const { mutateAsync: stopScenarioMutateAsync } = useStopScenario()
     const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
     const { data: scanResults = { NewProduct: [] } } = useScanResults("NewProduct");
@@ -117,6 +119,10 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
         await stopScenarioMutateAsync({ mode: "NewProduct" })
     }
 
+    const handleClearScenarioHistory = async () => {
+        await clearScenarioHistoryMutateAsync({ mode: "NewProduct" })
+    }
+
     const handleRowClick = (tag: Tag) => {
         const currentIndex = selectedRows.findIndex(el => el.epc === tag.epc);
         const newSelectedRows = [...selectedRows];
@@ -138,9 +144,12 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                 return sortOrder === 'asc'
                     ? a.epc.localeCompare(b.epc)
                     : b.epc.localeCompare(a.epc);
+            }
+            else if (sortBy === 'latest') {
+                const scantimestampA = a.scantimestamp;
+                const scantimestampB = b.scantimestamp;
+                return sortOrder === 'asc' ? scantimestampA - scantimestampB : scantimestampB - scantimestampA;
             } else {
-                if (!!a.rssi && !!b.rssi)
-                    return sortOrder === 'asc' ? a.rssi - b.rssi : b.rssi - a.rssi;
                 return 0
             }
         });
@@ -179,6 +188,19 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
         handleStopScenario()
         onClose();
     };
+
+    useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth'
+        });
+        // This cleanup function runs when the component unmounts
+        return () => {
+            handleStopScenario();
+        };
+    }, []);
+
     return (
         <Dialog
             open={open}
@@ -259,10 +281,13 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                 alignItems="center"
                                 width="100%"
                             >
-                                <ToggleButtonGroup disabled={(newProductCurrentScenario || []).length === 0} value={(newProductCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
-                                    <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
-                                    <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
-                                </ToggleButtonGroup>
+                                <Stack gap={0.5} direction={'row'} alignItems={'center'} display={'flex'} >
+                                    <ToggleButtonGroup disabled={(newProductCurrentScenario || []).length === 0} value={(newProductCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
+                                        <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
+                                        <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
+                                    </ToggleButtonGroup>
+                                    <IconButton onClick={handleClearScenarioHistory} title='stop'><Clear /></IconButton>
+                                </Stack>
                                 <IconButton onClick={() => setOpenSettings(true)}><Settings /></IconButton>
                             </Stack>
                         </Alert>
@@ -277,14 +302,14 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                 size="small"
                                 aria-label="sort by"
                             >
-                                <ToggleButton value="epc" aria-label="sort by epc">
-                                    <Tooltip title="Sort by EPC">
-                                        <Typography>EPC</Typography>
+                                <ToggleButton value="latest" aria-label="sort by latest">
+                                    <Tooltip title="Sort by Latest">
+                                        <Typography>{t["Latest"]}</Typography>
                                     </Tooltip>
                                 </ToggleButton>
-                                <ToggleButton value="rssi" aria-label="sort by rssi">
-                                    <Tooltip title="Sort by RSSI">
-                                        <Typography>RSSI</Typography>
+                                <ToggleButton value="epc" aria-label="sort by epc">
+                                    <Tooltip title="Sort by EPC">
+                                        <Typography>{t["EPC"]}</Typography>
                                     </Tooltip>
                                 </ToggleButton>
                             </ToggleButtonGroup>
@@ -342,9 +367,6 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                                     />
                                                     <Typography fontWeight={'bold'} variant="body1" align="center">{tag.epc}</Typography>
                                                 </Box>
-                                                <Typography variant="body2" color="text.secondary" align="center">
-                                                    RSSI: {tag.rssi}
-                                                </Typography>
                                             </CardContent>
                                         </Card>
                                     </Grid>
@@ -467,17 +489,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                                     borderBottom: '2px solid #8b6508',
                                                 }}
                                             >
-                                                EPC
-                                            </TableCell>
-                                            <TableCell
-                                                align="center"
-                                                sx={{
-                                                    bgcolor: 'linear-gradient(45deg, #8b6508, #a67c00)',
-                                                    fontWeight: 'bold',
-                                                    borderBottom: '2px solid #8b6508',
-                                                }}
-                                            >
-                                                RSSI
+                                                {t["EPC"]}
                                             </TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -505,7 +517,6 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                                     />
                                                 </TableCell>
                                                 <TableCell align="center">{tag.epc}</TableCell>
-                                                <TableCell align="center">{tag.rssi}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>

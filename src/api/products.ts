@@ -1,19 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, apiUpload, getProductItems, type Page, type Product, type SortingState } from '../lib/api';
 import type { ProductFormValues } from '../store/useProductFormStore';
-import { productsByIdsQueryKey, productsQueryKey, tagsQueryKey } from './queryKeys';
+import { productsByIdsQueryKey, productsQueryKey } from './queryKeys';
 
-
-
-export type Tag = {
-    id?: number;
-    epc: string;
-    rssi: number;
-    pc: number;
-    pl: number;
-    scantimestamp: number
-    deviceId: string
-};
 
 // Serial-safe query defaults from your modules.ts
 const serialSafeQueryDefaults = {
@@ -24,15 +13,6 @@ const serialSafeQueryDefaults = {
     structuralSharing: false as const,
     retry: false as const,
 };
-
-// Fetch all available tags
-export function useTags() {
-    return useQuery({
-        queryKey: tagsQueryKey,
-        queryFn: () => api<Tag[]>('/api/tags'),
-        ...serialSafeQueryDefaults,
-    });
-}
 
 type CreateProductArgs = {
     payload: ProductFormValues;
@@ -49,7 +29,7 @@ export function useCreateProduct() {
             formData.append('weight', payload.weight);
             formData.append('type', payload.type);
             formData.append('subType', payload.subType);
-            formData.append('inventoryItem', String(payload.inventoryItem));
+            formData.append('inventoryItem', payload.inventoryItem === true ? '1' : '0');
             formData.append('quantity', payload.quantity);
             formData.append('makingCharge', payload.makingCharge);
             formData.append('vat', payload.vat);
@@ -68,6 +48,44 @@ export function useCreateProduct() {
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['products'] })
+        },
+        ...serialSafeQueryDefaults,
+    });
+}
+
+interface UpdateProductArgs {
+    id: string;
+    payload: Partial<ProductFormValues>;
+    onProgress: (pct: number, loaded: number, total: number) => void;
+}
+
+export function useUpdateProduct() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, payload, onProgress }: UpdateProductArgs) => {
+            const formData = new FormData();
+            // formData.append('id', id);
+            if (payload.name !== undefined) formData.append('name', payload.name);
+            if (payload.weight !== undefined) formData.append('weight', payload.weight);
+            if (payload.type !== undefined) formData.append('type', payload.type);
+            if (payload.subType !== undefined) formData.append('subType', payload.subType);
+            if (payload.inventoryItem !== undefined) formData.append('inventoryItem', payload.inventoryItem === true ? '1' : '0');
+            if (payload.quantity !== undefined) formData.append('quantity', payload.quantity);
+            if (payload.makingCharge !== undefined) formData.append('makingCharge', payload.makingCharge);
+            if (payload.vat !== undefined) formData.append('vat', payload.vat);
+            if (payload.profit !== undefined) formData.append('profit', payload.profit);
+            if (payload.tags !== undefined) formData.append('tags', JSON.stringify(payload.tags));
+            if (payload.photos) {
+                payload.photos.forEach((photo) => formData.append('photos', photo));
+            }
+            if (payload.previews) {
+                payload.previews.forEach((preview) => formData.append('previews', preview));
+            }
+
+            await apiUpload(`/api/products/${id}`, formData, onProgress, 'PUT');
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['products'] });
         },
         ...serialSafeQueryDefaults,
     });
@@ -118,3 +136,45 @@ export function useProducts({
         placeholderData: (prev) => prev,
     })
 }
+
+export function useDeleteProduct() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: number) => api<void>(`/api/products/${id}`, { method: "DELETE" }),
+
+        // Simple path: just refetch everything related to products
+        onSuccess: (_data, id) => {
+            // If you have a canonical prefix in your keys, use that:
+            // e.g. ['products', { limit, sorting, filters }]
+            queryClient.invalidateQueries({ queryKey: ["products"] });
+        },
+
+        // OPTIONAL: if you want to avoid a refetch, do an optimistic cache update:
+        // onSuccess: (_data, id) => {
+        //   queryClient.setQueriesData(
+        //     { queryKey: ["products"], exact: false },
+        //     (old: any) => {
+        //       if (!old?.pages) return old;
+        //       return {
+        //         ...old,
+        //         pages: old.pages.map((page: any) => ({
+        //           ...page,
+        //           items: page.items?.filter((it: any) => it.id !== id),
+        //           total:
+        //             typeof page.total === "number" ? Math.max(0, page.total - 1) : page.total,
+        //         })),
+        //       };
+        //     }
+        //   );
+        // },
+    });
+}
+
+export type UpdateProductPayload = {
+    id: number;
+    values: Partial<ProductFormValues>; // same shape you already use to create
+    newPhotos?: File[]; // optional new images to append
+    removedPhotoPaths?: string[]; // server paths to delete
+    onProgress?: (percent: number, loaded: number, total: number) => void;
+};

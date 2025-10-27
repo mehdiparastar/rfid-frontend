@@ -1,14 +1,17 @@
 import { ArrowDownward, ArrowUpward, Delete, Edit, Search } from "@mui/icons-material";
-import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
+import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoldCurrency } from "../api/goldCurrency";
-import { useProducts } from "../api/products";
+import { useDeleteProduct, useProducts } from "../api/products";
 import PhotoLightbox from "../components/PhotoLightbox";
 import { useSocketStore } from "../store/socketStore";
 import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { translate } from "../utils/translate";
+import type { Product } from "../lib/api";
+import { ErrorSnack } from "../components/ErrorSnack";
+import ProductRegistration from "./ScanMode/components/ProductRegistration";
 
 export default function Products() {
     const theme = useTheme()
@@ -18,13 +21,14 @@ export default function Products() {
 
     const navigate = useNavigate();
 
-    const [limit,/* setLimit*/] = useState(10); // number of products per page
+    const [limit,/* setLimit*/] = useState(20); // number of products per page
     const [sortField, setSortField] = useState("createdAt");
     const [sortDirection, setSortDirection] = useState("desc");
     const [filters, setFilters] = useState({ q: "" }); // for search filter
     const [/*cursor*/, setCursor] = useState(null);
     const [selectedProducts, setSelectedProducts] = useState<number[]>([])
-
+    const [productToEdit, setProductToEdit] = useState<Product | null>(null);
+    const [productToDelete, setProductToDelete] = useState<Product | null>(null);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
 
@@ -33,11 +37,17 @@ export default function Products() {
         sorting: [{ id: sortField, desc: sortDirection === "desc" }],
         filters,
     })
+    const { mutateAsync: deleteProductMutateAsync, error: deleteProductError, isError: deleteProductIsError } = useDeleteProduct()
 
     const products = data?.pages.flatMap(p => p.items) ?? []
 
     const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
 
+    const confirmDelete = async () => {
+        if (productToDelete)
+            await deleteProductMutateAsync(productToDelete.id)
+        setProductToDelete(null);
+    };
 
     const handleLoadMore = () => {
         if (hasNextPage) {
@@ -70,6 +80,14 @@ export default function Products() {
         // Reset the cursor when filters or sorting change
         setCursor(null);
     }, [filters, sortField, sortDirection]);
+
+    useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth'
+        });
+    }, []);
 
 
 
@@ -238,10 +256,10 @@ export default function Products() {
                                                 )}
                                             </Box>
                                             <Stack direction={'row'}>
-                                                <IconButton aria-label="edit">
+                                                <IconButton onClick={() => setProductToEdit(product)} aria-label="edit">
                                                     <Edit color="info" />
                                                 </IconButton>
-                                                <IconButton aria-label="delete">
+                                                <IconButton onClick={() => setProductToDelete(product)} aria-label="delete">
                                                     <Delete color="error" />
                                                 </IconButton>
                                             </Stack>
@@ -286,12 +304,42 @@ export default function Products() {
                 onClose={() => setLightboxOpen(false)}
             />
 
+            {/* Edit confirm dialog */}
+            <Dialog maxWidth="md" fullWidth open={!!productToEdit} onClose={() => setProductToEdit(null)}>
+                <DialogTitle>{t["edit"]} {productToEdit?.name}</DialogTitle>
+                <DialogContent sx={{ p: 2 }}>
+                    {productToEdit && <ProductRegistration setProductToEdit={setProductToEdit} mode={"Edit"} toEditData={productToEdit as any} />}
+                </DialogContent>
+            </Dialog>
+
+
+            {/* Delete confirm dialog */}
+            <Dialog maxWidth="md" fullWidth open={!!productToDelete} onClose={() => setProductToDelete(null)}>
+                <DialogTitle>{t["Confirm delete"]} {productToDelete?.name}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {t["This action cannot be undone. Continue?"]}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setProductToDelete(null)}>{t["Cancel"]}</Button>
+                    <Button onClick={confirmDelete} autoFocus color="error" variant="contained">
+                        {t["Delete"]}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             {/* Error Message */}
             {spotPriceIsError && (
                 <Snackbar open={true} autoHideDuration={6000}>
                     <Alert severity="error">{JSON.parse((spotPriceError as Error)?.message).message || t["Something went wrong."]}</Alert>
                 </Snackbar>
             )}
+            <ErrorSnack
+                deleteProductIsError={deleteProductIsError}
+                deleteProductError={deleteProductError}
+                t={t}
+            />
         </>
     )
 }

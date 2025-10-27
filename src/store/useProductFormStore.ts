@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Tag } from '../api/products';
+import type { Tag } from '../api/tags';
 
 export interface ProductFormValues {
     name: string;
@@ -23,6 +23,7 @@ interface FormState {
     setValue: <K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) => void;
     setError: <K extends keyof ProductFormValues>(key: K, error: string) => void;
     setHelper: <K extends keyof ProductFormValues>(key: K, helper: string) => void;
+    initialize: (initialValues?: Partial<ProductFormValues>) => void;
     reset: () => void;
     validate: () => boolean;
 }
@@ -90,14 +91,14 @@ export const GOLD_PRODUCT_SUB_TYPES = [
 export type GoldProductSUBType = typeof GOLD_PRODUCT_SUB_TYPES[number]["symbol"];
 
 
-const initialValues: ProductFormValues = {
+const defaultInitialValues: ProductFormValues = {
     name: '',
     weight: "0.01",
     type: GOLD_PRODUCT_TYPES[0],
     subType: GOLD_PRODUCT_SUB_TYPES[0].symbol,
     inventoryItem: false,
     quantity: "1",
-    makingCharge: '0',
+    makingCharge: '5',
     vat: '10',
     profit: '7',
     tags: [],
@@ -105,8 +106,10 @@ const initialValues: ProductFormValues = {
     previews: [],
 };
 
+
+
 export const useProductFormStore = create<FormState>((set, get) => ({
-    values: initialValues,
+    values: defaultInitialValues,
     errors: {},
     helpers: {},
     setValue: (key, value) => {
@@ -114,7 +117,15 @@ export const useProductFormStore = create<FormState>((set, get) => ({
     },
     setError: (key, error) => set((state) => ({ errors: { ...state.errors, [key]: error } })),
     setHelper: (key, helper) => set((state) => ({ helpers: { ...state.helpers, [key]: helper } })),
-    reset: () => set({ values: initialValues, errors: {}, helpers: {} }),
+    initialize: (initialValues?: Partial<ProductFormValues>) => {
+        if (initialValues) {
+            const mergedValues = { ...defaultInitialValues, ...initialValues };
+            set({ values: mergedValues, errors: {}, helpers: {} });
+        } else {
+            set({ values: defaultInitialValues, errors: {}, helpers: {} });
+        }
+    },
+    reset: () => set({ values: defaultInitialValues, errors: {}, helpers: {} }),
     validate: () => {
         const { values } = get();
         const newErrors: Partial<Record<keyof ProductFormValues, string>> = {};
@@ -122,7 +133,7 @@ export const useProductFormStore = create<FormState>((set, get) => ({
         if (!values.weight || isNaN(parseFloat(values.weight))) newErrors.weight = 'Valid weight is required';
         if (!values.type) newErrors.type = 'Type is required';
         if (!values.subType) newErrors.subType = 'SubType is required';
-        if (values.inventoryItem === null) newErrors.inventoryItem = 'Inventory Item Status is required';
+        if (values.inventoryItem === undefined || values.inventoryItem === null) newErrors.inventoryItem = 'Inventory Item Status is required';
         if (!values.quantity || isNaN(parseInt(values.quantity))) newErrors.quantity = 'Valid quantity is required';
         if (!values.makingCharge || isNaN(parseFloat(values.makingCharge))) newErrors.makingCharge = 'Valid making charge is required';
         if (!values.vat || isNaN(parseFloat(values.vat))) newErrors.vat = 'Valid VAT is required';

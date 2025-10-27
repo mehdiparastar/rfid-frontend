@@ -74,7 +74,7 @@ const ScanMode: React.FC = () => {
 
                     <Zoom key={"NewProduct"} in={selectedScenario === "NewProduct"} style={{ transitionDelay: `${selectedScenario === "NewProduct" ? transitionDuration.exit : 0}ms` }} unmountOnExit>
                         <Box sx={{ width: 1, display: 'flex', justifyContent: 'center' }}>
-                            <ProductRegistration />
+                            <ProductRegistration mode="New" />
                         </Box>
                     </Zoom>
 

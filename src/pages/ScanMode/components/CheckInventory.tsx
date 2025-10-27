@@ -1,6 +1,7 @@
 import {
     ArrowDownward as ArrowDownwardIcon,
     ArrowUpward as ArrowUpwardIcon,
+    Clear,
     PlayArrow,
     Settings,
     Stop
@@ -34,9 +35,9 @@ import {
     useMediaQuery,
     useTheme
 } from '@mui/material';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGoldCurrency } from '../../../api/goldCurrency';
-import { useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from '../../../api/jrdDevices';
+import { clearScenarioHistory, useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from '../../../api/jrdDevices';
 import { useScanResultsLive } from '../../../features/useScanResultsLive';
 import { GOLD_PRODUCT_SUB_TYPES } from '../../../store/useProductFormStore';
 import { getIRRCurrency } from '../../../utils/getIRRCurrency';
@@ -58,6 +59,7 @@ const CheckInventory: React.FC = () => {
     const fullScreenSettingsDialog = useMediaQuery(theme.breakpoints.down('md'));
 
     const { data: scenarioState } = useCurrentScenario()
+    const { mutateAsync: clearScenarioHistoryMutateAsync } = clearScenarioHistory()
     const { mutateAsync: stopScenarioMutateAsync } = useStopScenario()
     const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
     const { data: scanResults = { Inventory: [] } } = useScanResults("Inventory");
@@ -104,6 +106,10 @@ const CheckInventory: React.FC = () => {
         await stopScenarioMutateAsync({ mode: "Inventory" })
     }
 
+    const handleClearScenarioHistory = async () => {
+        await clearScenarioHistoryMutateAsync({ mode: "Inventory" })
+    }
+
     const sortedProducts = useMemo(() => {
         const sorted = [...(products || [])];
         sorted.sort((a, b) => {
@@ -131,6 +137,17 @@ const CheckInventory: React.FC = () => {
         page * rowsPerPage + rowsPerPage
     );
 
+    useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth'
+        });
+        // This cleanup function runs when the component unmounts
+        return () => {
+            handleStopScenario();
+        };
+    }, []);
 
     return (
         <Paper elevation={3} sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto' }}>
@@ -196,10 +213,13 @@ const CheckInventory: React.FC = () => {
                         alignItems="center"
                         width="100%"
                     >
-                        <ToggleButtonGroup disabled={(inventoryCurrentScenario || []).length === 0} value={(inventoryCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
-                            <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
-                            <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
-                        </ToggleButtonGroup>
+                        <Stack gap={0.5} direction={'row'} alignItems={'center'} display={'flex'} >
+                            <ToggleButtonGroup disabled={(inventoryCurrentScenario || []).length === 0} value={(inventoryCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
+                                <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
+                                <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
+                            </ToggleButtonGroup>
+                            <IconButton onClick={handleClearScenarioHistory} title='stop'><Clear /></IconButton>
+                        </Stack>
                         <IconButton onClick={() => setOpenSettings(true)}><Settings /></IconButton>
                     </Stack>
                 </Alert>

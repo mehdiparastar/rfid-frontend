@@ -46,7 +46,7 @@ export function useInitJrdModules() {
                 method: "POST",
                 body: JSON.stringify(vars),
             }),
-
+        retry: 5,
         // Option A: optimistic update if you know exactly what changes
         onMutate: async () => {
             await qc.cancelQueries({ queryKey: jrdKeys.list() });
@@ -89,7 +89,7 @@ export function useStartScenario() {
                 method: "POST",
                 body: JSON.stringify(vars),
             }),
-
+        retry: 5,
         // optimistic update both lists we keep locally:
         // 1) the modules list (/api/jrd/devices)
         // 2) the current scenario (/api/jrd/current-scenario) if you show it
@@ -145,7 +145,7 @@ export function useStopScenario() {
                 method: "POST",
                 body: JSON.stringify(vars),
             }),
-
+        retry: 5,
         // optimistic update both lists we keep locally:
         // 1) the modules list (/api/jrd/devices)
         // 2) the current scenario (/api/jrd/current-scenario) if you show it
@@ -186,6 +186,27 @@ export function useStopScenario() {
             // Also refetch scenario if you want to be sure:
             qc.invalidateQueries({ queryKey: ["current-scenario"] });
         },
+    });
+}
+
+export function clearScenarioHistory() {
+    const qc = useQueryClient();
+
+    return useMutation({
+        mutationKey: [...jrdKeys.modules(), "clearScenarioHistory"],
+        mutationFn: (vars: { mode: Mode }) =>
+            api<boolean>(`/api/jrd/modules/clear-scenario-history`, {
+                method: "POST",
+                body: JSON.stringify(vars),
+            }),
+        retry: 5,
+        onSuccess: (_data, variables) => {
+            // Invalidate the scan results query for the specific mode
+            qc.invalidateQueries({
+                queryKey: scanResultsKey(variables.mode)
+            });
+        }
+
     });
 }
 

@@ -1,5 +1,5 @@
 import type { User } from "../api/auth";
-import type { Tag } from "../api/products";
+import type { Tag } from "../api/tags";
 import type { GoldProductSUBType, GoldProductType } from "../store/useProductFormStore";
 
 export class ApiError extends Error {
@@ -71,7 +71,7 @@ export async function api<T>(input: RequestInfo, init: RequestInit = {}): Promis
     return (text ? JSON.parse(text) : ({} as T)) as T;
 }
 
-export function apiUpload<T>(
+export function apiUpload_<T>(
     url: string,
     formData: FormData,
     onProgress?: (percent: number, loaded: number, total: number) => void
@@ -98,6 +98,57 @@ export function apiUpload<T>(
                         if (!refreshPromise) refreshPromise = doRefresh().finally(() => (refreshPromise = null));
                         await refreshPromise;
                         resolve(await apiUpload<T>(url, formData, onProgress)); // retry once
+                        return;
+                    } catch (err) {
+                        isLoggedOut = true;
+                        onHardLogout?.();
+                        reject(err);
+                        return;
+                    }
+                }
+
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(xhr.responseText ? JSON.parse(xhr.responseText) : ({} as T));
+                } else {
+                    reject(new Error(xhr.responseText || 'Request failed'));
+                }
+            };
+
+            xhr.onerror = () => reject(new Error('Network error'));
+            xhr.send(formData);
+        });
+
+    return send();
+}
+
+export function apiUpload<T>(
+    url: string,
+    formData: FormData,
+    onProgress?: (percent: number, loaded: number, total: number) => void,
+    method: 'POST' | 'PUT' | 'PATCH' = 'POST'  // New: Configurable HTTP method, default POST
+): Promise<T> {
+    const send = () =>
+        new Promise<T>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(method, url, true);  // Updated: Use the method parameter
+            xhr.withCredentials = true;
+
+            if (xhr.upload && onProgress) {
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        onProgress(pct, e.loaded, e.total);
+                    }
+                };
+            }
+
+            xhr.onload = async () => {
+                // attempt refresh on 401 once
+                if (xhr.status === 401) {
+                    try {
+                        if (!refreshPromise) refreshPromise = doRefresh().finally(() => (refreshPromise = null));
+                        await refreshPromise;
+                        resolve(await apiUpload<T>(url, formData, onProgress, method)); // retry once with same method
                         return;
                     } catch (err) {
                         isLoggedOut = true;
@@ -219,6 +270,31 @@ export async function getProductItems({
     }
 
     return api<Page<Product>>(`/api/products/all?${params.toString()}`)
+}
+
+export async function getTagItems({
+    cursor,
+    limit,
+    sorting,
+    filters,
+}: {
+    cursor?: string | null
+    limit?: number
+    sorting?: SortingState
+    filters?: Record<string, string | number | boolean | undefined>
+}) {
+    const params = new URLSearchParams()
+    if (cursor) params.set('cursor', JSON.stringify(cursor))
+    if (limit) params.set('limit', String(limit))
+    const sort = encodeSort(sorting)
+    if (sort) params.set('sort', sort)
+
+    // Properly stringify filters object before sending
+    if (filters && Object.keys(filters).length > 0) {
+        params.set('filters', JSON.stringify(filters));  // Send as JSON string
+    }
+
+    return api<Page<Tag>>(`/api/tags/all?${params.toString()}`)
 }
 
 export async function getInvoiceItems({
