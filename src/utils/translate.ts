@@ -187,6 +187,7 @@ const dict = {
         "Failed to generate previews": "Failed to generate previews",
         "tags selected": "tags selected",
         "Backup DB": "Backup DB",
+        "DB BACKUP": "DB BACKUP",
     },
     "fa": {
         "RFID Scanner": "تگ نما",
@@ -376,6 +377,7 @@ const dict = {
         "Failed to generate previews": "مشکلی در ایجاد فایل پیش نمایش رخ داد",
         "tags selected": "تگ انتخاب شد",
         "Backup DB": "پشتیبان گیری",
+        "DB BACKUP": "پشتیبان گیری",
     }
 }
 

@@ -144,7 +144,7 @@ export function useDeleteProduct() {
         mutationFn: (id: number) => api<void>(`/api/products/${id}`, { method: "DELETE" }),
 
         // Simple path: just refetch everything related to products
-        onSuccess: (_data, id) => {
+        onSuccess: (_data, /*id*/) => {
             // If you have a canonical prefix in your keys, use that:
             // e.g. ['products', { limit, sorting, filters }]
             queryClient.invalidateQueries({ queryKey: ["products"] });

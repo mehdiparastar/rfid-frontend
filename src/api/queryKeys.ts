@@ -44,3 +44,5 @@ export const jrdKeys = {
     modules: () => [...jrdKeys.all, 'modules'] as const,
     list: () => [...jrdKeys.modules(), 'list'] as const,
 };
+
+export const backupProgress = ["backup-progress"] as const

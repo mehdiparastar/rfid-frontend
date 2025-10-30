@@ -71,56 +71,6 @@ export async function api<T>(input: RequestInfo, init: RequestInit = {}): Promis
     return (text ? JSON.parse(text) : ({} as T)) as T;
 }
 
-export function apiUpload_<T>(
-    url: string,
-    formData: FormData,
-    onProgress?: (percent: number, loaded: number, total: number) => void
-): Promise<T> {
-    const send = () =>
-        new Promise<T>((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', url, true);
-            xhr.withCredentials = true;
-
-            if (xhr.upload && onProgress) {
-                xhr.upload.onprogress = (e) => {
-                    if (e.lengthComputable) {
-                        const pct = Math.round((e.loaded / e.total) * 100);
-                        onProgress(pct, e.loaded, e.total);
-                    }
-                };
-            }
-
-            xhr.onload = async () => {
-                // attempt refresh on 401 once
-                if (xhr.status === 401) {
-                    try {
-                        if (!refreshPromise) refreshPromise = doRefresh().finally(() => (refreshPromise = null));
-                        await refreshPromise;
-                        resolve(await apiUpload<T>(url, formData, onProgress)); // retry once
-                        return;
-                    } catch (err) {
-                        isLoggedOut = true;
-                        onHardLogout?.();
-                        reject(err);
-                        return;
-                    }
-                }
-
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    resolve(xhr.responseText ? JSON.parse(xhr.responseText) : ({} as T));
-                } else {
-                    reject(new Error(xhr.responseText || 'Request failed'));
-                }
-            };
-
-            xhr.onerror = () => reject(new Error('Network error'));
-            xhr.send(formData);
-        });
-
-    return send();
-}
-
 export function apiUpload<T>(
     url: string,
     formData: FormData,

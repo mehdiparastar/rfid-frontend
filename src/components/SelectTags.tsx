@@ -39,10 +39,10 @@ import {
 } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { clearScenarioHistory, useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from '../api/jrdDevices';
-import type { Tag } from '../api/products';
 import { useScanResultsLive } from '../features/useScanResultsLive';
 import ModuleSettings, { DialogTransition } from '../pages/ScanMode/components/ModuleSettings';
 import { translate } from '../utils/translate';
+import type { Tag } from '../api/tags';
 
 
 interface SelectTagsProps {

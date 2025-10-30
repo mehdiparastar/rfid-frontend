@@ -123,9 +123,9 @@ const CameraFilePicker: React.FC<CameraFilePickerProps> = ({
                     if (blob) {
                         const timestamp = Date.now();
                         const buffer = await blob.arrayBuffer();
-                        const file_ = new File([blob], `captured-photo-${timestamp}.jpg`, {
-                            type: 'image/jpeg',
-                        });
+                        // const file_ = new File([blob], `captured-photo-${timestamp}.jpg`, {
+                        //     type: 'image/jpeg',
+                        // });
                         const file = new File([buffer], `captured-photo-${timestamp}.jpg`, {
                             type: 'image/jpeg',
                         });

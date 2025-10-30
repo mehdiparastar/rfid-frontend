@@ -16,7 +16,7 @@ const ScanMode = React.lazy(() => import("../pages/ScanMode/ScanMode"));
 const SignIn = React.lazy(() => import("../pages/SignIn"));
 const SignUp = React.lazy(() => import("../pages/SignUp"));
 const Tags = React.lazy(() => import("../pages/Tags"));
-const BackupDB = React.lazy(() => import("../pages/BackupDB"));
+const BackupDB = React.lazy(() => import("../pages/DBOperations/DBOperations"));
 const Users = React.lazy(() => import("../pages/Users"));
 const IssueInvoice = React.lazy(() => import("../pages/IssueInvoice"));
 

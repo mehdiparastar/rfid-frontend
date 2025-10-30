@@ -1,7 +1,7 @@
 // src/lib/socket.ts
 import { io, Socket } from "socket.io-client";
-import type { Tag } from "../api/products";
 import type { Product } from "./api";
+import type { Tag } from "../api/tags";
 
 export type ScanResult =
     | { Scan: Product[]; Inventory?: Product[]; NewProduct?: Tag[], deviceId: string }
@@ -11,6 +11,7 @@ export type ScanResult =
 export type ServerToClientEvents = {
     // Example events — add yours:
     "new-scan-result": (payload: ScanResult) => void;
+    "backupProgress": (payload: Record<"backup_db" | "backup_files", number>) => void
 };
 
 export type ClientToServerEvents = {

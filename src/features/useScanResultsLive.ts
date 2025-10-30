@@ -2,25 +2,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import type { Mode } from "../api/modules";
-import type { Tag } from "../api/products";
 import { scanResultsKey } from "../api/queryKeys";
 import dingUrl from "../assets/sounds/ding.mp3"; // Vite: imports as URL
 import type { Product } from "../lib/api";
 import type { ScanResult } from "../lib/socket";
 import { useSocketStore } from "../store/socketStore";
+import type { Tag } from "../api/tags";
 
-
-/** Minimal upsert by id/epc, newest first, cap at maxItems */
-// function upsert(list: ScanResult[] | undefined, item: ScanResult, maxItems = 500) {
-//     const key = item.id ?? item.epc;
-//     if (!key) return list ?? [];
-//     const arr = list ? [...list] : [];
-//     const i = arr.findIndex(r => (r.id ?? r.epc) === key);
-//     if (i >= 0) arr.splice(i, 1);
-//     arr.unshift(item);
-//     if (arr.length > maxItems) arr.length = maxItems;
-//     return arr;
-// }
 
 export function useScanResultsLive(mode: Mode, maxItems = 5000, refetchOnReconnect = true) {
     const qc = useQueryClient();
