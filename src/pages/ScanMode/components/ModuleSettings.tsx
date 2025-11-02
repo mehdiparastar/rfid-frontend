@@ -16,6 +16,10 @@ interface IProps {
     scanMode: Mode
 }
 
+export const scanModeScanPowerInPercent = 12
+export const inventoryModeScanPowerInPercent = 100
+export const newProductModeScanPowerInPercent = 12
+
 export const DialogTransition = forwardRef(function Transition(
     props: TransitionProps & {
         children: React.ReactElement<unknown>;
@@ -25,7 +29,7 @@ export const DialogTransition = forwardRef(function Transition(
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullScreenSettingsDialog, /*scanMode*/ }) => {
+const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullScreenSettingsDialog, scanMode }) => {
     const { powerById, activeById, modeById, setPowerFor, setActiveFor, setModeFor, /*cycleMode*/ } = useModulePrefs();
 
     const theme = useTheme()
@@ -96,9 +100,9 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                             (jrdModules || []).length > 0 ?
                                 <List sx={{ width: '100%', mt: 4 }}>
                                     {(jrdModules && [...jrdModules,] || []).map(m => {
-                                        const thisPowerPercent = powerById[m.dev.id] ?? Math.max(Number(m.currentPower ?? MINPowerPercent), MINPowerPercent);
-                                        const isActive = activeById[m.dev.id] ?? false;
-                                        const mode: Mode = modeById[m.dev.id] ?? "Inventory";
+                                        const thisPowerPercent = powerById[m.dev.id] ?? (scanMode === "Inventory" ? inventoryModeScanPowerInPercent : scanMode === "Scan" ? scanModeScanPowerInPercent : scanMode === "NewProduct" ? newProductModeScanPowerInPercent : Math.max(Number(m.currentPower ?? MINPowerPercent), MINPowerPercent));
+                                        const isActive = activeById[m.dev.id] ?? true;
+                                        const mode: Mode = modeById[m.dev.id] ?? scanMode ?? "Inventory";
 
                                         return (
                                             <ListItem key={m.dev.id} sx={{ px: 1 }}>
@@ -107,7 +111,8 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                                                         aria-label="power"
                                                         getAriaValueText={(value: number) => `${value}%`}
                                                         valueLabelDisplay="auto"
-                                                        value={thisPowerPercent}
+                                                        defaultValue={powerDbmToPercent(m.currentPower)}
+                                                        // value={thisPowerPercent}
                                                         onChangeCommitted={(_, v) => {
                                                             if (typeof v === "number") setPowerFor(m.dev.id, v);
                                                         }}
@@ -155,7 +160,7 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                                                         />
                                                         <IconButton aria-label="cart">
                                                             <StyledBadge max={100} badgeContent={powerDbmToPercent(m.currentPower)} color="warning">
-                                                                <Box sx={{ width: 36 }} component={"img"} src="/images/icons/RFIDRadiation.png" />
+                                                                <Box sx={{ width: 36 }} component={"img"} src="/images/icons/RFIDRadiation.png"/>
                                                             </StyledBadge>
                                                         </IconButton>
                                                         <Divider orientation="vertical" flexItem />

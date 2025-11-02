@@ -207,7 +207,7 @@ const dict = {
         "Minimal Necklaces": "گردنبند مینیمال",
         "Classic Bracelets": "دستبند سنتی",
         "Search jewelry": "جستجوی جواهرات",
-        "Timeless Gold by": "طلای منحصر به فرد",
+        "Timeless Gold by": "جواهرات ",
         "KANAN": "کنعان",
         "Discover handcrafted 22K & 18K pieces inspired by heritage motifs and modern minimalism. Designed to be worn for a lifetime.": "قطعات دست‌ساز ۲۲ هزار و ۱۸ هزار دلاری را کشف کنید که با الهام از نقوش قدیمی و مینیمالیسم مدرن ساخته شده‌اند و برای استفاده مادام‌العمر طراحی شده‌اند.",
         "NEW SEASON": "مجموعه جدید",

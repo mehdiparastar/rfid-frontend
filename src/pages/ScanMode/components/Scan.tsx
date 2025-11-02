@@ -1,15 +1,18 @@
 import { ArrowDownward, ArrowUpward, Clear, Delete, Edit, PlayArrow, Search, Settings, Stop } from "@mui/icons-material";
-import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Divider, FormControl, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Paper, Select, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoldCurrency } from "../../../api/goldCurrency";
-import { clearScenarioHistory, useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from "../../../api/jrdDevices";
+import { clearScenarioHistory, useCurrentScenario, useInitJrdModules, useScanResults, useStartScenario, useStopScenario } from "../../../api/jrdDevices";
 import PhotoLightbox from "../../../components/PhotoLightbox";
 import { useScanResultsLive } from "../../../features/useScanResultsLive";
 import { GOLD_PRODUCT_SUB_TYPES } from "../../../store/useProductFormStore";
 import { getIRRCurrency } from "../../../utils/getIRRCurrency";
 import { translate } from "../../../utils/translate";
-import ModuleSettings from "./ModuleSettings";
+import ModuleSettings, { scanModeScanPowerInPercent } from "./ModuleSettings";
+import { useModulePrefs } from "./jrd-modules-default-storage";
+import { powerPercentToDbm } from "../../../utils/percentDbm";
+import type { Mode } from "../../../api/modules";
 
 const Scan: React.FC = () => {
 
@@ -33,11 +36,35 @@ const Scan: React.FC = () => {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
     const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
+    const { powerById, activeById, modeById, /*cycleMode*/ } = useModulePrefs();
+    const initJrdModulesMutation = useInitJrdModules();
 
     useScanResultsLive("Scan", 5000, true);
 
     const scanCurrentScenario = scenarioState?.filter(el => el.state.isActive && el.state.mode === "Scan")
 
+
+    const handleInitModules = () => {
+        // Trigger the mutation on button click
+        const initVars = Array
+            .from(new Set<string>([
+                ...Object.keys(powerById ?? {}),
+                ...Object.keys(activeById ?? {}),
+                ...Object.keys(modeById ?? {}),
+            ]))
+            .map((deviceId, i, arr) => ({
+                deviceId,
+                power: arr.length === 1 ? powerPercentToDbm(scanModeScanPowerInPercent) : powerPercentToDbm(powerById[deviceId]),
+                mode: arr.length === 1 ? ("Scan" as Mode) : modeById[deviceId],
+                isActive: activeById[deviceId]
+            }))
+        initJrdModulesMutation.mutate(initVars);
+    };
+
+    useEffect(() => {
+        if (!scanCurrentScenario || scanCurrentScenario.length === 0)
+            handleInitModules()
+    }, [scanCurrentScenario?.length])
 
     const handleStartScenario = async () => {
         await startScenarioMutateAsync({ mode: "Scan", ids: (scanCurrentScenario || [])?.map(el => el.id) })
@@ -100,6 +127,7 @@ const Scan: React.FC = () => {
         };
     }, []);
 
+    const isScanning = (scanCurrentScenario || []).filter(el => el.state.isScan).length > 0
 
     return (
         <Paper elevation={3} sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto', mb: 2 }}>
@@ -108,16 +136,30 @@ const Scan: React.FC = () => {
                     icon={false}
                     sx={{
                         textAlign: 'center',
-                        width: { xs: "100%", sm: 200 },
+                        width: { xs: "100%", sm: 240 },
                         mb: 1,
                         padding: '8px 10px',
-                        '& .MuiAlert-message': {
-                            width: '100%',
-                            padding: 0
-                        },
                         borderTopRightRadius: { sm: 0 },
                         borderBottomRightRadius: { sm: 0 },
-                        borderRight: { xs: 0, sm: 1 }
+                        borderRight: { xs: 0, sm: 1 },
+                        overflow: 'hidden',
+                        position: 'relative',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundColor: isScanning ? 'inherit' : 'yellow',
+                            opacity: theme.palette.mode === "light" ? 0.1 : 0.3,
+                            zIndex: 0,
+                        },
+                        '& > *': {
+                            position: 'relative',
+                            zIndex: 1,
+                        },
+                        '& .MuiAlert-message': {
+                            width: '100%',
+                            padding: 1,
+                        },
                     }}
                     slotProps={{
                         message: {
@@ -140,7 +182,7 @@ const Scan: React.FC = () => {
                     >
                         {t["Scanning IDs"]}
                     </Typography>
-                    <Typography variant='caption'>{scanCurrentScenario?.map(el => el.id).join("-")}</Typography>
+                    {initJrdModulesMutation.isPending ? <CircularProgress size={18} /> : <Typography variant='caption'>{scanCurrentScenario?.map(el => el.id).join(" - ")}</Typography>}
                 </Alert>
                 <Alert
                     icon={false}
@@ -151,12 +193,26 @@ const Scan: React.FC = () => {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '8px 10px',
-                        '& .MuiAlert-message': {
-                            width: '100%',
-                            padding: 0
-                        },
                         borderTopLeftRadius: { sm: 0 },
                         borderBottomLeftRadius: { sm: 0 },
+                        overflow: 'hidden',
+                        position: 'relative',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundColor: isScanning ? 'inherit' : 'yellow',
+                            opacity: theme.palette.mode === "light" ? 0.1 : 0.2,
+                            zIndex: 0,
+                        },
+                        '& > *': {
+                            position: 'relative',
+                            zIndex: 1,
+                        },
+                        '& .MuiAlert-message': {
+                            width: '100%',
+                            padding: 1,
+                        },
                     }}
                 >
                     <Stack
@@ -166,8 +222,24 @@ const Scan: React.FC = () => {
                         width="100%"
                     >
                         <Stack gap={0.5} direction={'row'} alignItems={'center'} display={'flex'} >
-                            <ToggleButtonGroup disabled={(scanCurrentScenario || []).length === 0} value={(scanCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
-                                <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
+                            <ToggleButtonGroup disabled={(scanCurrentScenario || []).length === 0} value={isScanning ? 'started' : 'stopped'}>
+                                <ToggleButton value={'started'} onClick={handleStartScenario} title='start'>
+                                    <PlayArrow
+                                        sx={{
+                                            ...(isScanning && {
+                                                position: 'relative',
+                                                animation: 'iconPulse 1.6s ease-in-out infinite',
+                                                filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.7))',
+                                                '@keyframes iconPulse': {
+                                                    '0%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.6))' },
+                                                    '50%': { transform: 'scale(1.2)', filter: 'drop-shadow(0 0 14px rgba(76,175,80,1))' },
+                                                    '100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.6))' },
+                                                },
+                                            }),
+                                        }}
+                                        color={isScanning ? 'success' : 'inherit'}
+                                    />
+                                </ToggleButton>
                                 <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
                             </ToggleButtonGroup>
                             <IconButton onClick={handleClearScenarioHistory} title='stop'><Clear /></IconButton>

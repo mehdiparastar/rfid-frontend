@@ -20,7 +20,7 @@ export type JrdStateResponse = {
     mode: Mode
 }
 
-type CurrentScenarioRow = {
+export type CurrentScenarioRow = {
     id: string;
     state: { mode: Mode; isActive: boolean; isScan: boolean; power: number; type: string; tagsScanResult: ScanResult };
 };
@@ -75,6 +75,7 @@ export function useCurrentScenario() {
     return useQuery({
         queryKey: ['current-scenario'],
         queryFn: ({ signal }) => api<CurrentScenarioRow[]>("/api/jrd/current-scenario", { signal }),
+        // refetchInterval: 5 * 1000,
         ...serialSafeQueryDefaults,
     });
 }

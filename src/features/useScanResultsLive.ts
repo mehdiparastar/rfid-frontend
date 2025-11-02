@@ -8,6 +8,7 @@ import type { Product } from "../lib/api";
 import type { ScanResult } from "../lib/socket";
 import { useSocketStore } from "../store/socketStore";
 import type { Tag } from "../api/tags";
+import type { CurrentScenarioRow } from "../api/jrdDevices";
 
 
 export function useScanResultsLive(mode: Mode, maxItems = 5000, refetchOnReconnect = true) {
@@ -30,7 +31,7 @@ export function useScanResultsLive(mode: Mode, maxItems = 5000, refetchOnReconne
     }, []);
 
     useEffect(() => {
-        const onResult = (payload: ScanResult) => {
+        const onNewResult = (payload: ScanResult) => {
             // play ding
             const a = audioRef.current;
             if (a) {
@@ -79,7 +80,14 @@ export function useScanResultsLive(mode: Mode, maxItems = 5000, refetchOnReconne
             });
         };
 
-        socket.on("new-scan-result", onResult);
+        const onUpdateCurrentScenario = (payload: { mode: Mode, data: CurrentScenarioRow[] }) => {
+            qc.setQueryData<CurrentScenarioRow[]>(['current-scenario'], (prev) => {
+                return payload.data
+            })
+        }
+
+        socket.on("new-scan-result", onNewResult);
+        socket.on("update-current-scenario", onUpdateCurrentScenario);
 
         const onReconnect = () => {
             if (refetchOnReconnect) qc.invalidateQueries({ queryKey: key });
@@ -87,7 +95,8 @@ export function useScanResultsLive(mode: Mode, maxItems = 5000, refetchOnReconne
         socket.io.on("reconnect", onReconnect);
 
         return () => {
-            socket.off("new-scan-result", onResult);
+            socket.off("new-scan-result", onNewResult);
+            socket.off("update-current-scenario", onUpdateCurrentScenario);
             socket.io.off("reconnect", onReconnect);
         };
     }, [qc, socket, key, mode, maxItems, refetchOnReconnect]);

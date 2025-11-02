@@ -16,6 +16,7 @@ import {
     CardContent,
     CardMedia,
     Chip,
+    CircularProgress,
     Divider,
     Grid,
     IconButton,
@@ -37,12 +38,15 @@ import {
 } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGoldCurrency } from '../../../api/goldCurrency';
-import { clearScenarioHistory, useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from '../../../api/jrdDevices';
+import { clearScenarioHistory, useCurrentScenario, useInitJrdModules, useScanResults, useStartScenario, useStopScenario } from '../../../api/jrdDevices';
 import { useScanResultsLive } from '../../../features/useScanResultsLive';
 import { GOLD_PRODUCT_SUB_TYPES } from '../../../store/useProductFormStore';
 import { getIRRCurrency } from '../../../utils/getIRRCurrency';
 import { translate } from '../../../utils/translate';
-import ModuleSettings from './ModuleSettings';
+import ModuleSettings, { inventoryModeScanPowerInPercent } from './ModuleSettings';
+import { useModulePrefs } from './jrd-modules-default-storage';
+import { powerPercentToDbm } from '../../../utils/percentDbm';
+import type { Mode } from '../../../api/modules';
 
 
 
@@ -65,6 +69,8 @@ const CheckInventory: React.FC = () => {
     const { data: scanResults = { Inventory: [] } } = useScanResults("Inventory");
 
     const { data: spotPrice, /*isLoading: spotPriceIsLoading, error: spotPriceError*/ } = useGoldCurrency();
+    const { powerById, activeById, modeById, /*cycleMode*/ } = useModulePrefs();
+    const initJrdModulesMutation = useInitJrdModules();
 
     useScanResultsLive("Inventory", 5000, true);
 
@@ -72,6 +78,27 @@ const CheckInventory: React.FC = () => {
 
     const inventoryCurrentScenario = scenarioState?.filter(el => el.state.isActive && el.state.mode === "Inventory")
 
+    const handleInitModules = () => {
+        // Trigger the mutation on button click
+        const initVars = Array
+            .from(new Set<string>([
+                ...Object.keys(powerById ?? {}),
+                ...Object.keys(activeById ?? {}),
+                ...Object.keys(modeById ?? {}),
+            ]))
+            .map((deviceId, i, arr) => ({
+                deviceId,
+                power: arr.length === 1 ? powerPercentToDbm(inventoryModeScanPowerInPercent) : powerPercentToDbm(powerById[deviceId]),
+                mode: arr.length === 1 ? ("Inventory" as Mode) : modeById[deviceId],
+                isActive: activeById[deviceId]
+            }))
+        initJrdModulesMutation.mutate(initVars);
+    };
+
+    useEffect(() => {
+        if (!inventoryCurrentScenario || inventoryCurrentScenario.length === 0)
+            handleInitModules()
+    }, [inventoryCurrentScenario?.length])
 
     const handleChangePage = (_event: unknown, newPage: number) => {
         setPage(newPage);
@@ -149,6 +176,8 @@ const CheckInventory: React.FC = () => {
         };
     }, []);
 
+    const isScanning = (inventoryCurrentScenario || []).filter(el => el.state.isScan).length > 0
+
     return (
         <Paper elevation={3} sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto' }}>
             <Stack width={1} spacing={0} direction={{ xs: 'column', sm: 'row' }}>
@@ -156,16 +185,30 @@ const CheckInventory: React.FC = () => {
                     icon={false}
                     sx={{
                         textAlign: 'center',
-                        width: { xs: "100%", sm: 200 },
+                        width: { xs: "100%", sm: 240 },
                         mb: 1,
                         padding: '8px 10px',
-                        '& .MuiAlert-message': {
-                            width: '100%',
-                            padding: 0
-                        },
                         borderTopRightRadius: { sm: 0 },
                         borderBottomRightRadius: { sm: 0 },
-                        borderRight: { xs: 0, sm: 1 }
+                        borderRight: { xs: 0, sm: 1 },
+                        overflow: 'hidden',
+                        position: 'relative',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundColor: isScanning ? 'inherit' : 'yellow',
+                            opacity: theme.palette.mode === "light" ? 0.1 : 0.2,
+                            zIndex: 0,
+                        },
+                        '& > *': {
+                            position: 'relative',
+                            zIndex: 1,
+                        },
+                        '& .MuiAlert-message': {
+                            width: '100%',
+                            padding: 1,
+                        },
                     }}
                     slotProps={{
                         message: {
@@ -188,7 +231,7 @@ const CheckInventory: React.FC = () => {
                     >
                         {t["Scanning IDs"]}
                     </Typography>
-                    <Typography variant='caption'>{inventoryCurrentScenario?.map(el => el.id).join(" - ")}</Typography>
+                    {initJrdModulesMutation.isPending ? <CircularProgress size={20} /> : <Typography variant='caption'>{inventoryCurrentScenario?.map(el => el.id).join(" - ")}</Typography>}
                 </Alert>
                 <Alert
                     icon={false}
@@ -199,12 +242,26 @@ const CheckInventory: React.FC = () => {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '8px 10px',
-                        '& .MuiAlert-message': {
-                            width: '100%',
-                            padding: 0
-                        },
                         borderTopLeftRadius: { sm: 0 },
                         borderBottomLeftRadius: { sm: 0 },
+                        overflow: 'hidden',
+                        position: 'relative',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundColor: isScanning ? 'inherit' : 'yellow',
+                            opacity: theme.palette.mode === "light" ? 0.1 : 0.2,
+                            zIndex: 0,
+                        },
+                        '& > *': {
+                            position: 'relative',
+                            zIndex: 1,
+                        },
+                        '& .MuiAlert-message': {
+                            width: '100%',
+                            padding: 1,
+                        },
                     }}
                 >
                     <Stack
@@ -214,8 +271,24 @@ const CheckInventory: React.FC = () => {
                         width="100%"
                     >
                         <Stack gap={0.5} direction={'row'} alignItems={'center'} display={'flex'} >
-                            <ToggleButtonGroup disabled={(inventoryCurrentScenario || []).length === 0} value={(inventoryCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
-                                <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
+                            <ToggleButtonGroup disabled={(inventoryCurrentScenario || []).length === 0} value={isScanning ? 'started' : 'stopped'}>
+                                <ToggleButton value={'started'} onClick={handleStartScenario} title='start'>
+                                    <PlayArrow
+                                        sx={{
+                                            ...(isScanning && {
+                                                position: 'relative',
+                                                animation: 'iconPulse 1.6s ease-in-out infinite',
+                                                filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.7))',
+                                                '@keyframes iconPulse': {
+                                                    '0%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.6))' },
+                                                    '50%': { transform: 'scale(1.2)', filter: 'drop-shadow(0 0 14px rgba(76,175,80,1))' },
+                                                    '100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.6))' },
+                                                },
+                                            }),
+                                        }}
+                                        color={isScanning ? 'success' : 'inherit'}
+                                    />
+                                </ToggleButton>
                                 <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
                             </ToggleButtonGroup>
                             <IconButton onClick={handleClearScenarioHistory} title='stop'><Clear /></IconButton>
@@ -747,177 +820,3 @@ const CheckInventory: React.FC = () => {
 };
 
 export default CheckInventory;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import ViewListIcon from '@mui/icons-material/ViewList';
-// import ViewModuleIcon from '@mui/icons-material/ViewModule';
-// import {
-//     Button,
-//     Card,
-//     CardActions,
-//     CardContent,
-//     CardMedia,
-//     Grid,
-//     IconButton,
-//     Paper,
-//     Table,
-//     TableBody,
-//     TableCell,
-//     TableContainer,
-//     TableHead,
-//     TableRow,
-//     Tooltip,
-//     Typography,
-// } from '@mui/material';
-// import { useState } from 'react';
-
-// interface Product {
-//     id: number;
-//     name: string;
-//     image: string;
-//     weight: string;
-// }
-// // Sample product data for a gold jewelry store
-// const products: Product[] = [
-//     {
-//         id: 1,
-//         name: 'Gold Necklace',
-//         image: 'https://www.shutterstock.com/shutterstock/photos/2256160991/display_1500/stock-photo-gold-pendant-with-blue-crystals-on-a-thin-chain-on-a-white-background-2256160991.jpg', // Placeholder for gold jewelry image
-//         weight: '20g',
-//     },
-//     {
-//         id: 2,
-//         name: 'Gold Ring',
-//         image: 'https://www.shutterstock.com/shutterstock/photos/2198896509/display_1500/stock-photo-diamond-ring-yellow-gold-isolated-on-white-engagement-solitaire-style-ring-2198896509.jpg', // Placeholder for gold jewelry image
-//         weight: '5g',
-//     },
-//     {
-//         id: 3,
-//         name: 'Gold Bracelet',
-//         image: 'https://www.shutterstock.com/shutterstock/photos/1926931343/display_1500/stock-photo-gold-bangle-on-white-background-1926931343.jpg', // Placeholder for gold jewelry image
-//         weight: '15g',
-//     },
-//     // Add more products as needed
-// ];
-
-// // Current date
-// const today = 'September 10, 2025';
-
-// const CheckInventory = () => {
-//     const [viewMode, setViewMode] = useState('card'); // 'card' or 'table'
-
-//     const handleCalculatePrice = (product: Product) => {
-//         // Placeholder for price calculation logic
-//         // In a real app, this could fetch current gold price and compute weight * price per gram
-//         alert(`Calculating price for ${product.name} (${product.weight})...`);
-//     };
-
-//     return (
-//         <Paper elevation={3} sx={{ p: 4, maxWidth: 800, mx: 'auto' }}>
-//             <Typography variant="h5" gutterBottom>
-//                 Today's Date: {today}
-//             </Typography>
-//             <Grid container justifyContent="flex-end" sx={{ mb: 2 }}>
-//                 <Tooltip title="Card View">
-//                     <IconButton onClick={() => setViewMode('card')} color={viewMode === 'card' ? 'primary' : 'default'}>
-//                         <ViewModuleIcon />
-//                     </IconButton>
-//                 </Tooltip>
-//                 <Tooltip title="Table View">
-//                     <IconButton onClick={() => setViewMode('table')} color={viewMode === 'table' ? 'primary' : 'default'}>
-//                         <ViewListIcon />
-//                     </IconButton>
-//                 </Tooltip>
-//             </Grid>
-
-//             {viewMode === 'card' ? (
-//                 <Grid container spacing={3}>
-//                     {products.map((product) => (
-//                         <Grid size={{ xs: 12, sm: 6, md: 4, }} key={product.id}>
-//                             <Card>
-//                                 <CardMedia
-//                                     component="img"
-//                                     height="140"
-//                                     image={product.image}
-//                                     alt={product.name}
-//                                 />
-//                                 <CardContent>
-//                                     <Typography variant="h6">{product.name}</Typography>
-//                                     <Typography variant="body2" color="text.secondary">
-//                                         Weight: {product.weight}
-//                                     </Typography>
-//                                 </CardContent>
-//                                 <CardActions>
-//                                     <Button size="small" variant="contained" onClick={() => handleCalculatePrice(product)}>
-//                                         Calculate Price
-//                                     </Button>
-//                                 </CardActions>
-//                             </Card>
-//                         </Grid>
-//                     ))}
-//                 </Grid>
-//             ) : (
-//                 <TableContainer>
-//                     <Table>
-//                         <TableHead>
-//                             <TableRow sx={{ textAlign: "center" }}>
-//                                 <TableCell>Preview</TableCell>
-//                                 <TableCell>Name</TableCell>
-//                                 <TableCell>Weight</TableCell>
-//                                 <TableCell>Action</TableCell>
-//                             </TableRow>
-//                         </TableHead>
-//                         <TableBody>
-//                             {products.map((product) => (
-//                                 <TableRow key={product.id} sx={{ textAlign: "center" }}>
-//                                     <TableCell>
-//                                         <img src={product.image} alt={product.name} style={{ width: 50, height: 50 }} />
-//                                     </TableCell>
-//                                     <TableCell>{product.name}</TableCell>
-//                                     <TableCell>{product.weight}</TableCell>
-//                                     <TableCell>
-//                                         <Button size="small" variant="contained" onClick={() => handleCalculatePrice(product)}>
-//                                             Online Price
-//                                         </Button>
-//                                     </TableCell>
-//                                 </TableRow>
-//                             ))}
-//                         </TableBody>
-//                     </Table>
-//                 </TableContainer>
-//             )}
-//         </Paper>
-//     );
-// };
-
-// export default CheckInventory;

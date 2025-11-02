@@ -46,3 +46,4 @@ export const jrdKeys = {
 };
 
 export const backupProgress = ["backup-progress"] as const
+export const restoreProgress = ["restore-progress"] as const

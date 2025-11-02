@@ -5,13 +5,13 @@ import { useSocketStore } from "../store/socketStore";
 import { backupProgress } from "../api/queryKeys";
 
 interface BackupProgress {
-    backUpDBProgress: number;
+    backupDBProgress: number;
     backupFilesProgress: number;
     url?: string;
 }
 
 const initialProgress: BackupProgress = {
-    backUpDBProgress: 0,
+    backupDBProgress: 0,
     backupFilesProgress: 0,
     url: undefined,
 };
@@ -34,7 +34,7 @@ export function useBackupProgress() {
 
             queryClient.setQueryData<BackupProgress>(backupProgress, (prev = initialProgress) => {
                 if (backupType === "backup_db") {
-                    return { ...prev, backUpDBProgress: newProgress };
+                    return { ...prev, backupDBProgress: newProgress };
                 }
                 if (backupType === "backup_files") {
                     return { ...prev, backupFilesProgress: newProgress };
@@ -58,6 +58,6 @@ export function useBackupProgress() {
     return {
         ...progressData,
         resetProgress,
-        isComplete: progressData.backUpDBProgress >= 100 && progressData.backupFilesProgress >= 100,
+        isComplete: progressData.backupDBProgress >= 100 && progressData.backupFilesProgress >= 100,
     };
 }

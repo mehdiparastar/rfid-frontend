@@ -2,6 +2,8 @@
 import { io, Socket } from "socket.io-client";
 import type { Product } from "./api";
 import type { Tag } from "../api/tags";
+import type { Mode } from "../api/modules";
+import type { CurrentScenarioRow } from "../api/jrdDevices";
 
 export type ScanResult =
     | { Scan: Product[]; Inventory?: Product[]; NewProduct?: Tag[], deviceId: string }
@@ -12,6 +14,8 @@ export type ServerToClientEvents = {
     // Example events — add yours:
     "new-scan-result": (payload: ScanResult) => void;
     "backupProgress": (payload: Record<"backup_db" | "backup_files", number>) => void
+    "restoreProgress": (payload: Record<"restore_db" | "restore_files", number>) => void
+    "update-current-scenario": (payload: { mode: Mode, data: CurrentScenarioRow[] }) => void;
 };
 
 export type ClientToServerEvents = {

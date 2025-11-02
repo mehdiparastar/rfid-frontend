@@ -15,6 +15,7 @@ import {
     Card,
     CardContent,
     Checkbox,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -38,11 +39,14 @@ import {
     useTheme
 } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
-import { clearScenarioHistory, useCurrentScenario, useScanResults, useStartScenario, useStopScenario } from '../api/jrdDevices';
+import { clearScenarioHistory, useCurrentScenario, useInitJrdModules, useScanResults, useStartScenario, useStopScenario } from '../api/jrdDevices';
 import { useScanResultsLive } from '../features/useScanResultsLive';
-import ModuleSettings, { DialogTransition } from '../pages/ScanMode/components/ModuleSettings';
+import ModuleSettings, { DialogTransition, newProductModeScanPowerInPercent } from '../pages/ScanMode/components/ModuleSettings';
 import { translate } from '../utils/translate';
 import type { Tag } from '../api/tags';
+import { powerPercentToDbm } from '../utils/percentDbm';
+import type { Mode } from '../api/modules';
+import { useModulePrefs } from '../pages/ScanMode/components/jrd-modules-default-storage';
 
 
 interface SelectTagsProps {
@@ -73,6 +77,9 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
     const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
     const { data: scanResults = { NewProduct: [] } } = useScanResults("NewProduct");
 
+    const { powerById, activeById, modeById, /*cycleMode*/ } = useModulePrefs();
+    const initJrdModulesMutation = useInitJrdModules();
+
     useScanResultsLive("NewProduct", 5000, true);
 
     const newProductCurrentScenario = scenarioState?.filter(el => el.state.isActive && el.state.mode === "NewProduct")
@@ -85,6 +92,28 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
             }
             return acc;
         }, []);
+
+    const handleInitModules = () => {
+        // Trigger the mutation on button click
+        const initVars = Array
+            .from(new Set<string>([
+                ...Object.keys(powerById ?? {}),
+                ...Object.keys(activeById ?? {}),
+                ...Object.keys(modeById ?? {}),
+            ]))
+            .map((deviceId, i, arr) => ({
+                deviceId,
+                power: arr.length === 1 ? powerPercentToDbm(newProductModeScanPowerInPercent) : powerPercentToDbm(powerById[deviceId]),
+                mode: arr.length === 1 ? ("NewProduct" as Mode) : modeById[deviceId],
+                isActive: activeById[deviceId]
+            }))
+        initJrdModulesMutation.mutate(initVars);
+    };
+
+    useEffect(() => {
+        if (!newProductCurrentScenario || newProductCurrentScenario.length === 0)
+            handleInitModules()
+    }, [newProductCurrentScenario?.length])
 
     const handleChangePage = (_event: unknown, newPage: number) => {
         setPage(newPage);
@@ -201,6 +230,8 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
         };
     }, []);
 
+    const isScanning = (newProductCurrentScenario || []).filter(el => el.state.isScan).length > 0
+
     return (
         <Dialog
             open={open}
@@ -227,13 +258,27 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                 width: { xs: "100%", sm: 200 },
                                 mb: 1,
                                 padding: '8px 10px',
-                                '& .MuiAlert-message': {
-                                    width: '100%',
-                                    padding: 0
-                                },
                                 borderTopRightRadius: { sm: 0 },
                                 borderBottomRightRadius: { sm: 0 },
-                                borderRight: { xs: 0, sm: 1 }
+                                borderRight: { xs: 0, sm: 1 },
+                                overflow: 'hidden',
+                                position: 'relative',
+                                '&::before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    inset: 0,
+                                    backgroundColor: isScanning ? 'inherit' : 'yellow',
+                                    opacity: theme.palette.mode === "light" ? 0.1 : 0.2,
+                                    zIndex: 0,
+                                },
+                                '& > *': {
+                                    position: 'relative',
+                                    zIndex: 1,
+                                },
+                                '& .MuiAlert-message': {
+                                    width: '100%',
+                                    padding: 1,
+                                },
                             }}
                             slotProps={{
                                 message: {
@@ -256,7 +301,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                             >
                                 {t["Scanning IDs"]}
                             </Typography>
-                            <Typography variant='caption'>{newProductCurrentScenario?.map(el => el.id).join("-")}</Typography>
+                            {initJrdModulesMutation.isPending ? <CircularProgress size={18} /> : <Typography variant='caption'>{newProductCurrentScenario?.map(el => el.id).join(" - ")}</Typography>}
                         </Alert>
                         <Alert
                             icon={false}
@@ -267,12 +312,26 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 padding: '8px 10px',
-                                '& .MuiAlert-message': {
-                                    width: '100%',
-                                    padding: 0
-                                },
                                 borderTopLeftRadius: { sm: 0 },
                                 borderBottomLeftRadius: { sm: 0 },
+                                overflow: 'hidden',
+                                position: 'relative',
+                                '&::before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    inset: 0,
+                                    backgroundColor: isScanning ? 'inherit' : 'yellow',
+                                    opacity: theme.palette.mode === "light" ? 0.1 : 0.2,
+                                    zIndex: 0,
+                                },
+                                '& > *': {
+                                    position: 'relative',
+                                    zIndex: 1,
+                                },
+                                '& .MuiAlert-message': {
+                                    width: '100%',
+                                    padding: 1,
+                                },
                             }}
                         >
                             <Stack
@@ -282,8 +341,24 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
                                 width="100%"
                             >
                                 <Stack gap={0.5} direction={'row'} alignItems={'center'} display={'flex'} >
-                                    <ToggleButtonGroup disabled={(newProductCurrentScenario || []).length === 0} value={(newProductCurrentScenario || []).filter(el => el.state.isScan).length > 0 ? 'started' : 'stopped'}>
-                                        <ToggleButton value={'started'} onClick={handleStartScenario} title='start'><PlayArrow /></ToggleButton>
+                                    <ToggleButtonGroup disabled={(newProductCurrentScenario || []).length === 0} value={isScanning ? 'started' : 'stopped'}>
+                                        <ToggleButton value={'started'} onClick={handleStartScenario} title='start'>
+                                            <PlayArrow
+                                                sx={{
+                                                    ...(isScanning && {
+                                                        position: 'relative',
+                                                        animation: 'iconPulse 1.6s ease-in-out infinite',
+                                                        filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.7))',
+                                                        '@keyframes iconPulse': {
+                                                            '0%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.6))' },
+                                                            '50%': { transform: 'scale(1.2)', filter: 'drop-shadow(0 0 14px rgba(76,175,80,1))' },
+                                                            '100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.6))' },
+                                                        },
+                                                    }),
+                                                }}
+                                                color={isScanning ? 'success' : 'inherit'}
+                                            />
+                                        </ToggleButton>
                                         <ToggleButton value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
                                     </ToggleButtonGroup>
                                     <IconButton onClick={handleClearScenarioHistory} title='stop'><Clear /></IconButton>

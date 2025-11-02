@@ -12,7 +12,7 @@ function DBBackup() {
     const ln = theme.direction === "ltr" ? "en" : "fa"
     const t = translate(ln) as any
     const { mutateAsync: backupDBMutateAsync, isPending } = useBackupRequest()
-    const { backUpDBProgress, backupFilesProgress, isComplete, resetProgress } = useBackupProgress()
+    const { backupDBProgress, backupFilesProgress, isComplete, resetProgress } = useBackupProgress()
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -32,7 +32,7 @@ function DBBackup() {
 
             // Wait briefly or check completion before download (adjust as needed)
             if (!isComplete) {
-                console.warn(`Backup may not be fully complete (DB: ${backUpDBProgress}%, Files: ${backupFilesProgress}%)`);
+                console.warn(`Backup may not be fully complete (DB: ${backupDBProgress}%, Files: ${backupFilesProgress}%)`);
             }
 
             // Create a temporary anchor element
@@ -57,7 +57,7 @@ function DBBackup() {
     }
 
     // Calculate a combined progress for button display (e.g., average)
-    const combinedProgress = Math.round((backUpDBProgress + backupFilesProgress) / 2);
+    const combinedProgress = Math.round((backupDBProgress + backupFilesProgress) / 2);
     const isInProgress = (isPending && combinedProgress < 100) || isPending;
 
     return (
@@ -104,11 +104,11 @@ function DBBackup() {
                         <Grid container spacing={2} sx={{ mt: 2 }}>
                             <Grid size={{ xs: 12, md: 6 }}>
                                 <Typography variant="body2" gutterBottom>
-                                    {t["DB_BACKUP"] || "DB Backup"}: {backUpDBProgress}%
+                                    {t["DB_BACKUP"] || "DB Backup"}: {backupDBProgress}%
                                 </Typography>
                                 <LinearProgress
                                     variant="determinate"
-                                    value={backUpDBProgress}
+                                    value={backupDBProgress}
                                     sx={{ height: 8, borderRadius: 4 }}
                                 />
                             </Grid>
