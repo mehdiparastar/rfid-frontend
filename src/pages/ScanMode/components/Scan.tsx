@@ -1,5 +1,5 @@
 import { ArrowDownward, ArrowUpward, Clear, Delete, Edit, PlayArrow, Search, Settings, Stop } from "@mui/icons-material";
-import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoldCurrency } from "../../../api/goldCurrency";
@@ -12,6 +12,10 @@ import { powerPercentToDbm } from "../../../utils/percentDbm";
 import { translate } from "../../../utils/translate";
 import ModuleSettings, { scanModeScanPowerInPercent } from "./ModuleSettings";
 import { useModulePrefs } from "./jrd-modules-default-storage";
+import type { Product } from "../../../lib/api";
+import ProductRegistration from "./ProductRegistration";
+import { useDeleteProduct } from "../../../api/products";
+import { ErrorSnack } from "../../../components/ErrorSnack";
 
 const Scan: React.FC = () => {
 
@@ -32,12 +36,15 @@ const Scan: React.FC = () => {
     const { mutate: stopScenarioMutate } = useStopScenario()
     const { mutate: startScenarioMutate } = useStartScenario()
     const { data: scanResults = { Scan: [] } } = useScanResults("Scan");
+    const [productToEdit, setProductToEdit] = useState<Product | null>(null);
+    const [productToDelete, setProductToDelete] = useState<Product | null>(null);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
 
     const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
     const { powerById, activeById, modeById, /*cycleMode*/ } = useModulePrefs();
     const initJrdModulesMutation = useInitJrdModules();
+    const { mutateAsync: deleteProductMutateAsync, error: deleteProductError, isError: deleteProductIsError } = useDeleteProduct()
 
     useScanResultsLive("Scan", 5000, true);
 
@@ -90,6 +97,12 @@ const Scan: React.FC = () => {
     const handleClearScenarioHistory = async () => {
         clearScenarioHistoryMutate({ mode: "Scan" })
     }
+
+    const confirmDelete = async () => {
+        if (productToDelete)
+            await deleteProductMutateAsync(productToDelete.id)
+        setProductToDelete(null);
+    };
 
     // Filter scan results based on search query
     const filteredScanResults = (scanResults.Scan || [])
@@ -399,10 +412,10 @@ const Scan: React.FC = () => {
                                                 )}
                                             </Box>
                                             <Stack direction={'row'}>
-                                                <IconButton aria-label="edit">
+                                                <IconButton onClick={() => setProductToEdit(product)} aria-label="edit">
                                                     <Edit color="info" />
                                                 </IconButton>
-                                                <IconButton aria-label="delete">
+                                                <IconButton onClick={() => setProductToDelete(product)} aria-label="delete">
                                                     <Delete color="error" />
                                                 </IconButton>
                                             </Stack>
@@ -430,12 +443,48 @@ const Scan: React.FC = () => {
                 />
             </>
 
-
             <ModuleSettings
                 openSettings={openSettings}
                 setOpenSettings={setOpenSettings}
                 fullScreenSettingsDialog={fullScreenSettingsDialog}
                 scanMode='Scan'
+            />
+
+            {/* Edit confirm dialog */}
+            <Dialog disableScrollLock maxWidth="md" fullWidth open={!!productToEdit} onClose={() => setProductToEdit(null)}>
+                <DialogTitle>{t["edit"]} {productToEdit?.name}</DialogTitle>
+                <DialogContent sx={{ p: 2 }}>
+                    {productToEdit && <ProductRegistration setProductToEdit={setProductToEdit} mode={"Edit"} toEditData={productToEdit as any} />}
+                </DialogContent>
+            </Dialog>
+
+
+            {/* Delete confirm dialog */}
+            <Dialog disableScrollLock maxWidth="md" fullWidth open={!!productToDelete} onClose={() => setProductToDelete(null)}>
+                <DialogTitle>{t["Confirm delete"]} {productToDelete?.name}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {t["This action cannot be undone. Continue?"]}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setProductToDelete(null)}>{t["Cancel"]}</Button>
+                    <Button onClick={confirmDelete} autoFocus color="error" variant="contained">
+                        {t["Delete"]}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Error Message */}
+            {spotPriceIsError && (
+                <Snackbar open={true} autoHideDuration={6000}>
+                    <Alert severity="error">{JSON.parse((spotPriceError as Error)?.message).message || t["Something went wrong."]}</Alert>
+                </Snackbar>
+            )}
+            <ErrorSnack
+                deleteProductIsError={deleteProductIsError}
+                deleteProductError={deleteProductError}
+                t={t}
             />
         </Paper>
     )
