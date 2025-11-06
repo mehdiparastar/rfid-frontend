@@ -163,7 +163,7 @@ const CameraFilePicker: React.FC<CameraFilePickerProps> = ({
 
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <Dialog disableScrollLock open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle>
                 {t['Capture Photos']}
                 <IconButton

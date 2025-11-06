@@ -31,7 +31,8 @@ function loadInitialDir(): Dir {
     if (htmlDir === "rtl" || htmlDir === "ltr") return htmlDir as Dir;
     const rtlLangs = ["ar", "fa", "he", "ur"];
     const lang = navigator.language?.slice(0, 2).toLowerCase();
-    return rtlLangs.includes(lang) ? "rtl" : "ltr";
+    return rtlLangs.includes(lang) ? "rtl" : "rtl"; // Force default to RTL (overrides LTR lang fallback)
+    // return rtlLangs.includes(lang) ? "rtl" : "ltr";
 }
 
 type UiContextValue = {

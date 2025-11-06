@@ -20,7 +20,7 @@ export default function PhotoLightbox({ photos, open, initialIndex = 0, onClose 
     const currentIndex = currentIndex_ >= photos.length ? photos.length - 1 : currentIndex_
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="lg">
+        <Dialog disableScrollLock open={open} onClose={onClose} maxWidth="lg">
             <Box sx={{ position: "relative", bgcolor: "black" }}>
                 <IconButton onClick={onClose} sx={{ position: "absolute", top: 8, right: 8, color: "white", zIndex: 10 }}>
                     <Close />

@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoldCurrency } from "../api/goldCurrency";
 import { useDeleteProduct, useProducts } from "../api/products";
+import { ErrorSnack } from "../components/ErrorSnack";
 import PhotoLightbox from "../components/PhotoLightbox";
+import type { Product } from "../lib/api";
 import { useSocketStore } from "../store/socketStore";
 import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { translate } from "../utils/translate";
-import type { Product } from "../lib/api";
-import { ErrorSnack } from "../components/ErrorSnack";
 import ProductRegistration from "./ScanMode/components/ProductRegistration";
 
 export default function Products() {
@@ -305,7 +305,7 @@ export default function Products() {
             />
 
             {/* Edit confirm dialog */}
-            <Dialog maxWidth="md" fullWidth open={!!productToEdit} onClose={() => setProductToEdit(null)}>
+            <Dialog disableScrollLock maxWidth="md" fullWidth open={!!productToEdit} onClose={() => setProductToEdit(null)}>
                 <DialogTitle>{t["edit"]} {productToEdit?.name}</DialogTitle>
                 <DialogContent sx={{ p: 2 }}>
                     {productToEdit && <ProductRegistration setProductToEdit={setProductToEdit} mode={"Edit"} toEditData={productToEdit as any} />}
@@ -314,7 +314,7 @@ export default function Products() {
 
 
             {/* Delete confirm dialog */}
-            <Dialog maxWidth="md" fullWidth open={!!productToDelete} onClose={() => setProductToDelete(null)}>
+            <Dialog disableScrollLock maxWidth="md" fullWidth open={!!productToDelete} onClose={() => setProductToDelete(null)}>
                 <DialogTitle>{t["Confirm delete"]} {productToDelete?.name}</DialogTitle>
                 <DialogContent>
                     <DialogContentText>

@@ -40,13 +40,12 @@ import {
 } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { clearScenarioHistory, useCurrentScenario, useInitJrdModules, useScanResults, useStartScenario, useStopScenario } from '../api/jrdDevices';
-import { useScanResultsLive } from '../features/useScanResultsLive';
-import ModuleSettings, { DialogTransition, newProductModeScanPowerInPercent } from '../pages/ScanMode/components/ModuleSettings';
-import { translate } from '../utils/translate';
 import type { Tag } from '../api/tags';
-import { powerPercentToDbm } from '../utils/percentDbm';
-import type { Mode } from '../api/modules';
+import { useScanResultsLive } from '../features/useScanResultsLive';
 import { useModulePrefs } from '../pages/ScanMode/components/jrd-modules-default-storage';
+import ModuleSettings, { DialogTransition, newProductModeScanPowerInPercent } from '../pages/ScanMode/components/ModuleSettings';
+import { powerPercentToDbm } from '../utils/percentDbm';
+import { translate } from '../utils/translate';
 
 
 interface SelectTagsProps {
@@ -71,12 +70,11 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
 
     const fullScreenSettingsDialog = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const { data: scenarioState } = useCurrentScenario()
-    const { mutateAsync: clearScenarioHistoryMutateAsync } = clearScenarioHistory()
-    const { mutateAsync: stopScenarioMutateAsync } = useStopScenario()
-    const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
+    const { data: scenarioState = [] } = useCurrentScenario()
+    const { mutate: clearScenarioHistoryMutate } = clearScenarioHistory()
+    const { mutate: stopScenarioMutate } = useStopScenario()
+    const { mutate: startScenarioMutate } = useStartScenario()
     const { data: scanResults = { NewProduct: [] } } = useScanResults("NewProduct");
-
     const { powerById, activeById, modeById, /*cycleMode*/ } = useModulePrefs();
     const initJrdModulesMutation = useInitJrdModules();
 
@@ -93,27 +91,32 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
             return acc;
         }, []);
 
-    const handleInitModules = () => {
+    const handleInitModules = async () => {
         // Trigger the mutation on button click
-        const initVars = Array
+        const serverIds = scenarioState.map(el => el.id)
+
+        const localIds = Array
             .from(new Set<string>([
                 ...Object.keys(powerById ?? {}),
                 ...Object.keys(activeById ?? {}),
                 ...Object.keys(modeById ?? {}),
-            ]))
-            .map((deviceId, i, arr) => ({
-                deviceId,
-                power: arr.length === 1 ? powerPercentToDbm(newProductModeScanPowerInPercent) : powerPercentToDbm(powerById[deviceId]),
-                mode: arr.length === 1 ? ("NewProduct" as Mode) : modeById[deviceId],
-                isActive: activeById[deviceId]
-            }))
-        initJrdModulesMutation.mutate(initVars);
-    };
+            ])).filter(el => serverIds.includes(el))
 
-    useEffect(() => {
-        if (!newProductCurrentScenario || newProductCurrentScenario.length === 0)
-            handleInitModules()
-    }, [newProductCurrentScenario?.length])
+        const initVars =
+            Array.from(new Set<string>([...localIds, ...serverIds]))
+                .map((deviceId) => {
+                    return ({
+                        deviceId,
+                        power: powerPercentToDbm(powerById[deviceId]) ?? powerPercentToDbm(newProductModeScanPowerInPercent) ?? 12,
+                        mode: modeById[deviceId] ?? "NewProduct",
+                        isActive: activeById[deviceId] ?? true
+                    })
+                })
+
+        if (initVars.length > 0) {
+            initJrdModulesMutation.mutate(initVars);
+        }
+    };
 
     const handleChangePage = (_event: unknown, newPage: number) => {
         setPage(newPage);
@@ -141,15 +144,15 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
     };
 
     const handleStartScenario = async () => {
-        await startScenarioMutateAsync({ mode: "NewProduct", ids: (newProductCurrentScenario || [])?.map(el => el.id) })
+        startScenarioMutate({ mode: "NewProduct", ids: (newProductCurrentScenario || [])?.map(el => el.id) })
     }
 
     const handleStopScenario = async () => {
-        await stopScenarioMutateAsync({ mode: "NewProduct" })
+        stopScenarioMutate({ mode: "NewProduct" })
     }
 
     const handleClearScenarioHistory = async () => {
-        await clearScenarioHistoryMutateAsync({ mode: "NewProduct" })
+        clearScenarioHistoryMutate({ mode: "NewProduct" })
     }
 
     const handleRowClick = (tag: Tag) => {
@@ -225,6 +228,9 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
             behavior: 'smooth'
         });
         // This cleanup function runs when the component unmounts
+
+        handleInitModules()
+
         return () => {
             handleStopScenario();
         };
@@ -234,6 +240,7 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
 
     return (
         <Dialog
+            disableScrollLock
             open={open}
             onClose={() => {
                 onClose()

@@ -293,7 +293,7 @@ const dict = {
         "Out of stock": "اتمام موجودی",
         "User not authenticated, please login": "مشکل احراز هویت، دوباره وارد شوید",
         "Inventory": "ویترین",
-        "Scan": "اسکن",
+        "Scan": "رومیزی",
         "New Product": "محصول جدید",
         "Scanning IDs": "اسکنر های متصل",
         "Latest": "جدید ترین",

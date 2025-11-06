@@ -27,7 +27,7 @@ export const powerPercentToDbm = (percent: number) => {
         case 8: return 2
         case 5: return 1
         default:
-            return 1;
+            return undefined;
     }
 }
 
@@ -60,6 +60,6 @@ export const powerDbmToPercent = (dbm: number) => {
         case 2: return 8
         case 1: return 5
         default:
-            return 58;
+            return undefined;
     }
 }

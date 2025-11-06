@@ -1,13 +1,12 @@
 import { Close } from "@mui/icons-material";
-import { Alert, AppBar, Badge, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, Divider, IconButton, List, ListItem, ListItemAvatar, ListItemText, Slide, Slider, Stack, styled, Switch, ToggleButton, ToggleButtonGroup, Toolbar, Typography, useTheme, type BadgeProps } from "@mui/material";
+import { Alert, AppBar, Badge, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, Divider, IconButton, LinearProgress, List, ListItem, ListItemIcon, ListItemText, Slide, Slider, Stack, styled, Switch, Toolbar, Typography, useTheme, type BadgeProps } from "@mui/material";
 import type { TransitionProps } from "@mui/material/transitions";
 import { forwardRef } from "react";
-import { useGetAllJrdModules, useInitJrdModules } from "../../../api/jrdDevices";
+import { useCurrentScenario, useInitJrdModules, useSetIsActiveModule, useSetModuleScanPower, useSetScanMode } from "../../../api/jrdDevices";
 import { type Mode } from "../../../api/modules";
-import { RFIDIcon } from "../../../svg/RFIDIcon/RFIDIcon";
 import { powerDbmToPercent, powerPercentToDbm } from "../../../utils/percentDbm";
 import { translate } from "../../../utils/translate";
-import { MINPowerPercent, useModulePrefs, type ActiveMap, type ModeMap, type PowerMap } from "./jrd-modules-default-storage";
+import { useModulePrefs, type ActiveMap, type ModeMap, type PowerMap } from "./jrd-modules-default-storage";
 
 interface IProps {
     openSettings: boolean,
@@ -30,14 +29,19 @@ export const DialogTransition = forwardRef(function Transition(
 });
 
 const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullScreenSettingsDialog, scanMode }) => {
-    const { powerById, activeById, modeById, setPowerFor, setActiveFor, setModeFor, /*cycleMode*/ } = useModulePrefs();
+    const { data: scenarioState = [], error: getScenarioStateError, isLoading: isLoadingScenarioState, isFetching: isFetchingScenarioState, refetch: refetchScenarioState } = useCurrentScenario();
+
+    const { powerById, activeById, modeById, setPowerFor, setActiveFor, setModeFor } = useModulePrefs();
 
     const theme = useTheme()
     const ln = theme.direction === "ltr" ? "en" : "fa"
     const t = translate(ln)! as any
 
-    const { data: jrdModules, error: getJrdModulesError, isLoading: isLoadingJrdModules, isFetching: isFetchingJrdModules, refetch: refetchJrdModules } = useGetAllJrdModules();
     const initJrdModulesMutation = useInitJrdModules();
+    const { mutate: setScanModeMutation, isPending: setScanModeIsPending } = useSetScanMode()
+    const { mutate: setIsActiveModuleMutation, isPending: setIsActiveModuleIsPending } = useSetIsActiveModule()
+    const { mutate: setModuleScanPowerMutation, isPending: setModuleScanPowerIsPending } = useSetModuleScanPower()
+
 
     const handleInitModules = (powerById: PowerMap, activeById: ActiveMap, modeById: ModeMap) => {
         // Trigger the mutation on button click
@@ -49,12 +53,14 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
             ]))
             .map((deviceId) => ({
                 deviceId,
-                power: powerPercentToDbm(powerById[deviceId]),
+                power: powerPercentToDbm(powerById[deviceId] ?? (scanMode === "Inventory" ? inventoryModeScanPowerInPercent : scanMode === "Scan" ? scanModeScanPowerInPercent : newProductModeScanPowerInPercent)) || 15,
                 mode: modeById[deviceId],
                 isActive: activeById[deviceId]
             }))
         initJrdModulesMutation.mutate(initVars);
     };
+
+    const isLoading = setScanModeIsPending || setIsActiveModuleIsPending || setModuleScanPowerIsPending || isLoadingScenarioState || isFetchingScenarioState || initJrdModulesMutation.status === "pending"
 
     return (
         <Dialog
@@ -62,6 +68,7 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
             open={openSettings}
             onClose={() => setOpenSettings(false)}
             aria-labelledby="responsive-dialog-title"
+            disableScrollLock
             slots={{
                 transition: DialogTransition,
             }}
@@ -85,112 +92,113 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                 <DialogContentText py={1}>
                     {t["You can see connected Module(s) and re-init them, also you can change modules power of scanning."]}
                 </DialogContentText>
-                <Divider variant="fullWidth" sx={{ mx: -1, mb: 1 }} />
                 {
-                    (isLoadingJrdModules || isFetchingJrdModules || initJrdModulesMutation.status === "pending") ?
-                        <Box sx={{ width: 1, my: 4, justifyContent: 'center', display: 'flex' }}><CircularProgress /></Box> :
-                        (!!getJrdModulesError || initJrdModulesMutation.status === "error") ?
-                            <Alert severity="error" sx={{ mt: 4 }}>
-                                {
-                                    JSON.parse(getJrdModulesError?.message || "{}")?.message ||
-                                    JSON.parse(initJrdModulesMutation.error?.message || "{}")?.message ||
-                                    t["An Error accured."]
-                                }
-                            </Alert> :
-                            (jrdModules || []).length > 0 ?
-                                <List sx={{ width: '100%', mt: 4 }}>
-                                    {(jrdModules && [...jrdModules,] || []).map(m => {
-                                        const thisPowerPercent = powerById[m.dev.id] ?? (scanMode === "Inventory" ? inventoryModeScanPowerInPercent : scanMode === "Scan" ? scanModeScanPowerInPercent : scanMode === "NewProduct" ? newProductModeScanPowerInPercent : Math.max(Number(m.currentPower ?? MINPowerPercent), MINPowerPercent));
-                                        const isActive = activeById[m.dev.id] ?? true;
-                                        const mode: Mode = modeById[m.dev.id] ?? scanMode ?? "Inventory";
+                    isLoading ?
+                        <LinearProgress sx={{ mx: -1 }} /> :
+                        <Divider variant="fullWidth" sx={{ mx: -1, pb: '3px' }} />
+                }
+                {
+                    (!!getScenarioStateError || initJrdModulesMutation.status === "error") ?
+                        <Alert severity="error" sx={{ mt: 4 }}>
+                            {
+                                JSON.parse(getScenarioStateError?.message || "{}")?.message ||
+                                JSON.parse(initJrdModulesMutation.error?.message || "{}")?.message ||
+                                t["An Error accured."]
+                            }
+                        </Alert> :
+                        (scenarioState || []).length > 0 ?
+                            <List sx={{ width: '100%', mt: 4 }}>
+                                {(scenarioState || []).map(m => {
+                                    return (
+                                        <ListItem key={m.id} sx={{ px: 1, mb: 2 }}>
+                                            <Stack gap={0.5} width={1} direction={'column'}>
+                                                <Slider
+                                                    aria-label="power"
+                                                    getAriaValueText={(value: number) => `${value}%`}
+                                                    valueLabelDisplay="auto"
+                                                    value={powerDbmToPercent(m.state.power)}
+                                                    onChangeCommitted={(_, v) => {
+                                                        if (typeof v === "number") {
+                                                            setModuleScanPowerMutation({ deviceId: m.id, power: powerPercentToDbm(v) ?? 15 })
+                                                            setPowerFor(m.id, v);
+                                                        }
+                                                    }}
+                                                    shiftStep={10}
+                                                    step={null}
+                                                    marks={[0, 5, 8, 12, 16, 20, 24, 27, 31, 35, 39, 43, 47, 50, 54, 58, 62, 65, 69, 73, 77, 81, 85, 88, 92, 96, 100].map((value) => ({ value }))}
+                                                    min={0}
+                                                    max={110}
+                                                    sx={{ width: 1 }}
+                                                    color="warning"
+                                                    slotProps={{
+                                                        root: { style: { paddingBottom: 0 } },
+                                                        rail: { style: { height: 24, borderTopRightRadius: 4, borderTopLeftRadius: 4, borderBottomRightRadius: 0, borderBottomLeftRadius: 0, } },
+                                                        track: { style: { height: 22, borderTopRightRadius: 4, borderTopLeftRadius: 4, borderBottomRightRadius: 0, borderBottomLeftRadius: 0, backgroundColor: `hsl(${120 - ((powerDbmToPercent(m.state.power) || 58) * 1.2)}, 100%, 40%)` } },
+                                                        thumb: { style: { color: theme.palette.warning.light, borderRadius: 2, height: 14, width: 14 } }
+                                                    }}
+                                                />
+                                                <Stack bgcolor={theme.palette.mode === 'light' ? 'whitesmoke' : theme.palette.divider} direction={'row'} mb={-1.5} alignItems="center" width={1}>
+                                                    <ListItemIcon sx={{ justifyContent: 'center', mt: 2 }}>
+                                                        <StyledBadge badgeContent={m.id} color="warning">
+                                                            <Box sx={{ width: 40 }} component={"img"} src="/images/icons/RFIDRadiation.png" />
+                                                        </StyledBadge>
+                                                    </ListItemIcon>
+                                                    <Divider sx={{ mr: 0.5 }} orientation="vertical" flexItem />
+                                                    <ListItemText
+                                                        slotProps={{ primary: { component: Box, fontSize: 14 }, secondary: { component: Box } }}
+                                                        primary={
+                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <Stack direction={'row'} gap={0.5} >
+                                                                    {(["Inventory", "Scan", "NewProduct"] as Mode[]).map((mMode) => (
+                                                                        <Chip
+                                                                            key={mMode}
+                                                                            size="small"
+                                                                            clickable
+                                                                            label={t[mMode]}
+                                                                            color={m.state.mode === mMode ? "success" : "default"}
+                                                                            variant={"filled"}
+                                                                            onClick={() => {
+                                                                                setScanModeMutation({ deviceId: m.id, mode: mMode })
+                                                                                setModeFor(m.id, mMode)
+                                                                            }}
+                                                                            sx={{ fontWeight: m.state.mode === mMode ? 'bold' : 'inherit', borderRadius: 0.2 }}
+                                                                        />
+                                                                    ))}
+                                                                </Stack>
+                                                            </Box>
+                                                        }
+                                                        secondary={
+                                                            <Box sx={{ fontSize: 10, display: 'flex', justifyContent: 'space-between' }}>
+                                                                <Typography
+                                                                    component="span"
+                                                                    variant="body2"
+                                                                    sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: 12, pt: 0.5, pb: 0 }}
+                                                                >
+                                                                    {/* {m.info.find(el => el.type === 'hw')?.text} - {m.info.find(el => el.type === 'mfg')?.text} - {m.info.find(el => el.type === 'sw')?.text} */}
+                                                                    {m.state.type} - jrd100
+                                                                </Typography>
+                                                            </Box>
+                                                        }
+                                                    />
 
-                                        return (
-                                            <ListItem key={m.dev.id} sx={{ px: 1 }}>
-                                                <Stack gap={0.5} width={1} direction={'column'}>
-                                                    <Slider
-                                                        aria-label="power"
-                                                        getAriaValueText={(value: number) => `${value}%`}
-                                                        valueLabelDisplay="auto"
-                                                        defaultValue={powerDbmToPercent(m.currentPower)}
-                                                        // value={thisPowerPercent}
-                                                        onChangeCommitted={(_, v) => {
-                                                            if (typeof v === "number") setPowerFor(m.dev.id, v);
-                                                        }}
-                                                        shiftStep={10}
-                                                        step={null}
-                                                        marks={[0, 5, 8, 12, 16, 20, 24, 27, 31, 35, 39, 43, 47, 50, 54, 58, 62, 65, 69, 73, 77, 81, 85, 88, 92, 96, 100].map((value) => ({ value }))}
-                                                        min={0}
-                                                        max={110}
-                                                        sx={{ width: 1 }}
-                                                        color="warning"
-                                                        slotProps={{
-                                                            root: { style: { paddingBottom: 0 } },
-                                                            rail: { style: { height: 24, borderTopRightRadius: 4, borderTopLeftRadius: 4, borderBottomRightRadius: 0, borderBottomLeftRadius: 0, } },
-                                                            track: { style: { height: 22, borderTopRightRadius: 4, borderTopLeftRadius: 4, borderBottomRightRadius: 0, borderBottomLeftRadius: 0, backgroundColor: `hsl(${120 - (thisPowerPercent * 1.2)}, 100%, 40%)` } },
-                                                            thumb: { style: { color: theme.palette.warning.light, borderRadius: 2, height: 14, width: 14 } }
+                                                    <Divider orientation="vertical" flexItem />
+                                                    <IsActiveSwitch
+                                                        color="success"
+                                                        checked={m.state.isActive}
+                                                        onChange={(_, c) => {
+                                                            setIsActiveModuleMutation({ deviceId: m.id, isActive: c })
+                                                            setActiveFor(m.id, c)
                                                         }}
                                                     />
-                                                    <Stack bgcolor={theme.palette.mode === 'light' ? 'whitesmoke' : theme.palette.divider} direction={'row'} mb={-1.5} alignItems="center" width={1}>
-                                                        <ListItemAvatar sx={{ mt: 0 }}>
-                                                            <RFIDIcon color="primary" sx={{ width: 56, height: 56 }} />
-                                                        </ListItemAvatar>
-                                                        <Divider sx={{ mr: 0.5 }} orientation="vertical" flexItem />
-                                                        <ListItemText
-                                                            slotProps={{ primary: { component: Box, fontSize: 14 }, secondary: { component: Box } }}
-                                                            primary={
-                                                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                    <Stack direction={'row'} gap={0.5}>
-                                                                        <Chip size="small" color="secondary" clickable sx={{ borderRadius: 0.2 }} label={m.dev.id} />
-                                                                        <Chip size="small" color={m.isActive ? "success" : "error"} clickable sx={{ borderRadius: 0.2 }} label={m.isActive ? t["Active"] : t["Disable"]} />
-                                                                        <Chip size="small" color="info" clickable sx={{ borderRadius: 0.2 }} label={t[m.mode]} />
-                                                                    </Stack>
-                                                                </Box>
-                                                            }
-                                                            secondary={
-                                                                <Box sx={{ fontSize: 10, display: 'flex', justifyContent: 'space-between' }}>
-                                                                    <Typography
-                                                                        component="span"
-                                                                        variant="body2"
-                                                                        sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: 12 }}
-                                                                    >
-                                                                        {m.info.find(el => el.type === 'hw')?.text} - {m.info.find(el => el.type === 'mfg')?.text} - {m.info.find(el => el.type === 'sw')?.text}
-                                                                    </Typography>
-                                                                </Box>
-                                                            }
-                                                        />
-                                                        <IconButton aria-label="cart">
-                                                            <StyledBadge max={100} badgeContent={powerDbmToPercent(m.currentPower)} color="warning">
-                                                                <Box sx={{ width: 36 }} component={"img"} src="/images/icons/RFIDRadiation.png"/>
-                                                            </StyledBadge>
-                                                        </IconButton>
-                                                        <Divider orientation="vertical" flexItem />
-                                                        <IsActiveSwitch checked={isActive} onChange={(_, c) => setActiveFor(m.dev.id, c)} />
-
-                                                    </Stack>
-                                                    <ToggleButtonGroup
-                                                        exclusive
-                                                        value={mode}
-                                                        color="warning"
-                                                        onChange={(_, val) => val && setModeFor(m.dev.id, val)}
-                                                        size="small"
-                                                        sx={{
-                                                            width: 1,
-                                                            mt: 1,
-                                                            borderTopLeftRadius: 0, borderTopRightRadius: 0,
-                                                        }}
-                                                    >
-                                                        <ToggleButton color="warning" sx={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, width: 1 }} value="Inventory">{t["Inventory"]}</ToggleButton>
-                                                        <ToggleButton color="warning" sx={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, width: 1 }} value="Scan">{t["Scan"]}</ToggleButton>
-                                                        <ToggleButton color="warning" sx={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, width: 1 }} value="NewProduct">{t["New"]}</ToggleButton>
-                                                    </ToggleButtonGroup>
                                                 </Stack>
-                                            </ListItem>
-                                        )
-                                    })}
-                                </List> :
-                                <Button onClick={() => refetchJrdModules()} color="warning" fullWidth variant="contained">{t["Fetch Latest State"]}</Button>
+                                            </Stack>
+                                        </ListItem>
+                                    )
+                                })}
+                            </List> :
+                            <Button onClick={() => refetchScenarioState()} color="warning" fullWidth variant="contained">{t["Fetch Latest State"]}</Button>
                 }
-                {(jrdModules || []).length > 0 &&
+                {(scenarioState || []).length > 0 &&
                     <DialogActions>
                         <Button
                             fullWidth
@@ -198,8 +206,6 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                             color="warning"
                             sx={{
                                 width: 1,
-                                borderTopLeftRadius: 0,
-                                borderTopRightRadius: 0,
                             }}
                             size="small"
                             onClick={() => { handleInitModules(powerById, activeById, modeById) }}
@@ -219,9 +225,9 @@ export default ModuleSettings
 
 const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
     '& .MuiBadge-badge': {
-        right: 18,
+        right: 20,
         top: -4,
-        border: `2px solid ${(theme.vars ?? theme).palette.background.paper}`,
+        border: `1px solid ${(theme.vars ?? theme).palette.background.paper}`,
         padding: '0 4px',
     },
 }));

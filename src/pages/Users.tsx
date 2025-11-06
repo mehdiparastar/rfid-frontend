@@ -124,7 +124,7 @@ export default function UsersPage() {
             </Paper>
 
             {/* Edit roles dialog */}
-            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
+            <Dialog disableScrollLock open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
                 <DialogTitle>Edit roles</DialogTitle>
                 {/* Error message for role change */}
                 {roleChangeError && (

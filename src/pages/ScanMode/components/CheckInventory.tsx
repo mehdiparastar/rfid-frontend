@@ -42,11 +42,10 @@ import { clearScenarioHistory, useCurrentScenario, useInitJrdModules, useScanRes
 import { useScanResultsLive } from '../../../features/useScanResultsLive';
 import { GOLD_PRODUCT_SUB_TYPES } from '../../../store/useProductFormStore';
 import { getIRRCurrency } from '../../../utils/getIRRCurrency';
+import { powerPercentToDbm } from '../../../utils/percentDbm';
 import { translate } from '../../../utils/translate';
 import ModuleSettings, { inventoryModeScanPowerInPercent } from './ModuleSettings';
 import { useModulePrefs } from './jrd-modules-default-storage';
-import { powerPercentToDbm } from '../../../utils/percentDbm';
-import type { Mode } from '../../../api/modules';
 
 
 
@@ -62,15 +61,16 @@ const CheckInventory: React.FC = () => {
     const [openSettings, setOpenSettings] = React.useState(false);
     const fullScreenSettingsDialog = useMediaQuery(theme.breakpoints.down('md'));
 
-    const { data: scenarioState } = useCurrentScenario()
-    const { mutateAsync: clearScenarioHistoryMutateAsync } = clearScenarioHistory()
-    const { mutateAsync: stopScenarioMutateAsync } = useStopScenario()
-    const { mutateAsync: startScenarioMutateAsync } = useStartScenario()
+    const { data: scenarioState = [] } = useCurrentScenario()
+    const { mutate: clearScenarioHistoryMutate } = clearScenarioHistory()
+    const { mutate: stopScenarioMutate } = useStopScenario()
+    const { mutate: startScenarioMutate } = useStartScenario()
     const { data: scanResults = { Inventory: [] } } = useScanResults("Inventory");
 
     const { data: spotPrice, /*isLoading: spotPriceIsLoading, error: spotPriceError*/ } = useGoldCurrency();
-    const { powerById, activeById, modeById, /*cycleMode*/ } = useModulePrefs();
+    const { powerById, activeById, modeById } = useModulePrefs();
     const initJrdModulesMutation = useInitJrdModules();
+
 
     useScanResultsLive("Inventory", 5000, true);
 
@@ -78,27 +78,33 @@ const CheckInventory: React.FC = () => {
 
     const inventoryCurrentScenario = scenarioState?.filter(el => el.state.isActive && el.state.mode === "Inventory")
 
-    const handleInitModules = () => {
+
+    const handleInitModules = async () => {
         // Trigger the mutation on button click
-        const initVars = Array
+        const serverIds = scenarioState.map(el => el.id)
+
+        const localIds = Array
             .from(new Set<string>([
                 ...Object.keys(powerById ?? {}),
                 ...Object.keys(activeById ?? {}),
                 ...Object.keys(modeById ?? {}),
-            ]))
-            .map((deviceId, i, arr) => ({
-                deviceId,
-                power: arr.length === 1 ? powerPercentToDbm(inventoryModeScanPowerInPercent) : powerPercentToDbm(powerById[deviceId]),
-                mode: arr.length === 1 ? ("Inventory" as Mode) : modeById[deviceId],
-                isActive: activeById[deviceId]
-            }))
-        initJrdModulesMutation.mutate(initVars);
-    };
+            ])).filter(el => serverIds.includes(el))
 
-    useEffect(() => {
-        if (!inventoryCurrentScenario || inventoryCurrentScenario.length === 0)
-            handleInitModules()
-    }, [inventoryCurrentScenario?.length])
+        const initVars =
+            Array.from(new Set<string>([...localIds, ...serverIds]))
+                .map((deviceId) => {
+                    return ({
+                        deviceId,
+                        power: powerPercentToDbm(powerById[deviceId]) ?? powerPercentToDbm(inventoryModeScanPowerInPercent) ?? 100,
+                        mode: modeById[deviceId] ?? "Inventory",
+                        isActive: activeById[deviceId] ?? true
+                    })
+                })
+
+        if (initVars.length > 0) {
+            initJrdModulesMutation.mutate(initVars);
+        }
+    };
 
     const handleChangePage = (_event: unknown, newPage: number) => {
         setPage(newPage);
@@ -126,15 +132,15 @@ const CheckInventory: React.FC = () => {
     };
 
     const handleStartScenario = async () => {
-        await startScenarioMutateAsync({ mode: "Inventory", ids: (inventoryCurrentScenario || [])?.map(el => el.id) })
+        startScenarioMutate({ mode: "Inventory", ids: (inventoryCurrentScenario || [])?.map(el => el.id) })
     }
 
     const handleStopScenario = async () => {
-        await stopScenarioMutateAsync({ mode: "Inventory" })
+        stopScenarioMutate({ mode: "Inventory" })
     }
 
     const handleClearScenarioHistory = async () => {
-        await clearScenarioHistoryMutateAsync({ mode: "Inventory" })
+        clearScenarioHistoryMutate({ mode: "Inventory" })
     }
 
     const sortedProducts = useMemo(() => {
@@ -171,10 +177,14 @@ const CheckInventory: React.FC = () => {
             behavior: 'smooth'
         });
         // This cleanup function runs when the component unmounts
+
+        handleInitModules()
+
         return () => {
             handleStopScenario();
         };
     }, []);
+
 
     const isScanning = (inventoryCurrentScenario || []).filter(el => el.state.isScan).length > 0
 

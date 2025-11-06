@@ -18,7 +18,7 @@ export const MINPowerPercent = 5;
 export const MAXPowerPercent = 100;
 const clamp = (v: number) => Math.min(Math.max(v, MINPowerPercent), MAXPowerPercent);
 
-const defaults: PrefsV1 = { version: 1, powerById: {}, activeById: {}, modeById: {} };
+const defaultPrefs: PrefsV1 = { version: 1, powerById: {}, activeById: {}, modeById: {} };
 
 // — storage utils —
 function readJSON<T>(key: string, fallback: T): T {
@@ -38,7 +38,7 @@ function writeJSON(key: string, value: unknown) {
 }
 
 export function useModulePrefs() {
-  const [state, setState] = React.useState<PrefsV1>(() => readJSON(KEY, defaults));
+  const [state, setState] = React.useState<PrefsV1>(() => readJSON(KEY, defaultPrefs));
 
   // persist on change
   React.useEffect(() => { writeJSON(KEY, state); }, [state]);
@@ -88,7 +88,7 @@ export function useModulePrefs() {
     });
   }, []);
 
-  const clearAll = React.useCallback(() => setState(defaults), []);
+  const clearAll = React.useCallback(() => setState(defaultPrefs), []);
 
   return {
     powerById: state.powerById,
