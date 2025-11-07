@@ -487,12 +487,12 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                     {createNewProductMutation.isPending ? <CircularProgress size={24} /> : (mode === "Edit" ? t["Edit Product"] : t['Register Product'])}
                 </Button>
             </form>
-            <SelectTags
+            {dialogOpen && <SelectTags
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
                 onConfirm={handleTagConfirm}
                 selectedTags={values.tags}
-            />
+            />}
             <CameraFilePicker
                 open={cameraDialogOpen}
                 onClose={() => setCameraDialogOpen(false)}
