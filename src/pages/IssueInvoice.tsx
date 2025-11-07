@@ -1,5 +1,5 @@
 import { Fingerprint, PhoneAndroid } from "@mui/icons-material";
-import { Alert, alpha, Box, Button, Container, Divider, Grid, InputAdornment, MenuItem, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from "@mui/material";
+import { Alert, alpha, Autocomplete, Box, Button, Container, Divider, Grid, InputAdornment, MenuItem, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from "@mui/material";
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFnsJalali } from '@mui/x-date-pickers/AdapterDateFnsJalali';
 import { faIR } from 'date-fns-jalali/locale/fa-IR';
@@ -17,6 +17,7 @@ import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { isValidIranianNationalId } from "../utils/nationalIdChecker";
 import { isValidIranMobile, normalizeIranMobileToE164 } from "../utils/phoneNumberChecker";
 import { translate } from "../utils/translate";
+import { useCustomerSearch } from "../api/customers";
 
 export default function IssueInvoice() {
 
@@ -52,22 +53,101 @@ export default function IssueInvoice() {
         nid: "",
     });
 
+    const [searchTerm, setSearchTerm] = useState('');
+    const { data: customerOptions = [], isFetching } = useCustomerSearch(searchTerm);
+
     const [quantityPerProduct, setQuantityPerProduct] = useState<{ [key: string]: number }>(products.reduce((p, c) => ({ ...p, [`quantity_${c.id}`]: 1 }), {}))
     const [payType, setPayType] = useState<'cash' | 'credit'>('cash');
     const [desc, setDesc] = useState<string>("")
 
-    // Handle form input changes
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCustomer({
-            ...customer,
-            [e.target.name]: e.target.value,
-        });
+    // when user selects existing customer:
+    const handleCustomerSelect = (selected: Customer | null) => {
+        if (selected && typeof selected !== 'string') {
+            setCustomer(selected);
+        }
     };
+
 
     const contentRef = useRef<HTMLDivElement>(null);
     const reactToPrintFn = useReactToPrint({
         contentRef,
         documentTitle: 'kanani-invoice',
+        pageStyle: theme.direction === "rtl" ?
+            `
+            @page { size: A4 landscape; margin: 0.5cm; }
+            @media print {
+                /* Scope all print rules to .printable-content */
+                .printable-content {
+                    direction: rtl !important;
+                    text-align: right !important;
+                    unicode-bidi: embed !important;
+                }
+                .printable-content * {
+                    direction: rtl !important;
+                }
+                .printable-content table, .printable-content .MuiTable-root {
+                    direction: rtl !important;
+                }
+                .printable-content .MuiTableCell-root {
+                    text-align: right !important;
+                }
+                .printable-content .MuiInputBase-root, .printable-content .MuiTextField-root {
+                    text-align: right !important;
+                }
+                /* Flip MUI margins/paddings for RTL */
+                .printable-content .MuiBox-root, .printable-content .MuiGrid-root {
+                    margin-right: var(--muirtl-margin-left, 0) !important;
+                    margin-left: var(--muirtl-margin-right, 0) !important;
+                }
+                /* Persian font fallback */
+                body { font-family: 'Vazirmatn', 'IRANSans', sans-serif !important; }
+                
+                /* ENHANCED: Hide no-print column (header + body cells) with MUI specificity */
+                .printable-content .no-print,
+                .printable-content .no-print.MuiTableCell-root,
+                .printable-content table td.no-print,
+                .printable-content .MuiTableBody-root td.no-print {
+                    display: none !important;
+                    visibility: hidden !important;
+                    width: 0 !important;
+                    min-width: 0 !important;
+                    max-width: 0 !important;
+                    padding: 0 !important;
+                    border: none !important;
+                }
+                /* Ensure table reflows after hiding column */
+                .printable-content .MuiTable-root {
+                    table-layout: fixed !important;  /* Prevents gaps */
+                }
+            }
+        ` :
+            `
+            @page { size: A4 landscape; margin: 0.5cm; }
+            @media print {
+                /* Scope all print rules to .printable-content */
+                .printable-content {
+                    /* LTR defaults if needed */
+                }
+                
+                /* ENHANCED: Hide no-print column (header + body cells) with MUI specificity */
+                .printable-content .no-print,
+                .printable-content .no-print.MuiTableCell-root,
+                .printable-content table td.no-print,
+                .printable-content .MuiTableBody-root td.no-print {
+                    display: none !important;
+                    visibility: hidden !important;
+                    width: 0 !important;
+                    min-width: 0 !important;
+                    max-width: 0 !important;
+                    padding: 0 !important;
+                    border: none !important;
+                }
+                /* Ensure table reflows after hiding column */
+                .printable-content .MuiTable-root {
+                    table-layout: fixed !important;  /* Prevents gaps */
+                }
+            }
+        `,
     });
 
     const onlinePrice = (spotPrice?.gold.find(el => el.name_en === "18K Gold")?.price || 0)
@@ -77,7 +157,7 @@ export default function IssueInvoice() {
         products.length > 0 &&
         customer.name.length > 0 &&
         isValidIranMobile(customer.phone) &&
-        isValidIranianNationalId(customer.nid) &&
+        // isValidIranianNationalId(customer.nid) &&
         !Object.entries(quantityPerProduct)
             .map(([k, v]) => {
                 const productQuantity = Number(products.find((p) => p.id === Number(k.toString().replace("quantity_", "")))?.quantity)
@@ -128,7 +208,11 @@ export default function IssueInvoice() {
             {!!spotPriceError && <Alert sx={{ borderRadius: 0 }} severity="error" variant="filled">{JSON.parse(spotPriceError?.message || '{"message":""}').message}</Alert>}
             {!!serverErr && <Alert sx={{ borderRadius: 0 }} severity="error" variant="filled">{serverErr}</Alert>}
             < Container maxWidth="xl" sx={{ px: 3, pt: 2, pb: 5 }}>
-                <Grid container ref={contentRef}>
+                <Grid
+                    container
+                    ref={contentRef}
+                    className="printable-content"
+                >
                     <Grid container sx={{ border: '1px dashed gold', height: 745 }} size={{ xs: 12, sm: 3 }}>
                         <Grid size={{ xs: 12 }} sx={{ display: 'flex' }}>
                             <Box
@@ -363,11 +447,6 @@ export default function IssueInvoice() {
                         }}
                     >
                         <Grid
-                            // sx={{
-                            //     backgroundImage: `radial-gradient(circle, ${theme.palette.warning.main} .8px, transparent 0.25px)`,
-                            //     backgroundSize: '25px 25px',
-                            // }}
-
                             sx={{
                                 position: "relative",
                                 // optional base background
@@ -395,102 +474,144 @@ export default function IssueInvoice() {
 
                             size={{ xs: 12 }}
                         >
-                            <Typography textAlign={'center'} fontFamily={theme.direction === "ltr" ? 'Pacifico, Segoe Script, Vazirmatn, Poppins, cursive' : 'IRANSans'} variant="h3" p={6} color="gold" fontWeight={800}>
+                            <Typography textAlign={'center'} fontFamily={theme.direction === "ltr" ? 'Pacifico, Segoe Script, Vazirmatn, Poppins, cursive' : 'IRANSans'} variant="h4" p={2} color="gold" fontWeight={700}>
                                 {t["Kanani jewelry"]}
                             </Typography>
                         </Grid>
                         <Grid size={{ xs: 12 }} sx={{ mb: 1 }}>
                             <Divider variant="fullWidth" sx={{ bgcolor: 'wheat', height: 4 }} />
                         </Grid>
+
+                        {/* --- Name --- */}
                         <Grid size={{ xs: 6 }} sx={{ p: 2 }}>
-                            <TextField
-                                name="name"
-                                size="small"
-                                fullWidth
-                                value={!!issuedInvoice ? issuedInvoice.customer.name : customer.name}
-                                onChange={handleChange}
-                                variant="standard"
-                                slotProps={{
-                                    input: {
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <Typography variant="body2" gutterBottom>
-                                                    {t["Customer:"]}
-                                                </Typography>
-                                            </InputAdornment>
-                                        )
-                                    }
+                            <Autocomplete
+                                freeSolo
+                                loading={isFetching}
+                                options={customerOptions}
+                                onChange={(_, selected) => handleCustomerSelect(selected as Customer)}
+                                isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                                getOptionLabel={(opt) => typeof opt === 'string' ? opt : opt.name}
+                                inputValue={customer.name}
+                                onInputChange={(_, val) => {
+                                    setCustomer((p) => ({ ...p, name: val }));
+                                    setSearchTerm(val);
                                 }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        name="name"
+                                        variant="standard"
+                                        size="small"
+                                        slotProps={{
+                                            input: {
+                                                ...params.InputProps,
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <Typography variant="body2">{t["Customer:"]}</Typography>
+                                                    </InputAdornment>
+                                                ),
+                                            }
+                                        }}
+                                    />
+                                )}
                             />
                         </Grid>
-                        <Grid size={{ xs: 3 }} sx={{ p: 2 }}>
-                            <TextField
-                                name="phone"
-                                value={!!issuedInvoice ? issuedInvoice.customer.phone : customer.phone}
-                                onChange={(e) => {
-                                    const next = e.target.value.replace(/\D/g, '').slice(0, 11);
-                                    setCustomer(p => ({ ...p, phone: next }));
-                                }}
-                                size="small"
-                                fullWidth
-                                variant="standard"
-                                type="tel"
-                                slotProps={{
-                                    input: {
-                                        inputProps: { inputMode: 'numeric', maxLength: 11 },
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <PhoneAndroid fontSize="medium" />
-                                            </InputAdornment>
-                                        ),
-                                    },
-                                }}
-                                error={customer.phone.length > 0 && !isValidIranMobile(customer.phone) && customer.phone.length >= 10}
-                                helperText={
-                                    isValidIranMobile(customer.phone)
-                                        ? `✓ ${normalizeIranMobileToE164(customer.phone)}`
-                                        : customer.phone.length === 0
-                                            ? t['Enter 10–11 digits']
-                                            : customer.phone.length < 10
-                                                ? t['Keep typing…']
-                                                : t['Invalid mobile number']
-                                }
-                            />
 
-                        </Grid>
+                        {/* --- Phone --- */}
                         <Grid size={{ xs: 3 }} sx={{ p: 2 }}>
-                            <TextField
-                                name="nid"
-                                value={!!issuedInvoice ? issuedInvoice.customer.nid : customer.nid}
-                                onChange={(e) => {
-                                    const next = e.target.value.replace(/\D/g, '').slice(0, 10);
-                                    setCustomer(p => ({ ...p, nid: next }));
+                            <Autocomplete
+                                freeSolo
+                                loading={isFetching}
+                                options={customerOptions}
+                                onChange={(_, selected) => handleCustomerSelect(selected as Customer)}
+                                isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                                getOptionLabel={(opt) => typeof opt === 'string' ? opt : opt.phone}
+                                inputValue={customer.phone}
+                                onInputChange={(_, val) => {
+                                    const next = val.replace(/\D/g, '').slice(0, 11);
+                                    setCustomer((p) => ({ ...p, phone: next }));
+                                    setSearchTerm(next);
                                 }}
-                                size="small"
-                                fullWidth
-                                variant="standard"
-                                type="tel"
-                                slotProps={{
-                                    input: {
-                                        inputProps: { inputMode: 'numeric', maxLength: 10 },
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <Fingerprint fontSize="medium" />
-                                            </InputAdornment>
-                                        ),
-                                    },
-                                }}
-                                error={customer.nid.length === 10 && !isValidIranianNationalId(customer.nid)}
-                                helperText={
-                                    customer.nid.length === 10
-                                        ? isValidIranianNationalId(customer.nid)
-                                            ? t['✓ Looks good']
-                                            : t['Invalid national ID']
-                                        : t['Enter 10 digits']
-                                }
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        name="phone"
+                                        variant="standard"
+                                        size="small"
+                                        type="tel"
+                                        slotProps={{
+                                            input: {
+                                                ...params.InputProps,
+                                                slotProps: { input: { inputMode: 'numeric', maxLength: 11 } },
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <PhoneAndroid fontSize="medium" />
+                                                    </InputAdornment>
+                                                ),
+                                            },
+                                        }}
+                                        error={customer.phone.length > 0 && !isValidIranMobile(customer.phone) && customer.phone.length >= 10}
+                                        helperText={
+                                            isValidIranMobile(customer.phone)
+                                                ? `✓ ${normalizeIranMobileToE164(customer.phone)}`
+                                                : customer.phone.length === 0
+                                                    ? t['Enter 10–11 digits']
+                                                    : customer.phone.length < 10
+                                                        ? t['Keep typing…']
+                                                        : t['Invalid mobile number']
+                                        }
+                                    />
+                                )}
                             />
-
                         </Grid>
+
+                        {/* --- NID --- */}
+                        <Grid size={{ xs: 3 }} sx={{ p: 2 }}>
+                            <Autocomplete
+                                freeSolo
+                                loading={isFetching}
+                                options={customerOptions}
+                                onChange={(_, selected) => handleCustomerSelect(selected as Customer)}
+                                isOptionEqualToValue={(opt, val) => opt.id === val.id}
+                                getOptionLabel={(opt) => typeof opt === 'string' ? opt : opt.nid}
+                                inputValue={customer.nid}
+                                onInputChange={(_, val) => {
+                                    const next = val.replace(/\D/g, '').slice(0, 10);
+                                    setCustomer((p) => ({ ...p, nid: next }));
+                                    setSearchTerm(next);
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        name="nid"
+                                        variant="standard"
+                                        size="small"
+                                        type="tel"
+                                        slotProps={{
+                                            input: {
+                                                ...params.InputProps,
+                                                slotProps: { input: { inputMode: 'numeric', maxLength: 10 } },
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <Fingerprint fontSize="medium" />
+                                                    </InputAdornment>
+                                                ),
+                                            }
+                                        }}
+                                        error={customer.nid.length === 10 && !isValidIranianNationalId(customer.nid)}
+                                        helperText={
+                                            customer.nid.length === 10
+                                                ? isValidIranianNationalId(customer.nid)
+                                                    ? t['✓ Looks good']
+                                                    : t['Invalid national ID']
+                                                : t['Enter 10 digits']
+                                        }
+                                    />
+                                )}
+                            />
+                        </Grid>
+
+
                         <Grid size={{ xs: 12 }} sx={{ p: 2, pt: 0 }}>
                             {/* table header like screenshot */}
                             <Paper sx={{ width: 1, overflow: 'hidden' }}>
@@ -502,7 +623,7 @@ export default function IssueInvoice() {
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700 }}>{t["Name"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Quantity"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 100 }}>{t["Weight(g)"]}</TableCell>
-                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge + Profit + VAT"]}</TableCell>
+                                                <TableCell className="no-print" align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge + Profit + VAT"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Spot Price (ریال)"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["Total (ریال)"]}</TableCell>
                                             </TableRow>
@@ -539,7 +660,7 @@ export default function IssueInvoice() {
                                                             />
                                                         </TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{Number(product.weight).toString()}</TableCell>
-                                                        <TableCell sx={{ height: 48 }} align="center">{Number(product.makingCharge).toString()}% + {Number(product.profit).toString()}% + {Number(product.vat).toString()}%</TableCell>
+                                                        <TableCell className="no-print" sx={{ height: 48 }} align="center">{Number(product.makingCharge).toString()}% + {Number(product.profit).toString()}% + {Number(product.vat).toString()}%</TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{productIRRSpotPrice}</TableCell>
                                                         <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{getIRRCurrency(10 * Number(productSpotPrice * 10) * Number(product.weight) * quantityPerProduct[`quantity_${product.id}`] * (1 + (Number(product.makingCharge) / 100) + (Number(product.profit) / 100) + (Number(product.vat) / 100))).replace('ریال', '')}</TableCell>
                                                     </TableRow>
@@ -554,6 +675,7 @@ export default function IssueInvoice() {
                                                             backgroundColor: theme.palette.action.hover,
                                                         }
                                                     }}
+                                                    className="no-print"
                                                 >
                                                     <TableCell colSpan={8} sx={{ height: 48 }} />
                                                 </TableRow>
