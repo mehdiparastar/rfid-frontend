@@ -37,7 +37,7 @@ export default function Products() {
         sorting: [{ id: sortField, desc: sortDirection === "desc" }],
         filters,
     })
-    const { mutateAsync: deleteProductMutateAsync, error: deleteProductError, isError: deleteProductIsError } = useDeleteProduct()
+    const { mutate: deleteProductMutate, error: deleteProductError, isError: deleteProductIsError } = useDeleteProduct()
 
     const products = data?.pages.flatMap(p => p.items) ?? []
 
@@ -45,7 +45,7 @@ export default function Products() {
 
     const confirmDelete = async () => {
         if (productToDelete)
-            await deleteProductMutateAsync(productToDelete.id)
+            deleteProductMutate(productToDelete.id)
         setProductToDelete(null);
     };
 

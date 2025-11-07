@@ -149,25 +149,6 @@ export function useDeleteProduct() {
             // e.g. ['products', { limit, sorting, filters }]
             queryClient.invalidateQueries({ queryKey: ["products"] });
         },
-
-        // OPTIONAL: if you want to avoid a refetch, do an optimistic cache update:
-        // onSuccess: (_data, id) => {
-        //   queryClient.setQueriesData(
-        //     { queryKey: ["products"], exact: false },
-        //     (old: any) => {
-        //       if (!old?.pages) return old;
-        //       return {
-        //         ...old,
-        //         pages: old.pages.map((page: any) => ({
-        //           ...page,
-        //           items: page.items?.filter((it: any) => it.id !== id),
-        //           total:
-        //             typeof page.total === "number" ? Math.max(0, page.total - 1) : page.total,
-        //         })),
-        //       };
-        //     }
-        //   );
-        // },
     });
 }
 
