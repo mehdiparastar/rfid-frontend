@@ -188,6 +188,13 @@ const dict = {
         "tags selected": "tags selected",
         "Backup DB": "Backup DB",
         "DB BACKUP": "DB BACKUP",
+        "Reset": "Reset",
+        "Apply": "Apply",
+        "Price ($)": "Price ($)",
+        "Weight (g)": "Weight (g)",
+        "Making Charge (%)": "Making Charge (%)",
+        "Profit (%)": "Profit (%)",
+        "Advanced Filters": "Advanced Filters",
     },
     "fa": {
         "RFID Scanner": "تگ نما",
@@ -378,6 +385,13 @@ const dict = {
         "tags selected": "تگ انتخاب شد",
         "Backup DB": "پشتیبان گیری",
         "DB BACKUP": "پشتیبان گیری",
+        "Reset": "حذف فیلترها",
+        "Apply": "اعمال فیلترها",
+        "Price ($)": "قیمت (ريال)",
+        "Weight (g)": "وزن (گرم)",
+        "Making Charge (%)": "اجرت ساخت (%)",
+        "Profit (%)": "سود (%)",
+        "Advanced Filters": "جستجوی پیشرفته",
     }
 }
 

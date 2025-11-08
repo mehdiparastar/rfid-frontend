@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api, ApiError, isAuthError } from '../lib/api';
+import type { GoldProductSUBType } from '../store/useProductFormStore';
 
 export interface GoldCurrencyData {
     gold: {
@@ -9,7 +10,7 @@ export interface GoldCurrencyData {
         name: string;
         name_en: string;
         price: number;
-        symbol: string;
+        symbol: GoldProductSUBType;
         time: string;
         time_unix: number;
         unit: string

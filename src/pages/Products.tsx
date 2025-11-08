@@ -1,5 +1,5 @@
-import { ArrowDownward, ArrowUpward, Delete, Edit, Search } from "@mui/icons-material";
-import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
+import { ArrowDownward, ArrowUpward, Delete, Edit, ExpandMore, FilterList, Search, Tune } from "@mui/icons-material";
+import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoldCurrency } from "../api/goldCurrency";
@@ -32,6 +32,13 @@ export default function Products() {
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
 
+    const [priceRange, setPriceRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
+    const [weightRange, setWeightRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
+    const [makingChargeRange, setMakingChargeRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
+    const [profitRange, setProfitRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
+
+    const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
+
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isError: fetchingIsError, error: fetchingError } = useProducts({
         limit,
         sorting: [{ id: sortField, desc: sortDirection === "desc" }],
@@ -41,7 +48,10 @@ export default function Products() {
 
     const products = data?.pages.flatMap(p => p.items) ?? []
 
-    const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
+    const ranges = data?.pages[0].ranges
+
+    const minPrice = spotPrice && ranges && 10 * ranges.price.min[0].weight * (spotPrice.gold.find(it => it.symbol === ranges.price.min[0].subType)?.price || 0) * (1 + ((ranges.price.min[0].vat + ranges.price.min[0].makingCharge + ranges.price.min[0].profit) / 100))
+    const maxPrice = spotPrice && ranges && 10 * ranges.price.max[0].weight * (spotPrice.gold.find(it => it.symbol === ranges.price.max[0].subType)?.price || 0) * (1 + ((ranges.price.max[0].vat + ranges.price.max[0].makingCharge + ranges.price.max[0].profit) / 100))
 
     const confirmDelete = async () => {
         if (productToDelete)
@@ -76,11 +86,64 @@ export default function Products() {
         })
     }
 
+    const handleAdvanceFilterInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.name.includes("price")) {
+            if (event.target.name.includes("min")) {
+                const minValue = Number(event.target.value) <= priceRange.max ? Number(event.target.value) : priceRange.max
+                setWeightRange(priceRange => ({ ...priceRange, min: minValue }));
+            }
+            if (event.target.name.includes("max")) {
+                const maxValue = Number(event.target.value) >= priceRange.min ? Number(event.target.value) : priceRange.min
+                setWeightRange(priceRange => ({ ...priceRange, max: maxValue }));
+            }
+        }
+        if (event.target.name.includes("weight")) {
+            if (event.target.name.includes("min")) {
+                const minValue = Number(event.target.value) <= weightRange.max ? Number(event.target.value) : weightRange.max
+                setWeightRange(weightRange => ({ ...weightRange, min: minValue }));
+            }
+            if (event.target.name.includes("max")) {
+                const maxValue = Number(event.target.value) >= weightRange.min ? Number(event.target.value) : weightRange.min
+                setWeightRange(weightRange => ({ ...weightRange, max: maxValue }));
+            }
+        }
+        if (event.target.name.includes("makingCharge")) {
+            if (event.target.name.includes("min")) {
+                const minValue = Number(event.target.value) <= makingChargeRange.max ? Number(event.target.value) : makingChargeRange.max
+                setWeightRange(makingChargeRange => ({ ...makingChargeRange, min: minValue }));
+            }
+            if (event.target.name.includes("max")) {
+                const maxValue = Number(event.target.value) >= makingChargeRange.min ? Number(event.target.value) : makingChargeRange.min
+                setWeightRange(makingChargeRange => ({ ...makingChargeRange, max: maxValue }));
+            }
+        }
+        if (event.target.name.includes("profit")) {
+            if (event.target.name.includes("min")) {
+                const minValue = Number(event.target.value) <= profitRange.max ? Number(event.target.value) : profitRange.max
+                setWeightRange(profitRange => ({ ...profitRange, min: minValue }));
+            }
+            if (event.target.name.includes("max")) {
+                const maxValue = Number(event.target.value) >= profitRange.min ? Number(event.target.value) : profitRange.min
+                setWeightRange(profitRange => ({ ...profitRange, max: maxValue }));
+            }
+        }
+    };
+
+
     useEffect(() => {
         // Reset the cursor when filters or sorting change
         setCursor(null);
     }, [filters, sortField, sortDirection]);
 
+    useEffect(() => {
+        if (!!ranges) {
+            setPriceRange({ min: minPrice || 0, max: maxPrice || 0 })
+            setWeightRange({ min: ranges.weight.min, max: ranges.weight.max })
+            setMakingChargeRange({ min: ranges.makingCharge.min, max: ranges.makingCharge.max })
+            setProfitRange({ min: ranges.profit.min, max: ranges.profit.max })
+
+        }
+    }, [ranges])
     useEffect(() => {
         window.scrollTo({
             top: 0,
@@ -90,6 +153,12 @@ export default function Products() {
     }, []);
 
 
+    const sliderStyle = {
+        color: "primary.main",
+        "& .MuiSlider-valueLabel": {
+            backgroundColor: "primary.main",
+        },
+    };
 
     if (status === 'pending' && products.length === 0)
         return (
@@ -109,7 +178,6 @@ export default function Products() {
                 </Box>
             </>
         )
-
 
     return (
         <>
@@ -158,7 +226,285 @@ export default function Products() {
                     {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}{t["product(s) selected."]}</Typography>}
                     <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>{t["INVOICE"]}</Button>
                 </Box>
+                <Accordion defaultExpanded={false} sx={{ my: 2, borderRadius: 1 }}>
+                    <AccordionSummary
+                        sx={{ '& .MuiAccordionSummary-content': { alignItems: 'center', display: 'flex' } }}
+                        expandIcon={<ExpandMore />}
+                        aria-controls="advanced-filters-content"
+                    >
+                        <IconButton><Tune color={Object.keys(filters).length !== 1 ? "success" : "inherit"} /></IconButton>
+                        <Typography variant="subtitle1" fontWeight={600}>
+                            {t["Advanced Filters"]}
+                        </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <Stack spacing={4}>
+                            {/* Price */}
+                            <Box>
+                                <Stack direction={"row"} alignItems={"center"} gap={2}>
+                                    <Chip sx={{ minWidth: 140, borderRadius: 1 }} label={t["Price ($)"]} />
 
+                                    <Slider
+                                        value={[priceRange.min, priceRange.max]}
+                                        onChange={(_, val) =>
+                                            setPriceRange(priceRange => ({ ...priceRange, min: val[0] <= val[1] ? val[0] : val[1], max: val[1] >= val[0] ? val[1] : val[0] }))
+                                        }
+
+                                        valueLabelFormat={(value) => getIRRCurrency(value)}
+                                        valueLabelDisplay="auto"
+                                        min={(minPrice && minPrice * .9) || 0}
+                                        max={(maxPrice && maxPrice * 1.1) || 100}
+                                        step={10000}
+                                        sx={{ ...sliderStyle, mb: "1px" }}
+                                        marks={[{ value: minPrice || 0, label: getIRRCurrency(minPrice || 0) }, { value: maxPrice || 0, label: getIRRCurrency(maxPrice || 0) },]}
+                                        aria-labelledby="price-input-slider"
+                                        slotProps={{
+                                            markLabel: { style: { top: -26 } },
+                                            root: { style: { paddingBottom: 0, borderRadius: 0 } },
+                                            rail: { style: { height: 26, borderRadius: 0 } },
+                                            track: { style: { height: 24, borderRadius: 0, backgroundColor: (minPrice && maxPrice) ? `hsl(${(priceRange.max - priceRange.min) / (maxPrice - minPrice) * 100}, 100%, 30%)` : `hsl(100, 100%, 30%)` } },
+                                            thumb: { style: { zIndex: 100, color: theme.palette.warning.light, borderRadius: 2, height: 14, width: 14 } }
+                                        }}
+                                    />
+
+                                </Stack>
+                            </Box>
+
+                            {/* Weight */}
+                            <Box>
+                                <Stack direction={"row"} alignItems={"center"} gap={2}>
+                                    <Chip sx={{ minWidth: 140, borderRadius: 1 }} label={t["Weight (g)"]} />
+                                    <TextField
+                                        value={weightRange.min}
+                                        name="weight-min"
+                                        size="small"
+                                        fullWidth
+                                        type='number'
+                                        inputMode="numeric"
+                                        slotProps={{
+                                            htmlInput: {
+                                                step: 0.01,
+                                                min: ranges?.weight.min || 0,
+                                                max: ranges?.weight.max || 100,
+                                                "aria-labelledby": 'min-weight-input-slider',
+                                                sx: { textAlign: 'center', px: "1px", pt: "5px", pb: "1px", fontSize: 14 },
+                                            },
+                                            input: { sx: { borderRadius: 0 } }
+                                        }}
+                                        sx={{ width: 120 }}
+                                        onChange={handleAdvanceFilterInputChange}
+                                        aria-labelledby="min-weight-input-slider"
+                                    />
+                                    <Slider
+                                        value={[weightRange.min, weightRange.max]}
+                                        onChange={(_, val) =>
+                                            setWeightRange(weightRange => ({ ...weightRange, min: val[0] <= val[1] ? val[0] : val[1], max: val[1] >= val[0] ? val[1] : val[0] }))
+                                        }
+                                        valueLabelDisplay="auto"
+                                        min={ranges?.weight.min || 0}
+                                        max={ranges?.weight.max || 100}
+                                        step={0.01}
+                                        sx={sliderStyle}
+                                        marks
+                                        aria-labelledby="weight-input-slider"
+                                        slotProps={{
+                                            root: { style: { paddingBottom: 0, marginLeft: -16, marginRight: -16, borderRadius: 0 } },
+                                            rail: { style: { height: 26, borderRadius: 0 } },
+                                            track: { style: { height: 24, borderRadius: 0, backgroundColor: ranges ? `hsl(${(weightRange.max - weightRange.min) / (ranges?.weight.max - ranges?.weight.min) * 100}, 100%, 30%)` : `hsl(100, 100%, 30%)` } },
+                                            thumb: { style: { zIndex: 100, color: theme.palette.warning.light, borderRadius: 2, height: 14, width: 14 } }
+                                        }}
+                                    />
+                                    <TextField
+                                        variant="outlined"
+                                        value={weightRange.max}
+                                        name="weight-max"
+                                        size="small"
+                                        fullWidth
+                                        type='number'
+                                        inputMode="numeric"
+                                        slotProps={{
+                                            htmlInput: {
+                                                step: 0.01,
+                                                min: ranges?.weight.min || 0,
+                                                max: ranges?.weight.max || 100,
+                                                "aria-labelledby": 'max-weight-input-slider',
+                                                sx: { textAlign: 'center', px: "1px", pt: "5px", pb: "1px", fontSize: 14 },
+                                            },
+                                            input: { sx: { borderRadius: 0 } }
+                                        }}
+                                        sx={{ width: 120 }}
+                                        onChange={handleAdvanceFilterInputChange}
+                                        aria-labelledby="max-weight-input-slider"
+                                    />
+                                </Stack>
+                            </Box>
+
+                            {/* Making Charge */}
+                            <Box>
+                                <Stack direction={"row"} alignItems={"center"} gap={2}>
+                                    <Chip sx={{ minWidth: 140, borderRadius: 1 }} label={t["Making Charge (%)"]} />
+                                    <TextField
+                                        value={makingChargeRange.min}
+                                        name="makingCharge-min"
+                                        size="small"
+                                        fullWidth
+                                        type='number'
+                                        inputMode="numeric"
+                                        slotProps={{
+                                            htmlInput: {
+                                                step: 0.1,
+                                                min: ranges?.makingCharge.min || 0,
+                                                max: ranges?.makingCharge.max || 100,
+                                                "aria-labelledby": 'min-makingCharge-input-slider',
+                                                sx: { textAlign: 'center', px: "1px", pt: "5px", pb: "1px", fontSize: 14 },
+                                            },
+                                            input: { sx: { borderRadius: 0 } }
+                                        }}
+                                        sx={{ width: 120 }}
+                                        onChange={handleAdvanceFilterInputChange}
+                                        aria-labelledby="min-makingCharge-input-slider"
+                                    />
+                                    <Slider
+                                        value={[makingChargeRange.min, makingChargeRange.max]}
+                                        onChange={(_, val) =>
+                                            setMakingChargeRange(makingChargeRange => ({ ...makingChargeRange, min: val[0] <= val[1] ? val[0] : val[1], max: val[1] >= val[0] ? val[1] : val[0] }))
+                                        }
+                                        valueLabelDisplay="auto"
+                                        min={ranges?.makingCharge.min || 0}
+                                        max={ranges?.makingCharge.max || 100}
+                                        step={0.1}
+                                        sx={sliderStyle}
+                                        marks
+                                        aria-labelledby="makingCharge-input-slider"
+                                        slotProps={{
+                                            root: { style: { paddingBottom: 0, marginLeft: -16, marginRight: -16, borderRadius: 0 } },
+                                            rail: { style: { height: 26, borderRadius: 0 } },
+                                            track: { style: { height: 24, borderRadius: 0, backgroundColor: ranges ? `hsl(${(makingChargeRange.max - makingChargeRange.min) / (ranges?.makingCharge.max - ranges?.makingCharge.min) * 100}, 100%, 30%)` : `hsl(100, 100%, 30%)` } },
+                                            thumb: { style: { zIndex: 100, color: theme.palette.warning.light, borderRadius: 2, height: 14, width: 14 } }
+                                        }}
+                                    />
+                                    <TextField
+                                        variant="outlined"
+                                        value={makingChargeRange.max}
+                                        name="makingCharge-max"
+                                        size="small"
+                                        fullWidth
+                                        type='number'
+                                        inputMode="numeric"
+                                        slotProps={{
+                                            htmlInput: {
+                                                step: 0.1,
+                                                min: ranges?.makingCharge.min || 0,
+                                                max: ranges?.makingCharge.max || 100,
+                                                "aria-labelledby": 'max-makingCharge-input-slider',
+                                                sx: { textAlign: 'center', px: "1px", pt: "5px", pb: "1px", fontSize: 14 },
+                                            },
+                                            input: { sx: { borderRadius: 0 } }
+                                        }}
+                                        sx={{ width: 120 }}
+                                        onChange={handleAdvanceFilterInputChange}
+                                        aria-labelledby="max-makingCharge-input-slider"
+                                    />
+                                </Stack>
+                            </Box>
+
+                            {/* Profit */}
+                            <Box>
+                                <Stack direction={"row"} alignItems={"center"} gap={2}>
+                                    <Chip sx={{ minWidth: 140, borderRadius: 1 }} label={t["Profit (%)"]} />
+                                    <TextField
+                                        value={profitRange.min}
+                                        name="profit-min"
+                                        size="small"
+                                        fullWidth
+                                        type='number'
+                                        inputMode="numeric"
+                                        slotProps={{
+                                            htmlInput: {
+                                                step: 0.1,
+                                                min: ranges?.profit.min || 0,
+                                                max: ranges?.profit.max || 100,
+                                                "aria-labelledby": 'min-profit-input-slider',
+                                                sx: { textAlign: 'center', px: "1px", pt: "5px", pb: "1px", fontSize: 14 },
+                                            },
+                                            input: { sx: { borderRadius: 0 } }
+                                        }}
+                                        sx={{ width: 120 }}
+                                        onChange={handleAdvanceFilterInputChange}
+                                        aria-labelledby="min-profit-input-slider"
+                                    />
+                                    <Slider
+                                        value={[profitRange.min, profitRange.max]}
+                                        onChange={(_, val) =>
+                                            setProfitRange(profitRange => ({ ...profitRange, min: val[0] <= val[1] ? val[0] : val[1], max: val[1] >= val[0] ? val[1] : val[0] }))
+                                        }
+                                        valueLabelDisplay="auto"
+                                        min={ranges?.profit.min || 0}
+                                        max={ranges?.profit.max || 100}
+                                        step={0.1}
+                                        sx={sliderStyle}
+                                        marks
+                                        aria-labelledby="profit-input-slider"
+                                        slotProps={{
+                                            root: { style: { paddingBottom: 0, marginLeft: -16, marginRight: -16, borderRadius: 0 } },
+                                            rail: { style: { height: 26, borderRadius: 0 } },
+                                            track: { style: { height: 24, borderRadius: 0, backgroundColor: ranges ? `hsl(${(profitRange.max - profitRange.min) / (ranges?.profit.max - ranges?.profit.min) * 100}, 100%, 30%)` : `hsl(100, 100%, 30%)` } },
+                                            thumb: { style: { zIndex: 100, color: theme.palette.warning.light, borderRadius: 2, height: 14, width: 14 } }
+                                        }}
+                                    />
+                                    <TextField
+                                        variant="outlined"
+                                        value={profitRange.max}
+                                        name="profit-max"
+                                        size="small"
+                                        fullWidth
+                                        type='number'
+                                        inputMode="numeric"
+                                        slotProps={{
+                                            htmlInput: {
+                                                step: 0.1,
+                                                min: ranges?.profit.min || 0,
+                                                max: ranges?.profit.max || 100,
+                                                "aria-labelledby": 'max-profit-input-slider',
+                                                sx: { textAlign: 'center', px: "1px", pt: "5px", pb: "1px", fontSize: 14 },
+                                            },
+                                            input: { sx: { borderRadius: 0 } }
+                                        }}
+                                        sx={{ width: 120 }}
+                                        onChange={handleAdvanceFilterInputChange}
+                                        aria-labelledby="max-profit-input-slider"
+                                    />
+                                </Stack>
+                            </Box>
+
+                            <Stack direction="row" justifyContent="flex-end" spacing={2}>
+                                <Button
+                                    variant="outlined"
+                                    disabled={Object.keys(filters).length === 1}
+                                    onClick={() => setFilters(filters => ({
+                                        q: filters['q']
+                                    }))}
+                                >
+                                    {t["Reset"]}
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    disabled={Object.keys(filters).length !== 1}
+                                    onClick={() => setFilters(filters => ({
+                                        ...filters,
+                                        priceRange,
+                                        weightRange,
+                                        makingChargeRange,
+                                        profitRange
+                                    }))}
+                                >
+                                    {t["Apply"]}
+                                </Button>
+                            </Stack>
+                        </Stack>
+                    </AccordionDetails>
+                </Accordion>
                 {/* Product Grid */}
                 <Grid container spacing={2}>
                     {

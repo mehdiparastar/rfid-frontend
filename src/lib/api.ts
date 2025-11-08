@@ -1,4 +1,5 @@
 import type { User } from "../api/auth";
+import type { IProductRange } from "../api/products";
 import type { Tag } from "../api/tags";
 import type { GoldProductSUBType, GoldProductType } from "../store/useProductFormStore";
 
@@ -182,7 +183,8 @@ export type Product = {
 export type Page<T> = {
     items: T[]
     nextCursor?: string | null
-    total?: number
+    total?: number,
+    ranges?: IProductRange
 }
 
 export type SortingState = Array<{ id: string; desc: boolean }>;

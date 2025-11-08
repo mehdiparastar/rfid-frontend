@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, apiUpload, getProductItems, type Page, type Product, type SortingState } from '../lib/api';
-import type { ProductFormValues } from '../store/useProductFormStore';
+import type { GoldProductSUBType, ProductFormValues } from '../store/useProductFormStore';
 import { productsByIdsQueryKey, productsQueryKey } from './queryKeys';
 
 
@@ -159,3 +159,31 @@ export type UpdateProductPayload = {
     removedPhotoPaths?: string[]; // server paths to delete
     onProgress?: (percent: number, loaded: number, total: number) => void;
 };
+
+interface IRange {
+    min: number;
+    max: number;
+}
+
+interface IProductPrice {
+    subType: GoldProductSUBType,
+    weight: number,
+    vat: number,
+    profit: number,
+    makingCharge: number,
+    price: number
+}
+export interface IProductRange {
+    weight: IRange,
+    quantity: IRange,
+    makingCharge: IRange,
+    profit: IRange,
+    price: { min: [IProductPrice, IProductPrice], max: [IProductPrice, IProductPrice] },
+}
+
+export function useProductsRanges() {
+    return useQuery({
+        queryKey: ["products-ranges"],
+        queryFn: ({ signal }) => api<IProductRange>("/api/products/get-all-ranges", { signal })
+    })
+}
