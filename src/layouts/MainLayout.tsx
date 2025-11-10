@@ -1,4 +1,4 @@
-import { Backup } from "@mui/icons-material";
+import { Backup, Dashboard, HomeFilled } from "@mui/icons-material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -41,13 +41,16 @@ import { useSocketStore } from "../store/socketStore";
 import TagNamaLogo from "../svg/TagNamaLogo";
 import { darkGradient, lightGradient, softBg } from "../utils/const";
 import { translate } from "../utils/translate";
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 
 const drawerWidth = 260;
 
 type NavItem = { to: string; label: string; icon: React.ReactElement };
 
 const NAV_ITEMS: NavItem[] = [
-    { to: "/home", label: "Home", icon: <DashboardIcon /> },
+    { to: "/home", label: "Home", icon: <HomeFilled /> },
+    { to: "/dashboard", label: "Dashboard", icon: <Dashboard /> },
+    { to: "/gold-price-dashboard", label: "Gold Price Dashboard", icon: <MonetizationOnIcon /> },
     { to: "/scan-mode", label: "Scan Mode", icon: <QrCodeScannerIcon /> },
     { to: "/products", label: "Products", icon: <Inventory2Icon /> },
     { to: "/invoices", label: "Invoices", icon: <ReceiptIcon /> },

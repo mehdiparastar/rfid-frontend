@@ -180,7 +180,6 @@ export default function IssueInvoice() {
                             productId: p.id,
                             quantity: quantityPerProduct[`quantity_${p.id}`],
                             soldPrice: Math.round(
-                                10 *
                                 productSpotPrice *
                                 quantityPerProduct[`quantity_${p.id}`] *
                                 Number(p.weight) * (1 + (Number(p.makingCharge) / 100) + (Number(p.profit) / 100) + (Number(p.vat) / 100))
@@ -631,8 +630,8 @@ export default function IssueInvoice() {
 
                                         <TableBody>
                                             {products.map((product, i) => {
-                                                const productSpotPrice = spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0
-                                                const productIRRSpotPrice = getIRRCurrency(10 * productSpotPrice).replace('ریال', '')
+                                                const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0)
+                                                const productIRRSpotPrice = getIRRCurrency(productSpotPrice).replace('ریال', '')
                                                 const availableQuantity = Number(product.quantity) - Number(product.saleItems?.reduce((p, c) => p + c.quantity, 0))
 
                                                 return (
@@ -662,7 +661,7 @@ export default function IssueInvoice() {
                                                         <TableCell sx={{ height: 48 }} align="center">{Number(product.weight).toString()}</TableCell>
                                                         <TableCell className="no-print" sx={{ height: 48 }} align="center">{Number(product.makingCharge).toString()}% + {Number(product.profit).toString()}% + {Number(product.vat).toString()}%</TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{productIRRSpotPrice}</TableCell>
-                                                        <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{getIRRCurrency(10 * Number(productSpotPrice * 10) * Number(product.weight) * quantityPerProduct[`quantity_${product.id}`] * (1 + (Number(product.makingCharge) / 100) + (Number(product.profit) / 100) + (Number(product.vat) / 100))).replace('ریال', '')}</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{getIRRCurrency(Number(productSpotPrice) * Number(product.weight) * quantityPerProduct[`quantity_${product.id}`] * (1 + (Number(product.makingCharge) / 100) + (Number(product.profit) / 100) + (Number(product.vat) / 100))).replace('ریال', '')}</TableCell>
                                                     </TableRow>
                                                 )
                                             })}
@@ -702,7 +701,11 @@ export default function IssueInvoice() {
                                 <Stack direction="row" gap={2} alignItems={'center'}>
                                     <Typography color="warning.light">
                                         {
-                                            getIRRCurrency(10 * products.reduce((p, c) => p + (onlinePrice * Number(c.weight) * quantityPerProduct[`quantity_${c.id}`] * (1 + (Number(c.makingCharge) / 100) + (Number(c.profit) / 100) + (Number(c.vat) / 100))), 0))
+                                            getIRRCurrency(products.reduce((p, c) => {
+                                                const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === c.subType)?.price || 0)
+
+                                                return p + (productSpotPrice * Number(c.weight) * quantityPerProduct[`quantity_${c.id}`] * (1 + (Number(c.makingCharge) / 100) + (Number(c.profit) / 100) + (Number(c.vat) / 100)))
+                                            }, 0))
                                         }
                                     </Typography>
                                     {!issuedInvoice && <Divider flexItem orientation="vertical" />}

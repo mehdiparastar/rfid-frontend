@@ -39,6 +39,82 @@ export default function InvoiceDetails() {
     const reactToPrintFn = useReactToPrint({
         contentRef,
         documentTitle: 'kanani-invoice',
+        pageStyle: theme.direction === "rtl" ?
+            `
+            @page { size: A4 landscape; margin: 0.5cm; }
+            @media print {
+                /* Scope all print rules to .printable-content */
+                .printable-content {
+                    direction: rtl !important;
+                    text-align: right !important;
+                    unicode-bidi: embed !important;
+                }
+                .printable-content * {
+                    direction: rtl !important;
+                }
+                .printable-content table, .printable-content .MuiTable-root {
+                    direction: rtl !important;
+                }
+                .printable-content .MuiTableCell-root {
+                    text-align: right !important;
+                }
+                .printable-content .MuiInputBase-root, .printable-content .MuiTextField-root {
+                    text-align: right !important;
+                }
+                /* Flip MUI margins/paddings for RTL */
+                .printable-content .MuiBox-root, .printable-content .MuiGrid-root {
+                    margin-right: var(--muirtl-margin-left, 0) !important;
+                    margin-left: var(--muirtl-margin-right, 0) !important;
+                }
+                /* Persian font fallback */
+                body { font-family: 'Vazirmatn', 'IRANSans', sans-serif !important; }
+                
+                /* ENHANCED: Hide no-print column (header + body cells) with MUI specificity */
+                .printable-content .no-print,
+                .printable-content .no-print.MuiTableCell-root,
+                .printable-content table td.no-print,
+                .printable-content .MuiTableBody-root td.no-print {
+                    display: none !important;
+                    visibility: hidden !important;
+                    width: 0 !important;
+                    min-width: 0 !important;
+                    max-width: 0 !important;
+                    padding: 0 !important;
+                    border: none !important;
+                }
+                /* Ensure table reflows after hiding column */
+                .printable-content .MuiTable-root {
+                    table-layout: fixed !important;  /* Prevents gaps */
+                }
+            }
+        ` :
+            `
+            @page { size: A4 landscape; margin: 0.5cm; }
+            @media print {
+                /* Scope all print rules to .printable-content */
+                .printable-content {
+                    /* LTR defaults if needed */
+                }
+                
+                /* ENHANCED: Hide no-print column (header + body cells) with MUI specificity */
+                .printable-content .no-print,
+                .printable-content .no-print.MuiTableCell-root,
+                .printable-content table td.no-print,
+                .printable-content .MuiTableBody-root td.no-print {
+                    display: none !important;
+                    visibility: hidden !important;
+                    width: 0 !important;
+                    min-width: 0 !important;
+                    max-width: 0 !important;
+                    padding: 0 !important;
+                    border: none !important;
+                }
+                /* Ensure table reflows after hiding column */
+                .printable-content .MuiTable-root {
+                    table-layout: fixed !important;  /* Prevents gaps */
+                }
+            }
+        `,
     });
 
 
@@ -52,7 +128,11 @@ export default function InvoiceDetails() {
             <Box sx={{ width: 1, bgcolor: isConnected ? "green" : "red", height: 5 }} />
             <Container maxWidth="xl" sx={{ px: 3, pt: 2, pb: 5 }}>
 
-                <Grid container ref={contentRef}>
+                <Grid
+                    container
+                    ref={contentRef}
+                    className="printable-content"
+                >
                     <Grid container sx={{ border: '1px dashed gold', height: 745 }} size={{ xs: 12, sm: 3 }}>
                         <Grid size={{ xs: 12 }} sx={{ display: 'flex' }}>
                             <Box
@@ -307,7 +387,7 @@ export default function InvoiceDetails() {
 
                             size={{ xs: 12 }}
                         >
-                            <Typography textAlign={'center'} fontFamily={theme.direction === "ltr" ? 'Pacifico, Segoe Script, Vazirmatn, Poppins, cursive' : 'IRANSans'} variant="h3" p={6} color="gold" fontWeight={800}>
+                            <Typography textAlign={'center'} fontFamily={theme.direction === "ltr" ? 'Pacifico, Segoe Script, Vazirmatn, Poppins, cursive' : 'IRANSans'} variant="h4" p={2} color="gold" fontWeight={700}>
                                 {t["Kanani jewelry"]}
                             </Typography>
                         </Grid>
@@ -390,7 +470,7 @@ export default function InvoiceDetails() {
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700 }}>{t["Name"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Quantity"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 100 }}>{t["Weight(g)"]}</TableCell>
-                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge + Profit + VAT"]}</TableCell>
+                                                <TableCell className="no-print" align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge + Profit + VAT"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Spot Price (ریال)"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["Total (ریال)"]}</TableCell>
                                             </TableRow>
@@ -399,7 +479,7 @@ export default function InvoiceDetails() {
                                         <TableBody>
                                             {invoice.items.map((item, i) => {
                                                 const itemSpotPrice = item.spotPrice
-                                                const itemIRRSpotPrice = getIRRCurrency(10 * itemSpotPrice).replace('ریال', '')
+                                                const itemIRRSpotPrice = getIRRCurrency(itemSpotPrice).replace('ریال', '')
 
                                                 return (
                                                     <TableRow
@@ -424,7 +504,7 @@ export default function InvoiceDetails() {
                                                             />
                                                         </TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{Number(item.product.weight).toString()}</TableCell>
-                                                        <TableCell sx={{ height: 48 }} align="center">{Number(item.product.makingCharge).toString()}% + {Number(item.product.profit).toString()}% + {Number(item.product.vat).toString()}%</TableCell>
+                                                        <TableCell className="no-print" sx={{ height: 48 }} align="center">{Number(item.product.makingCharge).toString()}% + {Number(item.product.profit).toString()}% + {Number(item.product.vat).toString()}%</TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{itemIRRSpotPrice}</TableCell>
                                                         <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{getIRRCurrency(item.soldPrice).replace('ریال', '')}</TableCell>
                                                     </TableRow>
@@ -439,6 +519,7 @@ export default function InvoiceDetails() {
                                                             backgroundColor: theme.palette.action.hover,
                                                         }
                                                     }}
+                                                    className="no-print"
                                                 >
                                                     <TableCell colSpan={8} sx={{ height: 48 }} />
                                                 </TableRow>

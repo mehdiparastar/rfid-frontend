@@ -19,6 +19,8 @@ const Tags = React.lazy(() => import("../pages/Tags"));
 const BackupDB = React.lazy(() => import("../pages/DBOperations/DBOperations"));
 const Users = React.lazy(() => import("../pages/Users"));
 const IssueInvoice = React.lazy(() => import("../pages/IssueInvoice"));
+const GoldPriceDashboard = React.lazy(() => import("../pages/Dashboard/GoldPriceDashboard"));
+const Dashboard = React.lazy(() => import("../pages/Dashboard/Dashboard"));
 
 import { fetchProductsByIds } from "../api/products"; // your feature fetcher
 import Invoices from "../pages/Invoices";
@@ -113,6 +115,8 @@ const router = createBrowserRouter([
             {
                 element: <RequireAuth />,
                 children: [
+                    { path: "dashboard", element: <Dashboard /> },
+                    { path: "gold-price-dashboard", element: <GoldPriceDashboard /> },
                     { path: "invoices", element: <Invoices /> },
                     { path: "products", element: <Products /> },
                     { path: "scan-mode", element: <ScanMode /> },
