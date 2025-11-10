@@ -194,7 +194,7 @@ export function useSetScanMode() {
                 }
             ),
         retry: 5,
-        async onSuccess(data, variables, context) {
+        async onSuccess(data,/* variables, context*/) {
             qc.setQueryData<JrdStateResponse[]>(jrdKeys.list(), data);
             await qc.refetchQueries({ queryKey: ["current-scenario"], type: "active" });
         },
@@ -215,7 +215,7 @@ export function useSetIsActiveModule() {
                 }
             ),
         retry: 5,
-        async onSuccess(data, variables, context) {
+        async onSuccess(data, /*variables, context*/) {
             qc.setQueryData<JrdStateResponse[]>(jrdKeys.list(), data);
             await qc.refetchQueries({ queryKey: ["current-scenario"], type: "active" });
         },
@@ -236,7 +236,7 @@ export function useSetModuleScanPower() {
                 }
             ),
         retry: 5,
-        async onSuccess(data, variables, context) {
+        async onSuccess(data, /*variables, context*/) {
             qc.setQueryData<JrdStateResponse[]>(jrdKeys.list(), data);
             await qc.refetchQueries({ queryKey: ["current-scenario"], type: "active" });
         },

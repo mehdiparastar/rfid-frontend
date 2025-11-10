@@ -50,7 +50,7 @@ export default function GoldPriceDashboard() {
                 </Stack>
 
                 <Grid container spacing={2}>
-                    {data?.gold.map((item, i) => {
+                    {data?.gold.map((item) => {
                         const isUp = item.change_value >= 0;
                         const chartData = Array.from({ length: 10 }, (_, idx) => ({
                             name: idx,

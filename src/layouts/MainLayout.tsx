@@ -1,13 +1,13 @@
 import { Backup, Dashboard, HomeFilled } from "@mui/icons-material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
-import DashboardIcon from "@mui/icons-material/Dashboard";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import LabelIcon from "@mui/icons-material/Label";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import SignInIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import UsersIcon from "@mui/icons-material/People";
 import SignUpIcon from "@mui/icons-material/PersonAdd";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
@@ -41,7 +41,6 @@ import { useSocketStore } from "../store/socketStore";
 import TagNamaLogo from "../svg/TagNamaLogo";
 import { darkGradient, lightGradient, softBg } from "../utils/const";
 import { translate } from "../utils/translate";
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 
 const drawerWidth = 260;
 

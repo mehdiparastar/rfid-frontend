@@ -3,9 +3,10 @@ import { Alert, alpha, Autocomplete, Box, Button, Container, Divider, Grid, Inpu
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFnsJalali } from '@mui/x-date-pickers/AdapterDateFnsJalali';
 import { faIR } from 'date-fns-jalali/locale/fa-IR';
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useLoaderData, useLocation } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
+import { useCustomerSearch } from "../api/customers";
 import { useGoldCurrency } from "../api/goldCurrency";
 import { useProductsByIds } from "../api/products";
 import { useCreateSale } from "../api/sales";
@@ -17,7 +18,6 @@ import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { isValidIranianNationalId } from "../utils/nationalIdChecker";
 import { isValidIranMobile, normalizeIranMobileToE164 } from "../utils/phoneNumberChecker";
 import { translate } from "../utils/translate";
-import { useCustomerSearch } from "../api/customers";
 
 export default function IssueInvoice() {
 

@@ -1,14 +1,14 @@
 // src/features/inventory/useScanResultsLive.ts
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
+import type { CurrentScenarioRow } from "../api/jrdDevices";
 import type { Mode } from "../api/modules";
 import { scanResultsKey } from "../api/queryKeys";
+import type { Tag } from "../api/tags";
 import dingUrl from "../assets/sounds/ding.mp3"; // Vite: imports as URL
 import type { Product } from "../lib/api";
 import type { ScanResult } from "../lib/socket";
 import { useSocketStore } from "../store/socketStore";
-import type { Tag } from "../api/tags";
-import type { CurrentScenarioRow } from "../api/jrdDevices";
 
 
 export function useScanResultsLive(mode: Mode, maxItems = 5000, refetchOnReconnect = true) {
@@ -81,7 +81,7 @@ export function useScanResultsLive(mode: Mode, maxItems = 5000, refetchOnReconne
         };
 
         const onUpdateCurrentScenario = (payload: { mode: Mode, data: CurrentScenarioRow[] }) => {
-            qc.setQueryData<CurrentScenarioRow[]>(['current-scenario'], (prev) => {
+            qc.setQueryData<CurrentScenarioRow[]>(['current-scenario'], () => {
                 return payload.data
             })
         }
