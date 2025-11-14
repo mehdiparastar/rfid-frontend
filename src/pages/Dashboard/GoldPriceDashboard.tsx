@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useGoldCurrency } from "../../api/goldCurrency";
 import { useSocketStore } from "../../store/socketStore";
-import { translate } from "../../utils/translate";
 import type { GoldProductSUBType } from "../../store/useProductFormStore";
+import { translate } from "../../utils/translate";
 
 const calcCoinPrice = (symbol: GoldProductSUBType, pricePerGeram: number) => {
     if (symbol === "IR_COIN_EMAMI") return pricePerGeram * 8.133
