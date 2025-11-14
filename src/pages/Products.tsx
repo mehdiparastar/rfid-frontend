@@ -1,4 +1,4 @@
-import { ArrowDownward, ArrowUpward, Delete, Edit, ExpandMore, Search, Tune } from "@mui/icons-material";
+import { ArrowDownward, ArrowUpward, Cancel, Check, Delete, Edit, ExpandMore, Search, Tune } from "@mui/icons-material";
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { translate } from "../utils/translate";
 import ProductRegistration from "./ScanMode/components/ProductRegistration";
+import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 
 export default function Products() {
     const theme = useTheme()
@@ -50,8 +51,24 @@ export default function Products() {
 
     const ranges = data?.pages[0].ranges
 
-    const minPrice = spotPrice && ranges && 10 * ranges.price.min[0].weight * (spotPrice.gold.find(it => it.symbol === ranges.price.min[0].subType)?.price || 0) * (1 + ((ranges.price.min[0].vat + ranges.price.min[0].makingCharge + ranges.price.min[0].profit) / 100))
-    const maxPrice = spotPrice && ranges && 10 * ranges.price.max[0].weight * (spotPrice.gold.find(it => it.symbol === ranges.price.max[0].subType)?.price || 0) * (1 + ((ranges.price.max[0].vat + ranges.price.max[0].makingCharge + ranges.price.max[0].profit) / 100))
+    const minPrice =
+        spotPrice && spotPrice.gold && ranges &&
+        calculateGoldPrice(
+            ranges.price.min[0].weight,
+            ranges.price.min[0].makingCharge,
+            ranges.price.min[0].profit,
+            ranges.price.min[0].vat,
+            (spotPrice.gold.find(it => it.symbol === ranges.price.min[0].subType)?.price || 0) * 10
+        )
+    const maxPrice =
+        spotPrice && spotPrice.gold && ranges &&
+        calculateGoldPrice(
+            ranges.price.max[0].weight,
+            ranges.price.max[0].makingCharge,
+            ranges.price.max[0].profit,
+            ranges.price.max[0].vat,
+            (spotPrice.gold.find(it => it.symbol === ranges.price.max[0].subType)?.price || 0) * 10
+        )
 
     const confirmDelete = async () => {
         if (productToDelete)
@@ -187,7 +204,7 @@ export default function Products() {
                 {/* Filters Section */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
                     <TextField
-                        label="Search Products"
+                        label={t["Search Products"]}
                         variant="outlined"
                         value={filters.q}
                         onChange={handleSearchChange}
@@ -513,7 +530,7 @@ export default function Products() {
                             const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
 
                             return (
-                                <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={product.id}>
+                                <Grid size={{ xs: 12, sm: 6 }} key={product.id}>
                                     <Card
                                         sx={{
                                             borderRadius: 1,
@@ -529,10 +546,10 @@ export default function Products() {
                                     >
                                         <CardMedia
                                             component="img"
-                                            height={200}
+                                            height={220}
                                             image={`api${product.photos[0]}` || "/default-product-image.jpg"}
                                             alt={product.name}
-                                            sx={{ width: "100%", objectFit: "cover", cursor: "pointer" }}
+                                            sx={{ width: "100%", height: '100%', objectFit: "cover", cursor: "pointer" }}
                                             onClick={() => {
                                                 setLightboxPhotos(product.photos || []);
                                                 setLightboxOpen(true);
@@ -549,7 +566,7 @@ export default function Products() {
                                             <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100)))}
+                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.weight, product.makingCharge, product.profit, product.vat, productSpotPrice) || 0))}
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?
@@ -571,12 +588,17 @@ export default function Products() {
                                             <Typography variant="body2" color="textSecondary">
                                                 {t["Sold Quantity:"]} {soldQuantity}
                                             </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {t["Sub Type:"]} {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {t["Inventory Item:"]} {<Checkbox checked={!!product.inventoryItem} />}
-                                            </Typography>
+                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Typography variant="body2" color="textSecondary">
+                                                    {t["Sub Type:"]} {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.[theme.direction === "rtl" ? "name" : "name_en"]}
+                                                </Typography>
+                                                <Chip
+                                                    icon={!!product.inventoryItem ? <Check /> : <Cancel />}
+                                                    label={t["Inventory Item"]}
+                                                    sx={{ borderRadius: 1 }}
+                                                    color={!!product.inventoryItem ? "info" : 'default'}
+                                                />
+                                            </Box>
                                         </CardContent>
                                         <CardActions sx={{ display: "flex", justifyContent: 'space-between' }}>
                                             <Box>

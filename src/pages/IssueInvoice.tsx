@@ -18,6 +18,7 @@ import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { isValidIranianNationalId } from "../utils/nationalIdChecker";
 import { isValidIranMobile, normalizeIranMobileToE164 } from "../utils/phoneNumberChecker";
 import { translate } from "../utils/translate";
+import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 
 export default function IssueInvoice() {
 
@@ -167,22 +168,20 @@ export default function IssueInvoice() {
             }).includes(false)
 
     const handleIssueInvoice = async () => {
-        if (canIssue && !spotPriceIsError) {
+        if (canIssue && !spotPriceIsError && spotPrice && spotPrice.gold) {
             try {
                 const create = await createSaleAsync({
                     customer: { name: customer.name, nid: customer.nid, phone: customer.phone },
                     sellDate: new Date(),
                     payType: payType,
                     items: products.map(p => {
-                        const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === p.subType)?.price || 0)
+                        const productSpotPrice = 10 * (spotPrice.gold.find(it => it.symbol === p.subType)?.price || 0)
 
                         return ({
                             productId: p.id,
                             quantity: quantityPerProduct[`quantity_${p.id}`],
                             soldPrice: Math.round(
-                                productSpotPrice *
-                                quantityPerProduct[`quantity_${p.id}`] *
-                                Number(p.weight) * (1 + (Number(p.makingCharge) / 100) + (Number(p.profit) / 100) + (Number(p.vat) / 100))
+                                productSpotPrice * (calculateGoldPrice(Number(p.weight), Number(p.makingCharge), Number(p.profit), Number(p.vat), productSpotPrice) || 0)
                             ),
                             spotPrice: productSpotPrice
                         })
@@ -661,7 +660,12 @@ export default function IssueInvoice() {
                                                         <TableCell sx={{ height: 48 }} align="center">{Number(product.weight).toString()}</TableCell>
                                                         <TableCell className="no-print" sx={{ height: 48 }} align="center">{Number(product.makingCharge).toString()}% + {Number(product.profit).toString()}% + {Number(product.vat).toString()}%</TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{productIRRSpotPrice}</TableCell>
-                                                        <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{getIRRCurrency(Number(productSpotPrice) * Number(product.weight) * quantityPerProduct[`quantity_${product.id}`] * (1 + (Number(product.makingCharge) / 100) + (Number(product.profit) / 100) + (Number(product.vat) / 100))).replace('ریال', '')}</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{
+                                                            getIRRCurrency(
+                                                                quantityPerProduct[`quantity_${product.id}`] *
+                                                                (calculateGoldPrice(Number(product.weight), Number(product.makingCharge), Number(product.profit), Number(product.vat), Number(productSpotPrice)) || 0)
+                                                            ).replace('ریال', '')}
+                                                        </TableCell>
                                                     </TableRow>
                                                 )
                                             })}
@@ -703,8 +707,7 @@ export default function IssueInvoice() {
                                         {
                                             getIRRCurrency(products.reduce((p, c) => {
                                                 const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === c.subType)?.price || 0)
-
-                                                return p + (productSpotPrice * Number(c.weight) * quantityPerProduct[`quantity_${c.id}`] * (1 + (Number(c.makingCharge) / 100) + (Number(c.profit) / 100) + (Number(c.vat) / 100)))
+                                                return p + (quantityPerProduct[`quantity_${c.id}`] * (calculateGoldPrice(Number(c.weight), Number(c.makingCharge), Number(c.profit), Number(c.vat), productSpotPrice) || 0))
                                             }, 0))
                                         }
                                     </Typography>

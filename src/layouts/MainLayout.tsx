@@ -1,4 +1,4 @@
-import { Backup, Dashboard, HomeFilled } from "@mui/icons-material";
+import { Backup, CleaningServices, Dashboard, HomeFilled, RestartAlt } from "@mui/icons-material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
@@ -21,7 +21,8 @@ import {
     Divider,
     Drawer,
     IconButton,
-    List, ListItemButton,
+    List,
+    ListItemButton,
     ListItemText,
     Menu,
     MenuItem,
@@ -67,7 +68,8 @@ function ListItemLink({
     icon,
     onNavigate,
     exact = true,
-}: NavItem & { onNavigate?: () => void; exact?: boolean }) {
+    mini = false,
+}: NavItem & { onNavigate?: () => void; exact?: boolean; mini?: boolean }) {
     // Highlight when URL matches. Set exact=false to keep parent highlighted on child routes.
     const match = useMatch({ path: to, end: exact });
     const theme = useTheme()
@@ -81,6 +83,14 @@ function ListItemLink({
             onClick={onNavigate}
             selected={!!match}
             sx={{
+                minHeight: 46,
+                maxHeight: 46,
+                justifyContent: "flex-start",
+                // px: !mini ? 2 : 2,
+                "& .MuiListItemIcon-root": {
+                    mr: 1,
+                    transition: "margin 0.25s ease",
+                },
                 "&.Mui-selected": (t) => ({
                     backgroundColor: t.palette.action.selected,
                 }),
@@ -89,8 +99,10 @@ function ListItemLink({
                 }),
             }}
         >
-            <MUIListItemIcon sx={{ minWidth: 40 }}>{icon}</MUIListItemIcon>
-            <ListItemText primary={t[label]} />
+            <MUIListItemIcon sx={{ minWidth: 0 }}>{icon}</MUIListItemIcon>
+            {!mini && (
+                <ListItemText primary={t[label]} sx={{ opacity: mini ? 0 : 1, transition: "opacity 0.25s ease, max-width 0.25s ease", }} />
+            )}
         </ListItemButton>
     );
 }
@@ -99,9 +111,11 @@ function ListItemLink({
 const Sidebar = React.memo(function Sidebar({
     items,
     onNavigate,
+    mini
 }: {
     items: NavItem[];
     onNavigate?: () => void;
+    mini?: boolean
 }) {
     return (
         <Box
@@ -130,7 +144,7 @@ const Sidebar = React.memo(function Sidebar({
             <Divider />
             <List>
                 {items.map((item) => (
-                    <ListItemLink key={item.to} {...item} onNavigate={onNavigate} />
+                    <ListItemLink key={item.to} {...item} onNavigate={onNavigate} mini={mini} />
                 ))}
             </List>
         </Box>
@@ -196,12 +210,34 @@ const Header = React.memo(function Header({ onMenuClick }: { onMenuClick: () => 
                     </Stack>
 
                     <Stack direction="row" spacing={1} alignItems="center">
-                        <Tooltip title={mode === "dark" ? "Switch to light" : "Switch to dark"}>
+                        <Tooltip title={t["Clear localStorage"]} arrow>
+                            <IconButton
+                                color="inherit"
+                                onClick={() => {
+                                    window.localStorage.clear()
+                                    navigate("/")
+                                }}
+                                sx={{ marginRight: 2 }}
+                            >
+                                <CleaningServices />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title={t["Reload Window"]} arrow>
+                            <IconButton
+                                color="inherit"
+                                onClick={() => window.location.reload()}
+                                sx={{ marginRight: 2 }}
+                            >
+                                <RestartAlt />
+                            </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title={mode === "dark" ? t["Switch to light"] : t["Switch to dark"]}>
                             <IconButton sx={{ width: 44, height: 44 }} color="inherit" onClick={toggleMode} aria-label="toggle color mode">
                                 {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title={dir === "rtl" ? "Switch to LTR" : "Switch to RTL"}>
+                        <Tooltip title={dir === "rtl" ? t["Switch to LTR"] : t["Switch to RTL"]}>
                             <IconButton sx={{ width: 44, height: 44 }} color="inherit" onClick={toggleDir} aria-label="toggle direction">
                                 {dir === "rtl" ?
                                     <Typography variant="body1" sx={{ fontWeight: "bold" }}>EN</Typography> :
@@ -261,10 +297,13 @@ const Header = React.memo(function Header({ onMenuClick }: { onMenuClick: () => 
 });
 
 
+
 export default function MainLayout() {
     const theme = useTheme();
     const mdUp = useMediaQuery(theme.breakpoints.up("md"));
     const [mobileOpen, setMobileOpen] = React.useState(false);
+    const drawerWidthCollapsed = 57;
+    const [openMini, setOpenMini] = React.useState(false);
 
     // Close drawer when route changes (mobile)
     const location = useLocation();
@@ -272,7 +311,6 @@ export default function MainLayout() {
         setMobileOpen(false);
     }, [location.pathname]);
 
-    const drawer = <Sidebar items={NAV_ITEMS} onNavigate={() => setMobileOpen(false)} />;
 
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh" }}>
@@ -291,10 +329,11 @@ export default function MainLayout() {
                         "& .MuiDrawer-paper": { width: drawerWidth },
                     }}
                 >
-                    {drawer}
+                    {/* {drawer} */}
+                    <Sidebar items={NAV_ITEMS} mini={false} onNavigate={() => setMobileOpen(false)} />
                 </Drawer>
             )}
-            {mdUp && (
+            {/* {mdUp && (
                 <Drawer
                     variant="permanent"
                     sx={{
@@ -306,8 +345,52 @@ export default function MainLayout() {
                 >
                     {drawer}
                 </Drawer>
-            )}
+            )} */}
 
+            {/* Desktop Mini Variant Drawer */}
+            {/* {mdUp && (
+                <Drawer
+                    variant="permanent"
+                    open={openMini}
+                    onMouseEnter={() => setOpenMini(true)}     // expand on hover
+                    onMouseLeave={() => setOpenMini(false)}    // collapse on leave
+                    sx={{
+                        width: openMini ? drawerWidth : drawerWidthCollapsed,
+                        transition: "width 0.3s ease",
+                        flexShrink: 0,
+                        "& .MuiDrawer-paper": {
+                            width: openMini ? drawerWidth : drawerWidthCollapsed,
+                            overflowX: "hidden",
+                            boxSizing: "border-box",
+                            transition: "width 0.3s ease",
+                        },
+                    }}
+                >
+                    {drawer}
+                </Drawer>
+            )} */}
+            {/* Desktop Mini Variant Drawer */}
+            {mdUp && (
+                <Drawer
+                    variant="permanent"
+                    open={openMini}
+                    onMouseEnter={() => setOpenMini(true)}     // expand on hover
+                    onMouseLeave={() => setOpenMini(false)}    // collapse on leave
+                    sx={{
+                        width: openMini ? drawerWidth : drawerWidthCollapsed,
+                        transition: "width 0.3s ease",
+                        flexShrink: 0,
+                        "& .MuiDrawer-paper": {
+                            width: openMini ? drawerWidth : drawerWidthCollapsed,
+                            overflowX: "hidden",
+                            boxSizing: "border-box",
+                            transition: "width 0.3s ease",
+                        },
+                    }}
+                >
+                    <Sidebar items={NAV_ITEMS} mini={!openMini} onNavigate={() => setMobileOpen(false)} />
+                </Drawer>
+            )}
             {/* Content + Footer */}
             <Box component="main" sx={{ minHeight: "1000px", flexGrow: 1, display: "flex", flexDirection: "column", overflow: 'hidden', background: theme.palette.mode === "dark" ? darkGradient : lightGradient }}>
                 {/* Decorative background */}

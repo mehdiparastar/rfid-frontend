@@ -229,12 +229,14 @@ const SelectTags: React.FC<SelectTagsProps> = ({ selectedTags, open, onClose, on
         });
         // This cleanup function runs when the component unmounts
 
-        handleInitModules()
+
 
         return () => {
             handleStopScenario();
         };
     }, []);
+
+    useEffect(() => { handleInitModules() }, [scenarioState.map(x => x.id).sort().join()])
 
     const isScanning = (newProductCurrentScenario || []).filter(el => el.state.isScan).length > 0
 

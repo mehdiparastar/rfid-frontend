@@ -46,6 +46,7 @@ import { powerPercentToDbm } from '../../../utils/percentDbm';
 import { translate } from '../../../utils/translate';
 import ModuleSettings, { inventoryModeScanPowerInPercent } from './ModuleSettings';
 import { useModulePrefs } from './jrd-modules-default-storage';
+import { calculateGoldPrice } from '../../../utils/calculateGoldPrice';
 
 
 
@@ -178,12 +179,13 @@ const CheckInventory: React.FC = () => {
         });
         // This cleanup function runs when the component unmounts
 
-        handleInitModules()
-
         return () => {
             handleStopScenario();
         };
     }, []);
+
+    useEffect(() => { handleInitModules() }, [scenarioState.map(x => x.id).sort().join()])
+
 
 
     const isScanning = (inventoryCurrentScenario || []).filter(el => el.state.isScan).length > 0
@@ -394,7 +396,7 @@ const CheckInventory: React.FC = () => {
                                             <Divider sx={{ mx: -2, my: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    Unit Price: {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100)))}
+                                                    Unit Price: {getIRRCurrency(calculateGoldPrice(product.weight, product.makingCharge, product.profit, product.vat, productSpotPrice) || 0)}
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?
@@ -668,7 +670,7 @@ const CheckInventory: React.FC = () => {
                                                 <Chip label={t[product.type]} size="small" />
                                             </TableCell>
                                             <TableCell align="center" variant="body" color="textSecondary" sx={{ fontWeight: 'bold', fontFamily: "IRANSans, sans-serifRoboto, Arial, sans-serif" }} >
-                                                {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100))).replace("ریال", "")}
+                                                {getIRRCurrency(Math.round(calculateGoldPrice(product.weight, product.makingCharge, product.profit, product.vat, productSpotPrice) || 0)).replace("ریال", "")}
                                             </TableCell>
                                             <TableCell align="center">
                                                 <Chip

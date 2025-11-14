@@ -1,7 +1,7 @@
 import { Close } from "@mui/icons-material";
-import { Alert, AppBar, Badge, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, Divider, IconButton, LinearProgress, List, ListItem, ListItemIcon, ListItemText, Slide, Slider, Stack, styled, Switch, Toolbar, Typography, useTheme, type BadgeProps } from "@mui/material";
+import { Alert, AppBar, Badge, Box, Button, Chip, Dialog, DialogContent, DialogContentText, Divider, IconButton, LinearProgress, List, ListItem, ListItemIcon, ListItemText, Slide, Slider, Stack, styled, Switch, Toolbar, Typography, useTheme, type BadgeProps } from "@mui/material";
 import type { TransitionProps } from "@mui/material/transitions";
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
 import { useCurrentScenario, useInitJrdModules, useSetIsActiveModule, useSetModuleScanPower, useSetScanMode } from "../../../api/jrdDevices";
 import { type Mode } from "../../../api/modules";
 import { powerDbmToPercent, powerPercentToDbm } from "../../../utils/percentDbm";
@@ -60,6 +60,10 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
         initJrdModulesMutation.mutate(initVars);
     };
 
+    useEffect(() => {
+        handleInitModules(powerById, activeById, modeById)
+    }, [])
+
     const isLoading = setScanModeIsPending || setIsActiveModuleIsPending || setModuleScanPowerIsPending || isLoadingScenarioState || isFetchingScenarioState || initJrdModulesMutation.status === "pending"
 
     return (
@@ -107,7 +111,7 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                             }
                         </Alert> :
                         (scenarioState || []).length > 0 ?
-                            <List sx={{ width: '100%', mt: 4 }}>
+                            <List sx={{ width: '100%', mt: 2 }}>
                                 {(scenarioState || []).map(m => {
                                     return (
                                         <ListItem key={m.id} sx={{ px: 1, mb: 2 }}>
@@ -197,23 +201,6 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                                 })}
                             </List> :
                             <Button onClick={() => refetchScenarioState()} color="warning" fullWidth variant="contained">{t["Fetch Latest State"]}</Button>
-                }
-                {(scenarioState || []).length > 0 &&
-                    <DialogActions>
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            color="warning"
-                            sx={{
-                                width: 1,
-                            }}
-                            size="small"
-                            onClick={() => { handleInitModules(powerById, activeById, modeById) }}
-                            disabled={initJrdModulesMutation.status === "pending"}
-                        >
-                            {initJrdModulesMutation.status === "pending" ? t['Initializing...'] : t['RE-INIT']}
-                        </Button>
-                    </DialogActions>
                 }
             </DialogContent>
         </Dialog>

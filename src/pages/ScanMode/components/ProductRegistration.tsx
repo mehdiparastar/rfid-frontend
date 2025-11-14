@@ -215,6 +215,12 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
         setDialogOpen(false);
     };
 
+    const handleTagRemove = (tag: Tag) => {
+        const unique = [...new Map(values.tags.filter(el => el.epc !== tag.epc).map(item => [item.epc, item])).values()]
+        setValue('tags', unique);
+        setHelper('tags', `${unique.length} ${t['tags selected']}`);
+    }
+
     useEffect(() => {
         if (mode === "Edit" && toEditData) {
             initialize(toEditData);
@@ -437,6 +443,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                                         disabled={createNewProductMutation.isPending}
                                         key={tag.epc}
                                         label={tag.epc}
+                                        onDelete={() => handleTagRemove(tag)}
                                     />
                                 ))}
                             </Box>

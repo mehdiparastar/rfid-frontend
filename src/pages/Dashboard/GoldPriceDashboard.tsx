@@ -68,9 +68,9 @@ export default function GoldPriceDashboard() {
                                             borderRadius: 3,
                                             boxShadow: 4,
                                             background:
-                                                isUp
+                                                theme.palette.mode === 'light' ? isUp
                                                     ? "linear-gradient(135deg, #fff8e1, #fffde7)"
-                                                    : "linear-gradient(135deg, #ffebee, #fce4ec)",
+                                                    : "linear-gradient(135deg, #ffebee, #fce4ec)" : {},
                                         }}
                                     >
                                         <CardContent>

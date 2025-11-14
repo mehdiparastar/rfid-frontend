@@ -16,6 +16,7 @@ import type { Product } from "../../../lib/api";
 import ProductRegistration from "./ProductRegistration";
 import { useDeleteProduct } from "../../../api/products";
 import { ErrorSnack } from "../../../components/ErrorSnack";
+import { calculateGoldPrice } from "../../../utils/calculateGoldPrice";
 
 const Scan: React.FC = () => {
 
@@ -146,6 +147,8 @@ const Scan: React.FC = () => {
             handleStopScenario();
         };
     }, []);
+
+    useEffect(() => { handleInitModules() }, [scenarioState.map(x => x.id).sort().join()])
 
     const isScanning = (scanCurrentScenario || []).filter(el => el.state.isScan).length > 0
 
@@ -312,7 +315,7 @@ const Scan: React.FC = () => {
                         {t["All"]}: {filteredScanResults.length || 0}
                     </Typography>
                     {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}{t["product(s) selected."]}</Typography>}
-                    <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>INVOICE</Button>
+                    <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>{t["INVOICE"]}</Button>
                 </Box>
 
                 {/* Product Grid */}
@@ -323,7 +326,7 @@ const Scan: React.FC = () => {
                             const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
 
                             return (
-                                <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={product.id}>
+                                <Grid size={{ xs: 12, sm: 6 }} key={product.id}>                                    
                                     <Card
                                         sx={{
                                             borderRadius: 1,
@@ -359,7 +362,7 @@ const Scan: React.FC = () => {
                                             <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(product.weight * productSpotPrice * (1 + product.profit / 100 + product.makingCharge / 100 + product.vat / 100)))}
+                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.weight, product.makingCharge, product.profit, product.vat, productSpotPrice) || 0))}
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?
