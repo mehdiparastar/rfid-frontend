@@ -14,11 +14,11 @@ import type { Customer, Invoice, Product } from "../lib/api";
 import { useSocketStore } from "../store/socketStore";
 import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 import { InvoiceLogoImg } from "../svg/InvoiceLogo/InvoiceLogo";
+import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { isValidIranianNationalId } from "../utils/nationalIdChecker";
 import { isValidIranMobile, normalizeIranMobileToE164 } from "../utils/phoneNumberChecker";
 import { translate } from "../utils/translate";
-import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 
 export default function IssueInvoice() {
 
@@ -176,12 +176,13 @@ export default function IssueInvoice() {
                     payType: payType,
                     items: products.map(p => {
                         const productSpotPrice = 10 * (spotPrice.gold.find(it => it.symbol === p.subType)?.price || 0)
+                        const productSpotKarat = (spotPrice.gold.find(it => it.symbol === p.subType)?.karat || 0)
 
                         return ({
                             productId: p.id,
                             quantity: quantityPerProduct[`quantity_${p.id}`],
                             soldPrice: Math.round(
-                                productSpotPrice * (calculateGoldPrice(Number(p.weight), Number(p.makingCharge), Number(p.profit), Number(p.vat), productSpotPrice) || 0)
+                                quantityPerProduct[`quantity_${p.id}`] * (calculateGoldPrice(Number(p.karat), Number(p.weight), Number(p.makingCharge), Number(p.profit), Number(p.vat), { price: productSpotPrice, karat: productSpotKarat }) || 0)
                             ),
                             spotPrice: productSpotPrice
                         })
@@ -630,6 +631,7 @@ export default function IssueInvoice() {
                                         <TableBody>
                                             {products.map((product, i) => {
                                                 const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0)
+                                                const productSpotKarat = (spotPrice?.gold.find(it => it.symbol === product.subType)?.karat || 0)
                                                 const productIRRSpotPrice = getIRRCurrency(productSpotPrice).replace('ریال', '')
                                                 const availableQuantity = Number(product.quantity) - Number(product.saleItems?.reduce((p, c) => p + c.quantity, 0))
 
@@ -663,7 +665,7 @@ export default function IssueInvoice() {
                                                         <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{
                                                             getIRRCurrency(
                                                                 quantityPerProduct[`quantity_${product.id}`] *
-                                                                (calculateGoldPrice(Number(product.weight), Number(product.makingCharge), Number(product.profit), Number(product.vat), Number(productSpotPrice)) || 0)
+                                                                (calculateGoldPrice(Number(product.karat), Number(product.weight), Number(product.makingCharge), Number(product.profit), Number(product.vat), { price: Number(productSpotPrice), karat: Number(productSpotKarat) }) || 0)
                                                             ).replace('ریال', '')}
                                                         </TableCell>
                                                     </TableRow>
@@ -707,7 +709,8 @@ export default function IssueInvoice() {
                                         {
                                             getIRRCurrency(products.reduce((p, c) => {
                                                 const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === c.subType)?.price || 0)
-                                                return p + (quantityPerProduct[`quantity_${c.id}`] * (calculateGoldPrice(Number(c.weight), Number(c.makingCharge), Number(c.profit), Number(c.vat), productSpotPrice) || 0))
+                                                const productSpotKarat = (spotPrice?.gold.find(it => it.symbol === c.subType)?.karat || 0)
+                                                return p + (quantityPerProduct[`quantity_${c.id}`] * (calculateGoldPrice(Number(c.karat), Number(c.weight), Number(c.makingCharge), Number(c.profit), Number(c.vat), { price: productSpotPrice, karat: productSpotKarat }) || 0))
                                             }, 0))
                                         }
                                     </Typography>

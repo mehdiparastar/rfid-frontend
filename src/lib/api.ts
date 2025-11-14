@@ -163,6 +163,7 @@ export type Product = {
     name: string
     photos: string[];  // Local file paths for photos
     previews: string[];  // Local file paths for preview images
+    karat: number;
     weight: number;  // In grams or kilograms, depending on your unit system
     type: GoldProductType;
     subType: GoldProductSUBType;

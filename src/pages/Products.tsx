@@ -9,10 +9,10 @@ import PhotoLightbox from "../components/PhotoLightbox";
 import type { Product } from "../lib/api";
 import { useSocketStore } from "../store/socketStore";
 import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
+import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { translate } from "../utils/translate";
 import ProductRegistration from "./ScanMode/components/ProductRegistration";
-import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 
 export default function Products() {
     const theme = useTheme()
@@ -54,20 +54,28 @@ export default function Products() {
     const minPrice =
         spotPrice && spotPrice.gold && ranges &&
         calculateGoldPrice(
+            ranges.price.min[0].karat,
             ranges.price.min[0].weight,
             ranges.price.min[0].makingCharge,
             ranges.price.min[0].profit,
             ranges.price.min[0].vat,
-            (spotPrice.gold.find(it => it.symbol === ranges.price.min[0].subType)?.price || 0) * 10
+            {
+                price: (spotPrice.gold.find(it => it.symbol === ranges.price.min[0].subType)?.price || 0) * 10,
+                karat: (spotPrice.gold.find(it => it.symbol === ranges.price.min[0].subType)?.karat || 0),
+            }
         )
     const maxPrice =
         spotPrice && spotPrice.gold && ranges &&
         calculateGoldPrice(
+            ranges.price.max[0].karat,
             ranges.price.max[0].weight,
             ranges.price.max[0].makingCharge,
             ranges.price.max[0].profit,
             ranges.price.max[0].vat,
-            (spotPrice.gold.find(it => it.symbol === ranges.price.max[0].subType)?.price || 0) * 10
+            {
+                price: (spotPrice.gold.find(it => it.symbol === ranges.price.max[0].subType)?.price || 0) * 10,
+                karat: (spotPrice.gold.find(it => it.symbol === ranges.price.max[0].subType)?.karat || 0)
+            }
         )
 
     const confirmDelete = async () => {
@@ -527,6 +535,7 @@ export default function Products() {
                     {
                         products.map((product) => {
                             const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0)
+                            const productSpotKarat = (spotPrice?.gold.find(it => it.symbol === product.subType)?.karat || 0)
                             const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
 
                             return (
@@ -566,7 +575,7 @@ export default function Products() {
                                             <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.weight, product.makingCharge, product.profit, product.vat, productSpotPrice) || 0))}
+                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingCharge, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }) || 0))}
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?
@@ -582,9 +591,12 @@ export default function Products() {
                                             <Typography variant="body2" color="textSecondary">
                                                 {t["Unit Weight:"]} {product.weight}{t["g"]}
                                             </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {t["Making Charge:"]} {product.makingCharge}%
-                                            </Typography>
+                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Typography variant="body2" color="textSecondary">
+                                                    {t["Making Charge:"]} {product.makingCharge}%
+                                                </Typography>
+                                                <Chip sx={{ borderRadius: 1 }} label={product.karat} />
+                                            </Box>
                                             <Typography variant="body2" color="textSecondary">
                                                 {t["Sold Quantity:"]} {soldQuantity}
                                             </Typography>
@@ -608,16 +620,16 @@ export default function Products() {
                                                             <Box
                                                                 key={tag.id}
                                                                 sx={{
-                                                                    bgcolor: "primary.main",
+                                                                    bgcolor: "primary.light",
                                                                     color: "darkslategrey",
                                                                     px: 1,
                                                                     py: 0.3,
                                                                     borderRadius: 1,
-                                                                    fontSize: 10,
+                                                                    fontSize: 13,
                                                                     fontWeight: 800,
                                                                 }}
                                                             >
-                                                                {tag.epc}
+                                                                {tag.epc.slice(-6)}
                                                             </Box>
                                                         ))}
                                                     </Box>

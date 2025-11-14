@@ -1,10 +1,19 @@
-export const calculateGoldPrice = (weight: number | undefined, makingCharge: number | undefined, profit: number | undefined, vat: number | undefined, unitPrice: number | undefined) => {
-    if (weight === 1.54) {
-        console.log()
-    }
-    if (weight && makingCharge && profit && vat && unitPrice) {
-        if (weight > 0 && makingCharge > 0 && profit > 0 && vat > 0 && unitPrice > 0) {
-            return weight * unitPrice * (1 + (makingCharge / 100)) * (1 + (profit / 100)) * (1 + (vat / 100))
+import type { GoldCurrencyData } from "../api/goldCurrency"
+
+export const calculateGoldPrice = (
+    karat: number | undefined,
+    weight: number | undefined,
+    makingCharge: number | undefined,
+    profit: number | undefined,
+    vat: number | undefined,
+    currencyData: Partial<GoldCurrencyData["gold"][number]>
+) => {
+    const unitPrice = Number(currencyData.price)
+    const unitKarat = Number(currencyData.karat)
+
+    if (karat && weight && makingCharge != null && profit != null && vat != null && unitPrice) {
+        if (karat > 0 && weight > 0 && makingCharge >= 0 && profit >= 0 && vat >= 0 && unitPrice > 0) {
+            return karat / unitKarat * weight * unitPrice * (1 + (makingCharge / 100)) * (1 + (profit / 100)) * (1 + (vat / 100))
         }
     }
 }

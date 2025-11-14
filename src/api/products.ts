@@ -26,6 +26,7 @@ export function useCreateProduct() {
         mutationFn: async ({ payload, onProgress }: CreateProductArgs) => {
             const formData = new FormData();
             formData.append('name', payload.name);
+            formData.append('karat', payload.karat);
             formData.append('weight', payload.weight);
             formData.append('type', payload.type);
             formData.append('subType', payload.subType);
@@ -66,6 +67,7 @@ export function useUpdateProduct() {
             const formData = new FormData();
             // formData.append('id', id);
             if (payload.name !== undefined) formData.append('name', payload.name);
+            if (payload.karat !== undefined) formData.append('karat', payload.karat);
             if (payload.weight !== undefined) formData.append('weight', payload.weight);
             if (payload.type !== undefined) formData.append('type', payload.type);
             if (payload.subType !== undefined) formData.append('subType', payload.subType);
@@ -171,7 +173,8 @@ interface IProductPrice {
     vat: number,
     profit: number,
     makingCharge: number,
-    price: number
+    price: number,
+    karat: number
 }
 export interface IProductRange {
     weight: IRange,

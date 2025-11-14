@@ -41,12 +41,12 @@ import { useGoldCurrency } from '../../../api/goldCurrency';
 import { clearScenarioHistory, useCurrentScenario, useInitJrdModules, useScanResults, useStartScenario, useStopScenario } from '../../../api/jrdDevices';
 import { useScanResultsLive } from '../../../features/useScanResultsLive';
 import { GOLD_PRODUCT_SUB_TYPES } from '../../../store/useProductFormStore';
+import { calculateGoldPrice } from '../../../utils/calculateGoldPrice';
 import { getIRRCurrency } from '../../../utils/getIRRCurrency';
 import { powerPercentToDbm } from '../../../utils/percentDbm';
 import { translate } from '../../../utils/translate';
 import ModuleSettings, { inventoryModeScanPowerInPercent } from './ModuleSettings';
 import { useModulePrefs } from './jrd-modules-default-storage';
-import { calculateGoldPrice } from '../../../utils/calculateGoldPrice';
 
 
 
@@ -367,6 +367,7 @@ const CheckInventory: React.FC = () => {
                     <Grid container spacing={3}>
                         {paginatedProducts.map((product) => {
                             const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0)
+                            const productSpotKarat = (spotPrice?.gold.find(it => it.symbol === product.subType)?.karat || 0)
                             const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
 
                             return (
@@ -396,7 +397,7 @@ const CheckInventory: React.FC = () => {
                                             <Divider sx={{ mx: -2, my: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    Unit Price: {getIRRCurrency(calculateGoldPrice(product.weight, product.makingCharge, product.profit, product.vat, productSpotPrice) || 0)}
+                                                    Unit Price: {getIRRCurrency(calculateGoldPrice(product.karat, product.weight, product.makingCharge, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }) || 0)}
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?
@@ -649,6 +650,7 @@ const CheckInventory: React.FC = () => {
                             <TableBody>
                                 {paginatedProducts.map((product) => {
                                     const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0)
+                                    const productSpotKarat = (spotPrice?.gold.find(it => it.symbol === product.subType)?.karat || 0)
                                     const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
 
                                     return (
@@ -670,7 +672,7 @@ const CheckInventory: React.FC = () => {
                                                 <Chip label={t[product.type]} size="small" />
                                             </TableCell>
                                             <TableCell align="center" variant="body" color="textSecondary" sx={{ fontWeight: 'bold', fontFamily: "IRANSans, sans-serifRoboto, Arial, sans-serif" }} >
-                                                {getIRRCurrency(Math.round(calculateGoldPrice(product.weight, product.makingCharge, product.profit, product.vat, productSpotPrice) || 0)).replace("ریال", "")}
+                                                {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingCharge, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }) || 0)).replace("ریال", "")}
                                             </TableCell>
                                             <TableCell align="center">
                                                 <Chip

@@ -25,16 +25,16 @@ import {
     Typography,
     useTheme
 } from '@mui/material';
+import { isEqual } from 'lodash';
 import React, { useEffect, useRef, useState } from 'react';
 import { useCreateProduct, useUpdateProduct } from '../../../api/products';
+import type { Tag } from '../../../api/tags';
 import CameraFilePicker, { type CapturedFile } from '../../../components/CameraFilePicker';
 import SelectTags from '../../../components/SelectTags';
+import type { Product } from '../../../lib/api';
 import { GOLD_PRODUCT_SUB_TYPES, GOLD_PRODUCT_TYPES, useProductFormStore, type GoldProductSUBType, type GoldProductType, type ProductFormValues } from '../../../store/useProductFormStore';
 import { generatePreview } from '../../../utils/imageUtils';
 import { translate } from '../../../utils/translate';
-import { isEqual } from 'lodash';
-import type { Product } from '../../../lib/api';
-import type { Tag } from '../../../api/tags';
 
 interface ProductRegistrationProps {
     mode: "New" | "Edit",
@@ -158,8 +158,8 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
         const changes: Partial<ProductFormValues> = {};
 
         // Primitives: Simple string/number/boolean comparison
-        const primitiveFields: (keyof Pick<ProductFormValues, 'name' | 'weight' | 'quantity' | 'makingCharge' | 'vat' | 'profit'>)[] = [
-            'name', 'weight', 'quantity', 'makingCharge', 'vat', 'profit'
+        const primitiveFields: (keyof Pick<ProductFormValues, 'name' | 'karat' | 'weight' | 'quantity' | 'makingCharge' | 'vat' | 'profit'>)[] = [
+            'name', 'karat', 'weight', 'quantity', 'makingCharge', 'vat', 'profit'
         ];
         primitiveFields.forEach(field => {
             if (current[field] !== original[field]) {
@@ -276,7 +276,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
             )}
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={1}>
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12 }}>
                         <TextField
                             label={t["Name"]}
                             disabled={createNewProductMutation.isPending}
@@ -296,11 +296,27 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                         <FormControl fullWidth margin="normal" error={!!errors.type}>
                             <InputLabel id="type-select-label">{t["Type"]}</InputLabel>
                             <Select
+                                MenuProps={{
+                                    disableScrollLock: true,  // This prevents body scroll lock
+                                }}
                                 disabled={createNewProductMutation.isPending}
                                 labelId="type-select-label"
                                 label={t["Type"]}
                                 value={values.type}
-                                onChange={(e) => setValue('type', e.target.value as GoldProductType)}
+                                onChange={(e) => {
+                                    setValue('type', e.target.value as GoldProductType)
+                                    if (e.target.value !== "Coin" && values.subType.includes("COIN")) {
+                                        setValue('subType', "IR_GOLD_18K" as GoldProductSUBType)
+                                        setValue('karat', "750")
+                                    }
+                                    if (e.target.value === "Coin" && !values.subType.includes("COIN")) {
+                                        setValue('subType', "IR_COIN_EMAMI" as GoldProductSUBType)
+                                        setValue('karat', "900")
+                                        setValue('weight', "8.133")
+                                    }
+                                    if (e.target.value === "Coin" && values.subType.includes("COIN") && !values.subType.includes("PCOIN")) setValue('karat', "900")
+                                    if (e.target.value === "Coin" && values.subType.includes("PCOIN")) setValue('karat', "750")
+                                }}
                             >
                                 {GOLD_PRODUCT_TYPES.map((type) => (
                                     <MenuItem key={type} value={type}>
@@ -315,25 +331,80 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                         <FormControl fullWidth margin="normal" error={!!errors.type}>
                             <InputLabel id="sub-type-select-label">{t["SubType"]}</InputLabel>
                             <Select
+                                MenuProps={{
+                                    disableScrollLock: true,  // This prevents body scroll lock
+                                }}
                                 disabled={createNewProductMutation.isPending}
                                 labelId="sub-type-select-label"
                                 label={t["SubType"]}
                                 value={values.subType}
-                                onChange={(e) => setValue('subType', e.target.value as GoldProductSUBType)}
+                                onChange={(e) => {
+                                    setValue('subType', e.target.value as GoldProductSUBType)
+                                    if (e.target.value === "IR_GOLD_18K") setValue('karat', "750")
+                                    if (e.target.value === "IR_GOLD_24K") setValue('karat', "995")
+                                    if (e.target.value.includes("PCOIN")) setValue('karat', "750")
+                                    if (e.target.value.includes("MELTED")) setValue('karat', "750")
+                                    if (!e.target.value.includes("PCOIN") && e.target.value.includes("COIN")) setValue('karat', "900")
+                                    if (e.target.value === "IR_COIN_EMAMI") setValue('weight', "8.133")
+                                    if (e.target.value === "IR_COIN_BAHAR") setValue('weight', "8.133")
+                                    if (e.target.value === "IR_COIN_HALF") setValue('weight', "4.066")
+                                    if (e.target.value === "IR_COIN_QUARTER") setValue('weight', "2.033")
+                                    if (e.target.value === "IR_COIN_1G") setValue('weight', "1.01")
+                                    if (e.target.value === "IR_PCOIN_1-5G") setValue('weight', "1.50")
+                                    if (e.target.value === "IR_PCOIN_1-4G") setValue('weight', "1.40")
+                                    if (e.target.value === "IR_PCOIN_1-3G") setValue('weight', "1.30")
+                                    if (e.target.value === "IR_PCOIN_1-2G") setValue('weight', "1.20")
+                                    if (e.target.value === "IR_PCOIN_1-1G") setValue('weight', "1.10")
+                                    if (e.target.value === "IR_PCOIN_1G") setValue('weight', "1.00")
+                                    if (e.target.value === "IR_PCOIN_900MG") setValue('weight', "0.90")
+                                    if (e.target.value === "IR_PCOIN_800MG") setValue('weight', "0.80")
+                                    if (e.target.value === "IR_PCOIN_700MG") setValue('weight', "0.70")
+                                    if (e.target.value === "IR_PCOIN_600MG") setValue('weight', "0.60")
+                                    if (e.target.value === "IR_PCOIN_500MG") setValue('weight', "0.50")
+                                    if (e.target.value === "IR_PCOIN_400MG") setValue('weight', "0.40")
+                                    if (e.target.value === "IR_PCOIN_300MG") setValue('weight', "0.30")
+                                    if (e.target.value === "IR_PCOIN_200MG") setValue('weight', "0.20")
+                                    if (e.target.value === "IR_PCOIN_100MG") setValue('weight', "0.10")
+                                }}
                             >
-                                {GOLD_PRODUCT_SUB_TYPES.map((type) => (
-                                    <MenuItem key={type.symbol} value={type.symbol}>
-                                        {theme.direction === "ltr" ? type.name_en : type.name}
-                                    </MenuItem>
-                                ))}
+                                {
+                                    values.type === "Coin" ?
+                                        GOLD_PRODUCT_SUB_TYPES.filter(el => el.symbol.includes("COIN") && el.symbol !== "XAUUSD").map((type) => (
+                                            <MenuItem key={type.symbol} value={type.symbol}>
+                                                {theme.direction === "ltr" ? type.name_en : type.name}
+                                            </MenuItem>
+                                        )) :
+                                        GOLD_PRODUCT_SUB_TYPES.filter(el => !el.symbol.includes("COIN") && el.symbol !== "XAUUSD").map((type) => (
+                                            <MenuItem key={type.symbol} value={type.symbol}>
+                                                {theme.direction === "ltr" ? type.name_en : type.name}
+                                            </MenuItem>
+                                        ))
+                                }
                             </Select>
                             <FormHelperText>{errors.type || helpers.type}</FormHelperText>
                         </FormControl>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
+                            label={t["Karat"]}
+                            disabled={createNewProductMutation.isPending || !values.subType.includes("MELTED")}
+                            value={values.karat}
+                            onChange={(e) => setValue('karat', e.target.value)}
+                            error={!!errors.karat}
+                            helperText={errors.karat || helpers.karat}
+                            fullWidth
+                            margin="normal"
+                            type='number'
+                            slotProps={{
+                                htmlInput: { min: 0, max: 1000, step: "1" },
+                                input: { endAdornment: <InputAdornment position="end">{t["karat"]}</InputAdornment> }
+                            }}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
                             label={t["Weight"]}
-                            disabled={createNewProductMutation.isPending}
+                            disabled={createNewProductMutation.isPending || values.subType.includes("COIN")}
                             value={values.weight}
                             onChange={(e) => setValue('weight', e.target.value)}
                             error={!!errors.weight}

@@ -3,6 +3,7 @@ import type { Tag } from '../api/tags';
 
 export interface ProductFormValues {
     name: string;
+    karat: string;
     weight: string;
     type: GoldProductType;
     subType: GoldProductSUBType;
@@ -223,6 +224,7 @@ export type GoldProductSUBType = typeof GOLD_PRODUCT_SUB_TYPES[number]["symbol"]
 
 const defaultInitialValues: ProductFormValues = {
     name: '',
+    karat: "750",
     weight: "0.01",
     type: GOLD_PRODUCT_TYPES[0],
     subType: GOLD_PRODUCT_SUB_TYPES[0].symbol,
@@ -260,14 +262,15 @@ export const useProductFormStore = create<FormState>((set, get) => ({
         const { values } = get();
         const newErrors: Partial<Record<keyof ProductFormValues, string>> = {};
         if (!values.name) newErrors.name = 'Name is required';
-        if (!values.weight || isNaN(parseFloat(values.weight))) newErrors.weight = 'Valid weight is required';
+        if (values.karat == null || isNaN(parseFloat(values.karat))) newErrors.karat = 'Valid karat is required';
+        if (values.weight == null || isNaN(parseFloat(values.weight))) newErrors.weight = 'Valid weight is required';
         if (!values.type) newErrors.type = 'Type is required';
         if (!values.subType) newErrors.subType = 'SubType is required';
         if (values.inventoryItem === undefined || values.inventoryItem === null) newErrors.inventoryItem = 'Inventory Item Status is required';
-        if (!values.quantity || isNaN(parseInt(values.quantity))) newErrors.quantity = 'Valid quantity is required';
-        if (!values.makingCharge || isNaN(parseFloat(values.makingCharge))) newErrors.makingCharge = 'Valid making charge is required';
-        if (!values.vat || isNaN(parseFloat(values.vat))) newErrors.vat = 'Valid VAT is required';
-        if (!values.profit || isNaN(parseFloat(values.profit))) newErrors.profit = 'Valid PROFIT is required';
+        if (values.quantity == null || isNaN(parseInt(values.quantity))) newErrors.quantity = 'Valid quantity is required';
+        if (values.makingCharge == null || isNaN(parseFloat(values.makingCharge))) newErrors.makingCharge = 'Valid making charge is required';
+        if (values.vat == null || isNaN(parseFloat(values.vat))) newErrors.vat = 'Valid VAT is required';
+        if (values.profit == null || isNaN(parseFloat(values.profit))) newErrors.profit = 'Valid PROFIT is required';
         if (values.tags.length === 0) newErrors.tags = 'At least one tag is required';
         if (values.photos.reduce((p, c) => p + c.size, 0) > 400 * 1024 * 1024) newErrors.photos = `At Max state, 400 MB have allowed to be attached for each product. your files size is: ${Math.round(values.photos.reduce((p, c) => p + c.size, 0) / (1024 * 1024) * 100) / 100}MB`;
         if (values.photos.length > 12) newErrors.photos = 'At Max state, 12 photos allowed to be attached for each product.';

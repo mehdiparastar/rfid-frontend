@@ -4,19 +4,19 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoldCurrency } from "../../../api/goldCurrency";
 import { clearScenarioHistory, useCurrentScenario, useInitJrdModules, useScanResults, useStartScenario, useStopScenario } from "../../../api/jrdDevices";
+import { useDeleteProduct } from "../../../api/products";
+import { ErrorSnack } from "../../../components/ErrorSnack";
 import PhotoLightbox from "../../../components/PhotoLightbox";
 import { useScanResultsLive } from "../../../features/useScanResultsLive";
+import type { Product } from "../../../lib/api";
 import { GOLD_PRODUCT_SUB_TYPES } from "../../../store/useProductFormStore";
+import { calculateGoldPrice } from "../../../utils/calculateGoldPrice";
 import { getIRRCurrency } from "../../../utils/getIRRCurrency";
 import { powerPercentToDbm } from "../../../utils/percentDbm";
 import { translate } from "../../../utils/translate";
 import ModuleSettings, { scanModeScanPowerInPercent } from "./ModuleSettings";
-import { useModulePrefs } from "./jrd-modules-default-storage";
-import type { Product } from "../../../lib/api";
 import ProductRegistration from "./ProductRegistration";
-import { useDeleteProduct } from "../../../api/products";
-import { ErrorSnack } from "../../../components/ErrorSnack";
-import { calculateGoldPrice } from "../../../utils/calculateGoldPrice";
+import { useModulePrefs } from "./jrd-modules-default-storage";
 
 const Scan: React.FC = () => {
 
@@ -323,10 +323,11 @@ const Scan: React.FC = () => {
                     {
                         (filteredScanResults || []).map((product) => {
                             const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === product.subType)?.price || 0)
+                            const productSpotKarat = (spotPrice?.gold.find(it => it.symbol === product.subType)?.karat || 0)
                             const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
 
                             return (
-                                <Grid size={{ xs: 12, sm: 6 }} key={product.id}>                                    
+                                <Grid size={{ xs: 12, sm: 6 }} key={product.id}>
                                     <Card
                                         sx={{
                                             borderRadius: 1,
@@ -362,7 +363,7 @@ const Scan: React.FC = () => {
                                             <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.weight, product.makingCharge, product.profit, product.vat, productSpotPrice) || 0))}
+                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingCharge, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }) || 0))}
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?

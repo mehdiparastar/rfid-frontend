@@ -103,7 +103,7 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                 }
                 {
                     (!!getScenarioStateError || initJrdModulesMutation.status === "error") ?
-                        <Alert severity="error" sx={{ mt: 4 }}>
+                        <Alert severity="error" sx={{ mt: 1 }}>
                             {
                                 JSON.parse(getScenarioStateError?.message || "{}")?.message ||
                                 JSON.parse(initJrdModulesMutation.error?.message || "{}")?.message ||
@@ -200,7 +200,7 @@ const ModuleSettings: React.FC<IProps> = ({ openSettings, setOpenSettings, fullS
                                     )
                                 })}
                             </List> :
-                            <Button onClick={() => refetchScenarioState()} color="warning" fullWidth variant="contained">{t["Fetch Latest State"]}</Button>
+                            <Button sx={{ mt: 1 }} onClick={() => refetchScenarioState()} color="warning" fullWidth variant="contained">{t["Fetch Latest State"]}</Button>
                 }
             </DialogContent>
         </Dialog>

@@ -13,7 +13,8 @@ export interface GoldCurrencyData {
         symbol: GoldProductSUBType;
         time: string;
         time_unix: number;
-        unit: string
+        unit: string;
+        karat: number;
     }[]
 }
 
