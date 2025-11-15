@@ -167,6 +167,21 @@ export const GOLD_PRODUCT_SUB_TYPES =
             name_en: "100mg Parsian Coin",
         },
         {
+            symbol: "IR_PCOIN_70MG",
+            name: "سکه 70 سوتی پارسیان",
+            name_en: "70mg Parsian Coin",
+        },
+        {
+            symbol: "IR_PCOIN_50MG",
+            name: "سکه 50 سوتی پارسیان",
+            name_en: "50mg Parsian Coin",
+        },
+        {
+            symbol: "IR_PCOIN_30MG",
+            name: "سکه 30 سوتی پارسیان",
+            name_en: "30mg Parsian Coin",
+        },
+        {
             symbol: "XAUUSD",
             name: "انس طلا",
             name_en: "Gold Ounce",

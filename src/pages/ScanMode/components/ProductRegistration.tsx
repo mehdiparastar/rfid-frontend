@@ -365,6 +365,9 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                                     if (e.target.value === "IR_PCOIN_300MG") setValue('weight', "0.30")
                                     if (e.target.value === "IR_PCOIN_200MG") setValue('weight', "0.20")
                                     if (e.target.value === "IR_PCOIN_100MG") setValue('weight', "0.10")
+                                    if (e.target.value === "IR_PCOIN_70MG") setValue('weight', "0.070")
+                                    if (e.target.value === "IR_PCOIN_50MG") setValue('weight', "0.050")
+                                    if (e.target.value === "IR_PCOIN_30MG") setValue('weight', "0.030")
                                 }}
                             >
                                 {
@@ -413,7 +416,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             margin="normal"
                             type='number'
                             slotProps={{
-                                htmlInput: { min: 0.01, step: "0.01" },
+                                htmlInput: { min: 0.001, step: "0.001" },
                                 input: { endAdornment: <InputAdornment position="end">{t["grams"]}</InputAdornment> }
                             }}
                         />
@@ -446,7 +449,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             margin="normal"
                             type='number'
                             slotProps={{
-                                htmlInput: { min: 0, step: "1", max: 100 },
+                                htmlInput: { min: 0, step: "0.1", max: 100 },
                                 input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }
                             }}
                         />
@@ -463,7 +466,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             margin="normal"
                             type='number'
                             slotProps={{
-                                htmlInput: { min: 0, step: "1", max: 100 },
+                                htmlInput: { min: 0, step: "0.1", max: 100 },
                                 input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }
                             }}
                         />
@@ -480,7 +483,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             margin="normal"
                             type='number'
                             slotProps={{
-                                htmlInput: { min: 0, step: "1", max: 100 },
+                                htmlInput: { min: 0, step: "0.1", max: 100 },
                                 input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }
                             }}
                         />

@@ -28,6 +28,9 @@ const calcCoinPrice = (symbol: GoldProductSUBType, pricePerGeram: number) => {
     if (symbol === "IR_PCOIN_300MG") return pricePerGeram * 0.30
     if (symbol === "IR_PCOIN_200MG") return pricePerGeram * 0.20
     if (symbol === "IR_PCOIN_100MG") return pricePerGeram * 0.10
+    if (symbol === "IR_PCOIN_70MG") return pricePerGeram * 0.070
+    if (symbol === "IR_PCOIN_50MG") return pricePerGeram * 0.050
+    if (symbol === "IR_PCOIN_30MG") return pricePerGeram * 0.030
     if (symbol === "IR_GOLD_MELTED") return pricePerGeram * 4.3318
     if (symbol === "XAUUSD") return pricePerGeram * 28.3495
     return pricePerGeram

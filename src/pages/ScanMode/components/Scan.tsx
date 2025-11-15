@@ -17,6 +17,7 @@ import { translate } from "../../../utils/translate";
 import ModuleSettings, { scanModeScanPowerInPercent } from "./ModuleSettings";
 import ProductRegistration from "./ProductRegistration";
 import { useModulePrefs } from "./jrd-modules-default-storage";
+import { ViewWeek as ColumnIcon, ViewStream as ModuleIcon } from '@mui/icons-material';
 
 const Scan: React.FC = () => {
 
@@ -31,6 +32,7 @@ const Scan: React.FC = () => {
     const [sortDirection, setSortDirection] = useState("desc");
     const [selectedProducts, setSelectedProducts] = useState<number[]>([])
     const [searchQuery, setSearchQuery] = useState(""); // New state for search query
+    const [columnCount, setColumnCount] = useState(3); // Default to 2 columns
 
     const { data: scenarioState = [] } = useCurrentScenario()
     const { mutate: clearScenarioHistoryMutate } = clearScenarioHistory()
@@ -151,6 +153,21 @@ const Scan: React.FC = () => {
     useEffect(() => { handleInitModules() }, [scenarioState.map(x => x.id).sort().join()])
 
     const isScanning = (scanCurrentScenario || []).filter(el => el.state.isScan).length > 0
+
+    const getGridSize = (columns: number) => {
+        switch (columns) {
+            case 2:
+                return { xs: 12, sm: 6 };
+            case 3:
+            default:
+                return { xs: 12, sm: 4 };
+        }
+    };
+
+    // Icon mapping for better visual indication
+    const getColumnIcon = (columns: number) => {
+        return columns === 2 ? <ModuleIcon sx={{ transform: 'rotate(90deg)' }} fontSize="small" /> : <ColumnIcon fontSize="small" />;
+    };
 
     return (
         <Paper elevation={3} sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto', mb: 2 }}>
@@ -315,7 +332,37 @@ const Scan: React.FC = () => {
                         {t["All"]}: {filteredScanResults.length || 0}
                     </Typography>
                     {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}{t["product(s) selected."]}</Typography>}
-                    <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>{t["INVOICE"]}</Button>
+                    <Stack direction={"row"} gap={2} alignItems={'center'}>
+                        <ToggleButtonGroup
+                            value={columnCount}
+                            exclusive
+                            onChange={(_, newValue) => setColumnCount(newValue)}
+                            aria-label="Select column layout"
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                '& .MuiToggleButtonGroup-grouped': {
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    '&:not(:first-of-type)': { borderLeft: 0 },
+                                    '&:first-of-type': { borderRadius: '4px 0 0 4px' },
+                                    '&:last-of-type': { borderRadius: '0 4px 4px 0' },
+                                    '&.Mui-selected': {
+                                        backgroundColor: 'primary.main',
+                                        color: 'white',
+                                        '&:hover': { backgroundColor: 'primary.dark' },
+                                    },
+                                },
+                            }}
+                        >
+                            {[2, 3].map((value) => (
+                                <ToggleButton key={value} value={value} size="small">
+                                    {getColumnIcon(value)}
+                                </ToggleButton>
+                            ))}
+                        </ToggleButtonGroup>
+                        <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>{t["INVOICE"]}</Button>
+                    </Stack>
                 </Box>
 
                 {/* Product Grid */}
@@ -327,7 +374,7 @@ const Scan: React.FC = () => {
                             const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
 
                             return (
-                                <Grid size={{ xs: 12, sm: 6 }} key={product.id}>
+                                <Grid size={getGridSize(columnCount)} key={product.id}>
                                     <Card
                                         sx={{
                                             borderRadius: 1,

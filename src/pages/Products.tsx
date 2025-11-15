@@ -1,5 +1,5 @@
 import { ArrowDownward, ArrowUpward, Cancel, Check, Delete, Edit, ExpandMore, Search, Tune } from "@mui/icons-material";
-import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoldCurrency } from "../api/goldCurrency";
@@ -13,6 +13,7 @@ import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { translate } from "../utils/translate";
 import ProductRegistration from "./ScanMode/components/ProductRegistration";
+import { ViewWeek as ColumnIcon, ViewStream as ModuleIcon } from '@mui/icons-material';
 
 export default function Products() {
     const theme = useTheme()
@@ -32,6 +33,7 @@ export default function Products() {
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
+    const [columnCount, setColumnCount] = useState(3); // Default to 2 columns
 
     const [priceRange, setPriceRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
     const [weightRange, setWeightRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
@@ -185,6 +187,21 @@ export default function Products() {
         },
     };
 
+    const getGridSize = (columns: number) => {
+        switch (columns) {
+            case 2:
+                return { xs: 12, sm: 6 };
+            case 3:
+            default:
+                return { xs: 12, sm: 4 };
+        }
+    };
+
+    // Icon mapping for better visual indication
+    const getColumnIcon = (columns: number) => {
+        return columns === 2 ? <ModuleIcon sx={{ transform: 'rotate(90deg)' }} fontSize="small" /> : <ColumnIcon fontSize="small" />;
+    };
+
     if (status === 'pending' && products.length === 0)
         return (
             <>
@@ -249,7 +266,37 @@ export default function Products() {
                         {t["All"]}: {data?.pages[0].total}
                     </Typography>
                     {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}{t["product(s) selected."]}</Typography>}
-                    <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>{t["INVOICE"]}</Button>
+                    <Stack direction={"row"} gap={2} alignItems={'center'}>
+                        <ToggleButtonGroup
+                            value={columnCount}
+                            exclusive
+                            onChange={(_, newValue) => setColumnCount(newValue)}
+                            aria-label="Select column layout"
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                '& .MuiToggleButtonGroup-grouped': {
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    '&:not(:first-of-type)': { borderLeft: 0 },
+                                    '&:first-of-type': { borderRadius: '4px 0 0 4px' },
+                                    '&:last-of-type': { borderRadius: '0 4px 4px 0' },
+                                    '&.Mui-selected': {
+                                        backgroundColor: 'primary.main',
+                                        color: 'white',
+                                        '&:hover': { backgroundColor: 'primary.dark' },
+                                    },
+                                },
+                            }}
+                        >
+                            {[2, 3].map((value) => (
+                                <ToggleButton key={value} value={value} size="small">
+                                    {getColumnIcon(value)}
+                                </ToggleButton>
+                            ))}
+                        </ToggleButtonGroup>
+                        <Button variant="contained" sx={{ width: 125 }} disabled={selectedProducts.length === 0} onClick={handleInvoiceInquiry}>{t["INVOICE"]}</Button>
+                    </Stack>
                 </Box>
                 <Accordion defaultExpanded={false} sx={{ my: 2, borderRadius: 1 }}>
                     <AccordionSummary
@@ -539,7 +586,7 @@ export default function Products() {
                             const soldQuantity = product.saleItems?.reduce((p, c) => p + c.quantity, 0) || 0
 
                             return (
-                                <Grid size={{ xs: 12, sm: 6 }} key={product.id}>
+                                <Grid size={getGridSize(columnCount)} key={product.id}>
                                     <Card
                                         sx={{
                                             borderRadius: 1,
