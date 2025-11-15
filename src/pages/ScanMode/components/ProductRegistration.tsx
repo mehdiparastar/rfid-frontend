@@ -23,10 +23,11 @@ import {
     Switch,
     TextField,
     Typography,
-    useTheme
+    useTheme,
+    type TextFieldProps
 } from '@mui/material';
 import { isEqual } from 'lodash';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useCreateProduct, useUpdateProduct } from '../../../api/products';
 import type { Tag } from '../../../api/tags';
 import CameraFilePicker, { type CapturedFile } from '../../../components/CameraFilePicker';
@@ -35,6 +36,8 @@ import type { Product } from '../../../lib/api';
 import { GOLD_PRODUCT_SUB_TYPES, GOLD_PRODUCT_TYPES, useProductFormStore, type GoldProductSUBType, type GoldProductType, type ProductFormValues } from '../../../store/useProductFormStore';
 import { generatePreview } from '../../../utils/imageUtils';
 import { translate } from '../../../utils/translate';
+import { NumericFormat } from 'react-number-format';
+import { getIRRCurrency } from '../../../utils/getIRRCurrency';
 
 interface ProductRegistrationProps {
     mode: "New" | "Edit",
@@ -158,8 +161,8 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
         const changes: Partial<ProductFormValues> = {};
 
         // Primitives: Simple string/number/boolean comparison
-        const primitiveFields: (keyof Pick<ProductFormValues, 'name' | 'karat' | 'weight' | 'quantity' | 'makingCharge' | 'vat' | 'profit'>)[] = [
-            'name', 'karat', 'weight', 'quantity', 'makingCharge', 'vat', 'profit'
+        const primitiveFields: (keyof Pick<ProductFormValues, 'name' | 'karat' | 'weight' | 'quantity' | 'makingCharge' | 'vat' | 'profit' | 'accessoriesCharge'>)[] = [
+            'name', 'karat', 'weight', 'quantity', 'makingCharge', 'vat', 'profit', 'accessoriesCharge'
         ];
         primitiveFields.forEach(field => {
             if (current[field] !== original[field]) {
@@ -403,8 +406,27 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                                 input: { endAdornment: <InputAdornment position="end">{t["karat"]}</InputAdornment> }
                             }}
                         />
-                    </Grid>
+                    </Grid>                    
                     <Grid size={{ xs: 12, md: 6 }}>
+                        <NumericFormatCustom
+                            label={t["accessoriesCharge"]}
+                            name="accessoriesCharge"
+                            value={values.accessoriesCharge}
+                            onChange={(e: any) => setValue("accessoriesCharge", e.target.value)}
+                            disabled={createNewProductMutation.isPending}
+                            fullWidth
+                            margin="normal"
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">{t["IRR"]}</InputAdornment>
+                                )
+                            }}
+                            error={!!errors.accessoriesCharge}
+                            helperText={errors.accessoriesCharge || helpers.accessoriesCharge}
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             label={t["Weight"]}
                             disabled={createNewProductMutation.isPending || values.subType.includes("COIN")}
@@ -421,7 +443,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
                             label={t["Quantity"]}
                             disabled={createNewProductMutation.isPending}
@@ -437,7 +459,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <TextField
                             label={t["Making Charge"]}
                             disabled={createNewProductMutation.isPending}
@@ -454,7 +476,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <TextField
                             label={t["VAT"]}
                             disabled={createNewProductMutation.isPending}
@@ -471,7 +493,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <TextField
                             label={t["PROFIT"]}
                             disabled={createNewProductMutation.isPending}
@@ -598,5 +620,29 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
         </Paper>
     );
 };
+
+
+export function NumericFormatCustom(props: any) {
+    const { inputRef, onChange, ...other } = props;
+
+    return (
+        <NumericFormat
+            {...other}
+            getInputRef={inputRef}
+            thousandSeparator=","
+            decimalSeparator="."
+            allowNegative={false}
+            customInput={TextField}
+            onValueChange={(values) => {
+                onChange({
+                    target: {
+                        name: props.name,
+                        value: values.floatValue, // raw number
+                    },
+                });
+            }}
+        />
+    );
+}
 
 export default ProductRegistration;

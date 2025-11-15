@@ -12,6 +12,7 @@ export interface ProductFormValues {
     makingCharge: string;
     vat: string;
     profit: string;
+    accessoriesCharge: string;
     tags: Tag[];
     photos: File[];
     previews: File[];
@@ -250,6 +251,7 @@ const defaultInitialValues: ProductFormValues = {
     makingCharge: '17',
     vat: '2',
     profit: '7',
+    accessoriesCharge: '0',
     tags: [],
     photos: [],
     previews: [],
@@ -279,6 +281,7 @@ export const useProductFormStore = create<FormState>((set, get) => ({
         const { values } = get();
         const newErrors: Partial<Record<keyof ProductFormValues, string>> = {};
         if (!values.name) newErrors.name = 'Name is required';
+        if (values.accessoriesCharge == null || isNaN(parseFloat(values.accessoriesCharge))) newErrors.accessoriesCharge = 'Valid accessories charge is required';
         if (values.karat == null || isNaN(parseFloat(values.karat))) newErrors.karat = 'Valid karat is required';
         if (values.weight == null || isNaN(parseFloat(values.weight))) newErrors.weight = 'Valid weight is required';
         if (!values.type) newErrors.type = 'Type is required';

@@ -410,7 +410,7 @@ const Scan: React.FC = () => {
                                             <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingCharge, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }) || 0))}
+                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingCharge, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge) || 0))}
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?

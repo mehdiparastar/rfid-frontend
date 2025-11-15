@@ -265,7 +265,8 @@ const dict = {
         "Switch to LTR": "Switch to english",
         "Switch to RTL": "Switch to farsi",
         "Karat": "Karat",
-        "karat": "karat",
+        "IRR": "IRR",
+        "accessoriesCharge": "accessoriesCharge",
     },
     "fa": {
         "RFID Scanner": "تگ نما",
@@ -533,7 +534,8 @@ const dict = {
         "Switch to LTR": "تغییر زبان به انگلیسی",
         "Switch to RTL": "تغییر زبان به فارسی",
         "Karat": "عیار",
-        "karat": "عیار"
+        "IRR": "ریال",
+        "accessoriesCharge": "هزینه اکسسوری",
     }
 }
 

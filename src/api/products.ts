@@ -35,6 +35,7 @@ export function useCreateProduct() {
             formData.append('makingCharge', payload.makingCharge);
             formData.append('vat', payload.vat);
             formData.append('profit', payload.profit);
+            formData.append('accessoriesCharge', payload.accessoriesCharge);
             formData.append('tags', JSON.stringify(payload.tags));
             payload.photos.forEach((photo) => formData.append('photos', photo));
             payload.previews.forEach((preview) => formData.append('previews', preview));
@@ -76,6 +77,7 @@ export function useUpdateProduct() {
             if (payload.makingCharge !== undefined) formData.append('makingCharge', payload.makingCharge);
             if (payload.vat !== undefined) formData.append('vat', payload.vat);
             if (payload.profit !== undefined) formData.append('profit', payload.profit);
+            if (payload.accessoriesCharge !== undefined) formData.append('accessoriesCharge', payload.accessoriesCharge);
             if (payload.tags !== undefined) formData.append('tags', JSON.stringify(payload.tags));
             if (payload.photos) {
                 payload.photos.forEach((photo) => formData.append('photos', photo));
@@ -174,7 +176,8 @@ interface IProductPrice {
     profit: number,
     makingCharge: number,
     price: number,
-    karat: number
+    karat: number,
+    accessoriesCharge: number,
 }
 export interface IProductRange {
     weight: IRange,

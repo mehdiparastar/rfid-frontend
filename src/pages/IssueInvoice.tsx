@@ -182,7 +182,7 @@ export default function IssueInvoice() {
                             productId: p.id,
                             quantity: quantityPerProduct[`quantity_${p.id}`],
                             soldPrice: Math.round(
-                                quantityPerProduct[`quantity_${p.id}`] * (calculateGoldPrice(Number(p.karat), Number(p.weight), Number(p.makingCharge), Number(p.profit), Number(p.vat), { price: productSpotPrice, karat: productSpotKarat }) || 0)
+                                quantityPerProduct[`quantity_${p.id}`] * (calculateGoldPrice(Number(p.karat), Number(p.weight), Number(p.makingCharge), Number(p.profit), Number(p.vat), { price: productSpotPrice, karat: productSpotKarat }, Number(p.accessoriesCharge)) || 0)
                             ),
                             spotPrice: productSpotPrice
                         })
@@ -665,7 +665,7 @@ export default function IssueInvoice() {
                                                         <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{
                                                             getIRRCurrency(
                                                                 quantityPerProduct[`quantity_${product.id}`] *
-                                                                (calculateGoldPrice(Number(product.karat), Number(product.weight), Number(product.makingCharge), Number(product.profit), Number(product.vat), { price: Number(productSpotPrice), karat: Number(productSpotKarat) }) || 0)
+                                                                (calculateGoldPrice(Number(product.karat), Number(product.weight), Number(product.makingCharge), Number(product.profit), Number(product.vat), { price: Number(productSpotPrice), karat: Number(productSpotKarat) }, Number(product.accessoriesCharge)) || 0)
                                                             ).replace('ریال', '')}
                                                         </TableCell>
                                                     </TableRow>
@@ -710,7 +710,7 @@ export default function IssueInvoice() {
                                             getIRRCurrency(products.reduce((p, c) => {
                                                 const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === c.subType)?.price || 0)
                                                 const productSpotKarat = (spotPrice?.gold.find(it => it.symbol === c.subType)?.karat || 0)
-                                                return p + (quantityPerProduct[`quantity_${c.id}`] * (calculateGoldPrice(Number(c.karat), Number(c.weight), Number(c.makingCharge), Number(c.profit), Number(c.vat), { price: productSpotPrice, karat: productSpotKarat }) || 0))
+                                                return p + (quantityPerProduct[`quantity_${c.id}`] * (calculateGoldPrice(Number(c.karat), Number(c.weight), Number(c.makingCharge), Number(c.profit), Number(c.vat), { price: productSpotPrice, karat: productSpotKarat }, Number(c.accessoriesCharge)) || 0))
                                             }, 0))
                                         }
                                     </Typography>

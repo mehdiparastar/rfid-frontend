@@ -173,6 +173,7 @@ export type Product = {
     makingCharge: number;  // Charge for making the product
     vat: number;  // vat for making the product
     profit: number;  // profit for making the product
+    accessoriesCharge: number;
     tags?: Tag[];
     saleItems?: SaleItem[];
     createdAt?: Date;
