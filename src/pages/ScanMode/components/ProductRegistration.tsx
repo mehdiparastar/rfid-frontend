@@ -23,11 +23,11 @@ import {
     Switch,
     TextField,
     Typography,
-    useTheme,
-    type TextFieldProps
+    useTheme
 } from '@mui/material';
 import { isEqual } from 'lodash';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { NumericFormat } from 'react-number-format';
 import { useCreateProduct, useUpdateProduct } from '../../../api/products';
 import type { Tag } from '../../../api/tags';
 import CameraFilePicker, { type CapturedFile } from '../../../components/CameraFilePicker';
@@ -36,8 +36,6 @@ import type { Product } from '../../../lib/api';
 import { GOLD_PRODUCT_SUB_TYPES, GOLD_PRODUCT_TYPES, useProductFormStore, type GoldProductSUBType, type GoldProductType, type ProductFormValues } from '../../../store/useProductFormStore';
 import { generatePreview } from '../../../utils/imageUtils';
 import { translate } from '../../../utils/translate';
-import { NumericFormat } from 'react-number-format';
-import { getIRRCurrency } from '../../../utils/getIRRCurrency';
 
 interface ProductRegistrationProps {
     mode: "New" | "Edit",
@@ -406,7 +404,7 @@ const ProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                                 input: { endAdornment: <InputAdornment position="end">{t["karat"]}</InputAdornment> }
                             }}
                         />
-                    </Grid>                    
+                    </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
                         <NumericFormatCustom
                             label={t["accessoriesCharge"]}

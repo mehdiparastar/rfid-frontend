@@ -1,4 +1,4 @@
-import { ArrowDownward, ArrowUpward, Cancel, Check, Delete, Edit, ExpandMore, Search, Tune } from "@mui/icons-material";
+import { ArrowDownward, ArrowUpward, Cancel, Check, ViewWeek as ColumnIcon, Delete, Edit, ExpandMore, ViewStream as ModuleIcon, Search, Tune } from "@mui/icons-material";
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,6 @@ import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { translate } from "../utils/translate";
 import ProductRegistration from "./ScanMode/components/ProductRegistration";
-import { ViewWeek as ColumnIcon, ViewStream as ModuleIcon } from '@mui/icons-material';
 
 export default function Products() {
     const theme = useTheme()

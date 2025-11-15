@@ -1,4 +1,4 @@
-import { ArrowDownward, ArrowUpward, Clear, Delete, Edit, PlayArrow, Search, Settings, Stop } from "@mui/icons-material";
+import { ArrowDownward, ArrowUpward, Clear, ViewWeek as ColumnIcon, Delete, Edit, ViewStream as ModuleIcon, PlayArrow, Search, Settings, Stop } from "@mui/icons-material";
 import { Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +17,6 @@ import { translate } from "../../../utils/translate";
 import ModuleSettings, { scanModeScanPowerInPercent } from "./ModuleSettings";
 import ProductRegistration from "./ProductRegistration";
 import { useModulePrefs } from "./jrd-modules-default-storage";
-import { ViewWeek as ColumnIcon, ViewStream as ModuleIcon } from '@mui/icons-material';
 
 const Scan: React.FC = () => {
 
