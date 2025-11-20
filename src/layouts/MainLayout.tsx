@@ -1,4 +1,4 @@
-import { Backup, CleaningServices, Dashboard, HomeFilled, RestartAlt } from "@mui/icons-material";
+import { Backup, CleaningServices, Dashboard, Fullscreen, HomeFilled, RestartAlt } from "@mui/icons-material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
@@ -210,6 +210,25 @@ const Header = React.memo(function Header({ onMenuClick }: { onMenuClick: () => 
                     </Stack>
 
                     <Stack direction="row" spacing={1} alignItems="center">
+                        <Tooltip title={t["Full Screen"]} arrow>
+                            <IconButton
+                                color="inherit"
+                                onClick={() => {
+                                    const elem = document.documentElement as any;
+
+                                    if (elem.requestFullscreen) {
+                                        elem.requestFullscreen();
+                                    } else if (elem.webkitRequestFullscreen) {
+                                        elem.webkitRequestFullscreen();
+                                    } else if (elem.msRequestFullscreen) {
+                                        elem.msRequestFullscreen();
+                                    }
+                                }}
+                                sx={{ marginRight: 2 }}
+                            >
+                                <Fullscreen />
+                            </IconButton>
+                        </Tooltip>
                         <Tooltip title={t["Clear localStorage"]} arrow>
                             <IconButton
                                 color="inherit"
