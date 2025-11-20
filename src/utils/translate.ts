@@ -268,6 +268,7 @@ const dict = {
         "IRR": "IRR",
         "accessoriesCharge": "accessoriesCharge",
         "Full Screen": "Full Screen",
+        "Connected Modules": "Connected Modules",
     },
     "fa": {
         "RFID Scanner": "تگ نما",
@@ -537,7 +538,8 @@ const dict = {
         "Karat": "عیار",
         "IRR": "ریال",
         "accessoriesCharge": "هزینه اکسسوری",
-        "Full Screen": "تمام صفحه"
+        "Full Screen": "تمام صفحه",
+        "Connected Modules": "ماژول های متصل"
     }
 }
 

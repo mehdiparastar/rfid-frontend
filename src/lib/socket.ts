@@ -4,6 +4,7 @@ import type { Product } from "./api";
 import type { Tag } from "../api/tags";
 import type { Mode } from "../api/modules";
 import type { CurrentScenarioRow } from "../api/jrdDevices";
+import type { Esp32ClientInfo } from "../api/espModules";
 
 export type ScanResult =
     | { Scan: Product[]; Inventory?: Product[]; NewProduct?: Tag[], deviceId: string }
@@ -12,6 +13,8 @@ export type ScanResult =
 
 export type ServerToClientEvents = {
     // Example events — add yours:
+    "esp-modules-new-scan-recieved": (payload: Partial<Esp32ClientInfo>) => void;
+    "esp-modules-status-updated": (payload: Partial<Esp32ClientInfo>) => void;
     "new-scan-result": (payload: ScanResult) => void;
     "backupProgress": (payload: Record<"backup_db" | "backup_files", number>) => void
     "restoreProgress": (payload: Record<"restore_db" | "restore_files", number>) => void

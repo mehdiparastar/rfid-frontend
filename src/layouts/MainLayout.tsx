@@ -1,4 +1,4 @@
-import { Backup, CleaningServices, Dashboard, Fullscreen, HomeFilled, RestartAlt } from "@mui/icons-material";
+import { Backup, BluetoothConnected, CleaningServices, ConnectedTv, ConnectingAirportsRounded, Dashboard, Fullscreen, HomeFilled, RestartAlt, WifiChannel, WifiFind } from "@mui/icons-material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
@@ -51,6 +51,7 @@ const NAV_ITEMS: NavItem[] = [
     { to: "/home", label: "Home", icon: <HomeFilled /> },
     { to: "/dashboard", label: "Dashboard", icon: <Dashboard /> },
     { to: "/gold-price-dashboard", label: "Gold Price Dashboard", icon: <MonetizationOnIcon /> },
+    { to: "/esp-modules", label: "Connected Modules", icon: <WifiFind /> },
     { to: "/scan-mode", label: "Scan Mode", icon: <QrCodeScannerIcon /> },
     { to: "/products", label: "Products", icon: <Inventory2Icon /> },
     { to: "/invoices", label: "Invoices", icon: <ReceiptIcon /> },

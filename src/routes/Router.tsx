@@ -21,6 +21,7 @@ const Users = React.lazy(() => import("../pages/Users"));
 const IssueInvoice = React.lazy(() => import("../pages/IssueInvoice"));
 const GoldPriceDashboard = React.lazy(() => import("../pages/Dashboard/GoldPriceDashboard"));
 const Dashboard = React.lazy(() => import("../pages/Dashboard/Dashboard"));
+const ESPModules = React.lazy(() => import("../pages/ESPModules"));
 
 import { fetchProductsByIds } from "../api/products"; // your feature fetcher
 import Invoices from "../pages/Invoices";
@@ -116,6 +117,7 @@ const router = createBrowserRouter([
                 element: <RequireAuth />,
                 children: [
                     { path: "dashboard", element: <Dashboard /> },
+                    { path: "esp-modules", element: <ESPModules /> },
                     { path: "gold-price-dashboard", element: <GoldPriceDashboard /> },
                     { path: "invoices", element: <Invoices /> },
                     { path: "products", element: <Products /> },
