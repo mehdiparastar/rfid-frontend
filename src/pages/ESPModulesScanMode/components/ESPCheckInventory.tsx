@@ -79,7 +79,7 @@ const ESPCheckInventory: React.FC = () => {
 
     const products = uniqueByIdAndTimeStamp(
         allEspModules
-            .filter(m => m.mode === "Inventory" && m.tagScanResults && m.tagScanResults.Inventory)
+            .filter(m => m.tagScanResults && m.tagScanResults.Inventory)
             .map(el => el.tagScanResults!.Inventory)
             .flat()
     ) as unknown as ESPModulesProductScan[]
@@ -176,8 +176,6 @@ const ESPCheckInventory: React.FC = () => {
             a.play().catch(() => {/* ignore */ });
         }
     }, [products?.length])
-
-    const isPending = stopScanPending || startScanPending || clearScanHistoryPending
 
     return (
         <Paper elevation={3} sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto' }}>
