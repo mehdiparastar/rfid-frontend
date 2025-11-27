@@ -13,37 +13,36 @@ export function useESPModulesScanLive(refetchOnReconnect = true) {
     useEffect(() => {
         const onESPModulesNewScanRecieved = (payload: ESPModulesProductScan[]) => {
             qc.setQueryData<Esp32ClientInfo[]>(["esp-modules"], (prev) => {
+                if (!prev) return
+
                 const next: Esp32ClientInfo[] = [];
+                for (const m of prev) {
+                    let inventoryTagScanResults: ESPModulesProductScan[] = []
 
-                for (const patch of payload) {
+                    for (const patch of payload) {
+                        if (m.id === patch.deviceId) {
+                            const oldScannedProduct = (m?.tagScanResults?.Inventory ?? []).find(p => p.id === patch.id)
 
-                    const old = (prev ?? []).filter(m => m.id != null).find(m => m.id! === patch.deviceId);
-                    const oldScanned = (old?.tagScanResults?.Inventory ?? []).find(p => p.id === patch.id)
-
-                    if (old && oldScanned) {
-                        next.push({
-                            ...old,
-                            tagScanResults: {
-                                ...old.tagScanResults,
-                                Inventory: (old.tagScanResults?.Inventory ?? []).map(el => el.id === oldScanned.id ? patch : el) ?? [],
-                                Scan: old.tagScanResults?.Scan ?? [],
-                                NewProduct: old.tagScanResults?.NewProduct ?? []
+                            if (oldScannedProduct) {
+                                inventoryTagScanResults = (m.tagScanResults?.Inventory ?? []).map(p => p.id === patch.id ? ({ ...oldScannedProduct, ...patch }) : p) as ESPModulesProductScan[]
+                            } else {
+                                inventoryTagScanResults = [...(m.tagScanResults?.Inventory ?? []), patch]
                             }
-                        });
-                    } else if (old && !oldScanned) {
-                        next.push({
-                            ...old,
-                            tagScanResults: {
-                                ...old.tagScanResults,
-                                Inventory: [...(old.tagScanResults?.Inventory ?? []), patch],
-                                Scan: old.tagScanResults?.Scan ?? [],
-                                NewProduct: old.tagScanResults?.NewProduct ?? []
-                            }
-                        });
+                        }
                     }
+
+                    next.push({
+                        ...m,
+                        tagScanResults: {
+                            ...m.tagScanResults,
+                            Inventory: inventoryTagScanResults,
+                            Scan: m.tagScanResults?.Scan ?? [],
+                            NewProduct: m.tagScanResults?.NewProduct ?? []
+                        }
+                    })
                 }
 
-                return next;
+                return next
             })
         }
         const onESPModulesClearScanHistoryByMode = (payload: { id: number, mode: Mode }) => {

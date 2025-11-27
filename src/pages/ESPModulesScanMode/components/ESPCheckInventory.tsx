@@ -71,11 +71,11 @@ const ESPCheckInventory: React.FC = () => {
     useESPModulesLive(true)
     useESPModulesScanLive(true)
 
-    const { mutate: clearScanHistoryMutate } = useClearEspModulesScanHistory()
-    const { mutate: startESPModulesScanByMode } = useStartESPModulesScanByMode()
-    const { mutate: stopESPModulesScanByMode } = useStopESPModulesScanByMode()
+    const { mutate: clearScanHistoryMutate, isPending: clearScanHistoryPending } = useClearEspModulesScanHistory()
+    const { mutate: startESPModulesScanByMode, isPending: startScanPending } = useStartESPModulesScanByMode()
+    const { mutate: stopESPModulesScanByMode, isPending: stopScanPending } = useStopESPModulesScanByMode()
 
-    const { data: spotPrice, /*isLoading: spotPriceIsLoading, error: spotPriceError*/ } = useGoldCurrency();
+    const { data: spotPrice } = useGoldCurrency();
 
     const products = uniqueByIdAndTimeStamp(
         allEspModules
@@ -177,6 +177,7 @@ const ESPCheckInventory: React.FC = () => {
         }
     }, [products?.length])
 
+    const isPending = stopScanPending || startScanPending || clearScanHistoryPending
 
     return (
         <Paper elevation={3} sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto' }}>
@@ -271,25 +272,42 @@ const ESPCheckInventory: React.FC = () => {
                     >
                         <ToggleButtonGroup size='small' value={isScanning ? 'started' : 'stopped'}>
                             <ToggleButton size='small' value={'started'} onClick={handleStartScenario} title='start'>
-                                <PlayArrow
-                                    sx={{
-                                        ...(isScanning && {
-                                            position: 'relative',
-                                            animation: 'iconPulse 1.6s ease-in-out infinite',
-                                            filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.7))',
-                                            '@keyframes iconPulse': {
-                                                '0%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.6))' },
-                                                '50%': { transform: 'scale(1.2)', filter: 'drop-shadow(0 0 14px rgba(76,175,80,1))' },
-                                                '100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.6))' },
-                                            },
-                                        }),
-                                    }}
-                                    color={isScanning ? 'success' : 'inherit'}
-                                />
+                                {
+                                    startScanPending ?
+                                        <CircularProgress size={22} /> :
+                                        <PlayArrow
+                                            sx={{
+                                                width: 22,
+                                                ...(isScanning && {
+                                                    position: 'relative',
+                                                    animation: 'iconPulse 1.6s ease-in-out infinite',
+                                                    filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.7))',
+                                                    '@keyframes iconPulse': {
+                                                        '0%': { transform: 'scale(.9)', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.6))' },
+                                                        '50%': { transform: 'scale(1.3)', filter: 'drop-shadow(0 0 14px rgba(76,175,80,1))' },
+                                                        '100%': { transform: 'scale(.9)', filter: 'drop-shadow(0 0 6px rgba(76,175,80,0.6))' },
+                                                    },
+                                                }),
+                                            }}
+                                            color={isScanning ? 'success' : 'inherit'}
+                                        />
+                                }
                             </ToggleButton>
-                            <ToggleButton size='small' value={'stopped'} onClick={handleStopScenario} title='stop'><Stop /></ToggleButton>
+                            <ToggleButton size='small' value={'stopped'} onClick={handleStopScenario} title='stop'>
+                                {
+                                    stopScanPending ?
+                                        <CircularProgress size={22} /> :
+                                        <Stop sx={{ width: 22 }} />
+                                }
+                            </ToggleButton>
                         </ToggleButtonGroup>
-                        <IconButton onClick={handleClearScanHistory} title={t["clear history"]}><Clear /></IconButton>
+                        <IconButton onClick={handleClearScanHistory} title={t["clear history"]}>
+                            {
+                                clearScanHistoryPending ?
+                                    <CircularProgress size={22} /> :
+                                    <Clear sx={{ width: 22 }} />
+                            }
+                        </IconButton>
                     </Stack>
                 </Alert>
             </Stack>

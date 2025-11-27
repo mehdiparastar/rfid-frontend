@@ -26,7 +26,7 @@ export function useEspModules() {
     return useQuery({
         queryKey: ["esp-modules"],
         queryFn: ({ signal }) => api<Esp32ClientInfo[]>(`/api/jrd/all-connected-esp-modules`, { signal }),
-        ...serialSafeQueryDefaults,
+        // ...serialSafeQueryDefaults,
     });
 }
 
@@ -267,7 +267,7 @@ export function useStopESPModulesScanByMode() {
                     prevList
                         .filter(m => m.id != null)
                         .map(m =>
-                            m.mode === variables.mode ? ({ ...m, isScan: !(data.res.filter(el => el.id != null).find(el => el.id === m.id)!.stopped) }) : (m)
+                            (m.mode === variables.mode && data.res.find(e => e.id === m.id)?.stopped) ? ({ ...m, isScan: !(data.res.filter(el => el.id != null).find(el => el.id === m.id)!.stopped) }) : (m)
                         ));
             }
             return data
