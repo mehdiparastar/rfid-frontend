@@ -269,6 +269,13 @@ const dict = {
         "accessoriesCharge": "accessoriesCharge",
         "Full Screen": "Full Screen",
         "Connected Modules": "Connected Modules",
+        "No ESP32 modules connected.": "No ESP32 modules connected.",
+        "s ago": "s ago",
+        "m ago": "m ago",
+        "h ago": "h ago",
+        "clear history": "clear history",
+        "You Successfully Scanned All Inventory Items.": "You Successfully Scanned All Inventory Items.",
+        "Get Rest Of What Should be scanned.": "Get Rest Of What Should be scanned.",
     },
     "fa": {
         "RFID Scanner": "تگ نما",
@@ -361,7 +368,7 @@ const dict = {
         "Unit Weight:": "وزن واحد",
         "g": "گرم",
         "Making Charge:": "اجرت",
-        "Sold Quantity:": "تعداد فروخته شده",
+        "Sold Quantity:": "تعداد فروش",
         "Sub Type:": "نوع جنس طلا:",
         "Inventory Item:": "محصول ویترینی:",
         "All": "همه",
@@ -539,7 +546,14 @@ const dict = {
         "IRR": "ریال",
         "accessoriesCharge": "هزینه اکسسوری",
         "Full Screen": "تمام صفحه",
-        "Connected Modules": "ماژول های متصل"
+        "Connected Modules": "ماژول های متصل",
+        "No ESP32 modules connected.": "هیچ ماژولی پیدا نشد.",
+        "s ago": " ثانیه پیش",
+        "m ago": " دقیقه پیش",
+        "h ago": " ساعت پیش",
+        "clear history": "پاک کردن سابقه اسکن",
+        "You Successfully Scanned All Inventory Items.": "تمامی محصولات ویترینی اسکن شد.",
+        "Get Rest Of What Should be scanned.": "محصولات ویترینی که اسکن نشده اند.",
     }
 }
 

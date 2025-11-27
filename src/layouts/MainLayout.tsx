@@ -1,4 +1,4 @@
-import { Backup, BluetoothConnected, CleaningServices, ConnectedTv, ConnectingAirportsRounded, Dashboard, Fullscreen, HomeFilled, RestartAlt, WifiChannel, WifiFind } from "@mui/icons-material";
+import { Backup, CleaningServices, Dashboard, Fullscreen, HomeFilled, RestartAlt, WifiFind } from "@mui/icons-material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
@@ -325,12 +325,42 @@ export default function MainLayout() {
     const drawerWidthCollapsed = 57;
     const [openMini, setOpenMini] = React.useState(false);
 
+    const openTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+    const closeTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
     // Close drawer when route changes (mobile)
     const location = useLocation();
     React.useEffect(() => {
         setMobileOpen(false);
     }, [location.pathname]);
 
+    const handleMouseEnter = () => {
+        // If user comes back fast, cancel closeTimer
+        if (closeTimerRef.current) {
+            clearTimeout(closeTimerRef.current);
+            closeTimerRef.current = null;
+        }
+
+        // Start open timer
+        openTimerRef.current = setTimeout(() => {
+            setOpenMini(true);
+            openTimerRef.current = null;
+        }, 1000); // ← 1 second
+    };
+
+    const handleMouseLeave = () => {
+        // Cancel open timer if not opened yet
+        if (openTimerRef.current) {
+            clearTimeout(openTimerRef.current);
+            openTimerRef.current = null;
+        }
+
+        // Start close timer
+        closeTimerRef.current = setTimeout(() => {
+            setOpenMini(false);
+            closeTimerRef.current = null;
+        }, 1000); // ← 1 second
+    };
 
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh" }}>
@@ -349,53 +379,16 @@ export default function MainLayout() {
                         "& .MuiDrawer-paper": { width: drawerWidth },
                     }}
                 >
-                    {/* {drawer} */}
                     <Sidebar items={NAV_ITEMS} mini={false} onNavigate={() => setMobileOpen(false)} />
                 </Drawer>
             )}
-            {/* {mdUp && (
-                <Drawer
-                    variant="permanent"
-                    sx={{
-                        width: drawerWidth,
-                        flexShrink: 0,
-                        "& .MuiDrawer-paper": { boxSizing: "border-box" },
-                    }}
-                    open
-                >
-                    {drawer}
-                </Drawer>
-            )} */}
-
-            {/* Desktop Mini Variant Drawer */}
-            {/* {mdUp && (
-                <Drawer
-                    variant="permanent"
-                    open={openMini}
-                    onMouseEnter={() => setOpenMini(true)}     // expand on hover
-                    onMouseLeave={() => setOpenMini(false)}    // collapse on leave
-                    sx={{
-                        width: openMini ? drawerWidth : drawerWidthCollapsed,
-                        transition: "width 0.3s ease",
-                        flexShrink: 0,
-                        "& .MuiDrawer-paper": {
-                            width: openMini ? drawerWidth : drawerWidthCollapsed,
-                            overflowX: "hidden",
-                            boxSizing: "border-box",
-                            transition: "width 0.3s ease",
-                        },
-                    }}
-                >
-                    {drawer}
-                </Drawer>
-            )} */}
             {/* Desktop Mini Variant Drawer */}
             {mdUp && (
                 <Drawer
                     variant="permanent"
                     open={openMini}
-                    onMouseEnter={() => setOpenMini(true)}     // expand on hover
-                    onMouseLeave={() => setOpenMini(false)}    // collapse on leave
+                    onMouseEnter={handleMouseEnter}     // expand on hover
+                    onMouseLeave={handleMouseLeave}    // collapse on leave
                     sx={{
                         width: openMini ? drawerWidth : drawerWidthCollapsed,
                         transition: "width 0.3s ease",

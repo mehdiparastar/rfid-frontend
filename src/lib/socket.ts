@@ -4,17 +4,33 @@ import type { Product } from "./api";
 import type { Tag } from "../api/tags";
 import type { Mode } from "../api/modules";
 import type { CurrentScenarioRow } from "../api/jrdDevices";
-import type { Esp32ClientInfo } from "../api/espModules";
+import type { Esp32ClientInfo, Esp32StatusPayload } from "../api/espModules";
+
+
+export type ESPModulesProductScan = Product & { scantimestamp: number, scanRSSI: number, deviceId: number }
+export type ESPModulesScanResult =
+    | { Scan: ESPModulesProductScan[]; Inventory?: ESPModulesProductScan[]; NewProduct?: Tag[] }
+    | { Inventory: ESPModulesProductScan[]; Scan?: ESPModulesProductScan[]; NewProduct?: Tag[] }
+    | { NewProduct: Tag[]; Scan?: ESPModulesProductScan[]; Inventory?: ESPModulesProductScan[] };
 
 export type ScanResult =
-    | { Scan: Product[]; Inventory?: Product[]; NewProduct?: Tag[], deviceId: string }
-    | { Inventory: Product[]; Scan?: Product[]; NewProduct?: Tag[], deviceId: string }
-    | { NewProduct: Tag[]; Scan?: Product[]; Inventory?: Product[], deviceId: string };
+    | { Scan: Product[]; Inventory?: Product[]; NewProduct?: Tag[], deviceId: number }
+    | { Inventory: Product[]; Scan?: Product[]; NewProduct?: Tag[], deviceId: number }
+    | { NewProduct: Tag[]; Scan?: Product[]; Inventory?: Product[], deviceId: number };
+
+
 
 export type ServerToClientEvents = {
     // Example events — add yours:
-    "esp-modules-new-scan-recieved": (payload: Partial<Esp32ClientInfo>) => void;
-    "esp-modules-status-updated": (payload: Partial<Esp32ClientInfo>) => void;
+    "esp-modules-stop-scan": (payload: { id: number }) => void,
+    "esp-modules-start-scan": (payload: { id: number }) => void,
+    "esp-modules-updated-mode": (payload: { id: number, mode: Mode }) => void,
+    "esp-modules-updated-is-active": (payload: { id: number, isActive: boolean }) => void,
+    "esp-modules-updated-power": (payload: { id: number, currentHardPower: number, currentSoftPower: number }) => void,
+    "esp-modules-registration-updated": (payload: Partial<Esp32ClientInfo>[]) => void,
+    "esp-modules-new-inventory-scan-recieved": (payload: ESPModulesProductScan[]) => void;
+    "esp-modules-status-updated": (payload: Partial<Esp32StatusPayload> & { id: number }) => void;
+    "esp-modules-clear-scan-history-by-mode": (payload: { id: number, mode: Mode }) => void;
     "new-scan-result": (payload: ScanResult) => void;
     "backupProgress": (payload: Record<"backup_db" | "backup_files", number>) => void
     "restoreProgress": (payload: Record<"restore_db" | "restore_files", number>) => void

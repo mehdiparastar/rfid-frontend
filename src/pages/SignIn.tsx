@@ -180,7 +180,7 @@ export default function SignIn() {
                                         <span>{t["Signing in…"]}</span>
                                     </Stack>
                                 ) : (
-                                    "Sign in"
+                                    t["Sign in"]
                                 )}
                             </Button>
                         </Stack>
