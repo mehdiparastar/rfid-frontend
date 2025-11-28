@@ -10,7 +10,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import UsersIcon from "@mui/icons-material/People";
 import SignUpIcon from "@mui/icons-material/PersonAdd";
-import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import {
     AppBar,
@@ -52,7 +51,6 @@ const NAV_ITEMS: NavItem[] = [
     { to: "/dashboard", label: "Dashboard", icon: <Dashboard /> },
     { to: "/gold-price-dashboard", label: "Gold Price Dashboard", icon: <MonetizationOnIcon /> },
     { to: "/esp-modules", label: "Connected Modules", icon: <WifiFind /> },
-    { to: "/scan-mode", label: "Scan Mode", icon: <QrCodeScannerIcon /> },
     { to: "/products", label: "Products", icon: <Inventory2Icon /> },
     { to: "/invoices", label: "Invoices", icon: <ReceiptIcon /> },
     { to: "/tags", label: "Tags", icon: <LabelIcon /> },
@@ -345,7 +343,7 @@ export default function MainLayout() {
         openTimerRef.current = setTimeout(() => {
             setOpenMini(true);
             openTimerRef.current = null;
-        }, 1000); // ← 1 second
+        }, 750); // ← 1 second
     };
 
     const handleMouseLeave = () => {
@@ -359,7 +357,7 @@ export default function MainLayout() {
         closeTimerRef.current = setTimeout(() => {
             setOpenMini(false);
             closeTimerRef.current = null;
-        }, 1000); // ← 1 second
+        }, 750); // ← 1 second
     };
 
     return (

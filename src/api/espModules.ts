@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ScanMode } from "../constants/scanMode";
 import { api, type Product } from "../lib/api";
 import type { ESPModulesTagScanResults } from "../lib/socket";
-import { type Mode } from "./modules";
 
 export interface Esp32StatusPayload {
     rssi: number;
@@ -14,7 +14,7 @@ export interface Esp32ClientInfo {
     ip?: string;
     socket?: WebSocket;
     lastSeen: number;
-    mode: Mode;
+    mode: ScanMode;
     currentHardPower: number; // in dbm ben 15 and 26
     currentSoftPower: number; // enable if request power be less than 15
     isActive: boolean;
@@ -96,8 +96,8 @@ export function useSetESPModulesMode() {
 
     return useMutation({
         mutationKey: ["setESPModulesMode"],
-        mutationFn: (vars: { deviceId: number; mode: Mode; }) =>
-            api<{ command: string, mode: Mode, sent: boolean }>(
+        mutationFn: (vars: { deviceId: number; mode: ScanMode; }) =>
+            api<{ command: string, mode: ScanMode, sent: boolean }>(
                 `/api/jrd/${vars.deviceId}/mode`,
                 {
                     method: "POST",
@@ -124,7 +124,7 @@ export function useStartESPModulesScan() {
 
     return useMutation({
         mutationKey: ["setStartESPModulesScan"],
-        mutationFn: (vars: { deviceId: number; mode: Mode; }) =>
+        mutationFn: (vars: { deviceId: number; mode: ScanMode; }) =>
             api<{ sent: boolean; command: string; started: boolean; }>(
                 `/api/jrd/${vars.deviceId}/start-scan`,
                 {
@@ -151,7 +151,7 @@ export function useStartESPModulesScanByMode() {
 
     return useMutation({
         mutationKey: ["setStartESPModulesScanByMode"],
-        mutationFn: (vars: { mode: Mode; }) =>
+        mutationFn: (vars: { mode: ScanMode; }) =>
             api<
                 {
                     sent: boolean;
@@ -247,7 +247,7 @@ export function useStopESPModulesScanByMode() {
 
     return useMutation({
         mutationKey: ["setStopESPModulesScanByMode"],
-        mutationFn: (vars: { mode: Mode; }) =>
+        mutationFn: (vars: { mode: ScanMode; }) =>
             api<{
                 sent: boolean;
                 command: string;
@@ -279,7 +279,7 @@ export function useClearEspModulesScanHistory() {
 
     return useMutation({
         mutationKey: ["clearESPModulesScanHistoryByMode"],
-        mutationFn: (vars: { mode: Mode; }) => api<{ cleared: boolean; sent: boolean; command: string; }>(`/api/jrd/${vars.mode}/clear-scan-history`, { method: "POST" }),
+        mutationFn: (vars: { mode: ScanMode; }) => api<{ cleared: boolean; sent: boolean; command: string; }>(`/api/jrd/${vars.mode}/clear-scan-history`, { method: "POST" }),
         onSuccess(data, variables) {
             const prevList = qc.getQueryData<Esp32ClientInfo[]>(["esp-modules"]);
             if (prevList && prevList.length > 0) {

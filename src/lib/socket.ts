@@ -2,15 +2,14 @@
 import { io, Socket } from "socket.io-client";
 import type { Product } from "./api";
 import type { Tag } from "../api/tags";
-import type { Mode } from "../api/modules";
-import type { CurrentScenarioRow } from "../api/jrdDevices";
 import type { Esp32ClientInfo, Esp32StatusPayload } from "../api/espModules";
+import type { ScanMode } from "../constants/scanMode";
 
 
 export type ESPModulesProductScan = Product & { scantimestamp: number, scanRSSI: number, deviceId: number }
 
 export type ProductScan = Partial<Product> & { scantimestamp: number, scanRSSI: number }
-export type ESPModulesTagScanResults = Record<Mode, ProductScan[]>;
+export type ESPModulesTagScanResults = Record<ScanMode, ProductScan[]>;
 
 export type ESPModulesScanResult =
     | { Scan: ESPModulesProductScan[]; Inventory?: ESPModulesProductScan[]; NewProduct?: Tag[] }
@@ -28,17 +27,15 @@ export type ServerToClientEvents = {
     // Example events — add yours:
     "esp-modules-stop-scan": (payload: { id: number }) => void,
     "esp-modules-start-scan": (payload: { id: number }) => void,
-    "esp-modules-updated-mode": (payload: { id: number, mode: Mode }) => void,
+    "esp-modules-updated-mode": (payload: { id: number, mode: ScanMode }) => void,
     "esp-modules-updated-is-active": (payload: { id: number, isActive: boolean }) => void,
     "esp-modules-updated-power": (payload: { id: number, currentHardPower: number, currentSoftPower: number }) => void,
     "esp-modules-registration-updated": (payload: Partial<Esp32ClientInfo>[]) => void,
     "esp-modules-new-scan-recieved": (payload: ESPModulesProductScan[]) => void;
     "esp-modules-status-updated": (payload: Partial<Esp32StatusPayload> & { id: number }) => void;
-    "esp-modules-clear-scan-history-by-mode": (payload: { id: number, mode: Mode }) => void;
-    "new-scan-result": (payload: ScanResult) => void;
+    "esp-modules-clear-scan-history-by-mode": (payload: { id: number, mode: ScanMode }) => void;
     "backupProgress": (payload: Record<"backup_db" | "backup_files", number>) => void
     "restoreProgress": (payload: Record<"restore_db" | "restore_files", number>) => void
-    "update-current-scenario": (payload: { mode: Mode, data: CurrentScenarioRow[] }) => void;
 };
 
 export type ClientToServerEvents = {

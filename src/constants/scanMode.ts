@@ -1,0 +1,1 @@
+export type ScanMode = "Inventory" | "Scan" | "NewProduct";

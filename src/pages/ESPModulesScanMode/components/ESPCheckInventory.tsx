@@ -38,7 +38,7 @@ import {
     useTheme
 } from '@mui/material';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useClearEspModulesScanHistory, useEspModules, useEspModulesInventoryItemShouldBeScanned, useStartESPModulesScanByMode, useStopESPModulesScanByMode } from '../../../api/espModules';
+import { useClearEspModulesScanHistory, useEspModules, useEspModulesInventoryItemShouldBeScanned, useSetESPModulePower, useSetESPModulesIsActive, useSetESPModulesMode, useStartESPModulesScanByMode, useStopESPModulesScanByMode } from '../../../api/espModules';
 import { useGoldCurrency } from '../../../api/goldCurrency';
 import dingUrl from "../../../assets/sounds/ding.mp3"; // Vite: imports as URL
 import { useESPModulesLive } from '../../../features/useESPModulesLive';
@@ -67,6 +67,9 @@ const ESPCheckInventory: React.FC = () => {
     const [openBackDrop, setOpenBackDrop] = useState<boolean>(false);
 
     const { data: allEspModules = [] } = useEspModules();
+    const { mutate: setESPModulesPower, } = useSetESPModulePower()
+    const { mutate: setESPModulesIsActive, } = useSetESPModulesIsActive()
+    const { mutate: setESPModulesMode, } = useSetESPModulesMode()
 
     useESPModulesLive(true)
     useESPModulesScanLive(true)
@@ -157,6 +160,13 @@ const ESPCheckInventory: React.FC = () => {
         a.preload = "auto";
         a.volume = 1.0; // tweak if needed
         audioRef.current = a;
+
+        if (allEspModules.length === 1) {
+            const deviceId = allEspModules[0].id!
+            setESPModulesIsActive({ deviceId, isActive: true })
+            setESPModulesMode({ deviceId, mode: "Inventory" })
+            setESPModulesPower({ deviceId, power: 26 })
+        }
 
         return () => {
             a.pause();

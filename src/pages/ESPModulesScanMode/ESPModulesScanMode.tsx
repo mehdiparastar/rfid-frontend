@@ -1,8 +1,7 @@
 import { AddBox, FactCheck } from "@mui/icons-material";
-import { Alert, AppBar, Box, CircularProgress, Container, Grid, Tab, Tabs, useTheme, Zoom } from "@mui/material";
+import { Alert, AppBar, Box, CircularProgress, Grid, Tab, Tabs, useTheme, Zoom } from "@mui/material";
 import React from "react";
 import { useMe } from "../../api/auth";
-import type { Mode } from "../../api/modules";
 import { useLocalStorageData } from "../../features/useLocalStorageData";
 import { useSocketStore } from "../../store/socketStore";
 import { RFIDIcon } from "../../svg/RFIDIcon/RFIDIcon";
@@ -10,6 +9,7 @@ import { translate } from "../../utils/translate";
 import ESPCheckInventory from "./components/ESPCheckInventory";
 import ESPProductRegistration from "./components/ESPProductRegistration";
 import ESPScan from "./components/ESPScan";
+import type { ScanMode } from "../../constants/scanMode";
 
 
 const ESPModulesScanMode: React.FC = () => {
@@ -17,8 +17,7 @@ const ESPModulesScanMode: React.FC = () => {
     const ln = theme.direction === "ltr" ? "en" : "fa"
     const t = translate(ln)!
     const { data: me, isLoading } = useMe(); // useMe() already handles cookie-based auth
-    // const [selectedScenario, setSelectedScenario] = useState<Mode>("Inventory")
-    const [selectedScenario, setSelectedScenario] = useLocalStorageData<Mode>("selectedScenario", "Inventory");
+    const [selectedScenario, setSelectedScenario] = useLocalStorageData<ScanMode>("selectedScenario", "Inventory");
     const isConnected = useSocketStore((s) => s.isConnected);
 
     const transitionDuration = {
@@ -49,7 +48,7 @@ const ESPModulesScanMode: React.FC = () => {
                 <AppBar position="static" color="warning">
                     <Tabs
                         value={selectedScenario}
-                        onChange={(_e: React.SyntheticEvent, newValue: Mode) => setSelectedScenario(newValue)}
+                        onChange={(_e: React.SyntheticEvent, newValue: ScanMode) => setSelectedScenario(newValue)}
                         indicatorColor="secondary"
                         textColor="inherit"
                         variant="fullWidth"

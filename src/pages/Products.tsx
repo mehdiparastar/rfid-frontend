@@ -12,7 +12,6 @@ import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { translate } from "../utils/translate";
-import ProductRegistration from "./ScanMode/components/ProductRegistration";
 import ESPProductRegistration from "./ESPModulesScanMode/components/ESPProductRegistration";
 
 export default function Products() {

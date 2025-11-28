@@ -81,7 +81,7 @@ export default function Tags() {
         <>
             <Box sx={{ width: 1, bgcolor: isConnected ? 'green' : 'red', height: 5 }} />
             {/* controls you wire to setSorting / setFilters */}
-            <Container maxWidth="lg" sx={{ px: 1, mb: 2 }}>
+            <Container maxWidth="xl" sx={{ width: 1, px: 1, mb: 2 }}>
                 {/* Filters Section */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
                     <TextField
@@ -129,7 +129,9 @@ export default function Tags() {
                             return (
                                 <Grid key={tag.id}>
                                     <Chip
+                                        size="medium"
                                         sx={{
+                                            width: 1,
                                             borderRadius: 1,
                                             overflow: "hidden",
                                             boxShadow: 3,
@@ -140,7 +142,7 @@ export default function Tags() {
                                             },
                                             cursor: "pointer",
                                         }}
-                                        label={tag.epc}
+                                        label={<Typography variant="h5">{tag.epc.toUpperCase()}</Typography>}
                                     />
                                 </Grid>
                             )

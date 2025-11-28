@@ -1,4 +1,4 @@
-import { AddBox, FactCheck, Settings } from "@mui/icons-material";
+import { Settings } from "@mui/icons-material";
 import {
     Box,
     Card,
@@ -19,23 +19,18 @@ import {
 } from "@mui/material";
 import { useRef } from "react";
 import { useEspModules, useSetESPModulePower, useSetESPModulesIsActive, useSetESPModulesMode } from "../api/espModules";
-import type { Mode } from "../api/modules";
+import { IsActiveSwitch } from "../components/IsActiveSwitch";
+import type { ScanMode } from "../constants/scanMode";
 import { useESPModulesLive } from "../features/useESPModulesLive";
 import { RFIDIcon } from "../svg/RFIDIcon/RFIDIcon";
 import { powerDbmToPercent, powerPercentToDbm } from "../utils/percentDbm";
 import { translate } from "../utils/translate";
-import ESPCheckInventory from "./ESPModulesScanMode/components/ESPCheckInventory";
-import { IsActiveSwitch } from "./ScanMode/components/ModuleSettings";
-import ESPScan from "./ESPModulesScanMode/components/ESPScan";
-import ESPProductRegistration from "./ESPModulesScanMode/components/ESPProductRegistration";
 import ESPModulesScanMode from "./ESPModulesScanMode/ESPModulesScanMode";
 
 
 export default function ESPModules() {
     const box1Ref = useRef<HTMLDivElement>(null);
     const box2Ref = useRef<HTMLDivElement>(null);
-    const box3Ref = useRef<HTMLDivElement>(null);
-    const box4Ref = useRef<HTMLDivElement>(null);
 
     const scrollTo = (ref: React.RefObject<HTMLElement | null>) => {
         if (!ref.current) return;
@@ -49,7 +44,7 @@ export default function ESPModules() {
     const ln = theme.direction === "ltr" ? "en" : "fa";
     const t = translate(ln)!;
 
-    const { data: espModules, isLoading: espModulesIsLoading, isError } = useEspModules();
+    const { data: espModules = [], isLoading: espModulesIsLoading, isError } = useEspModules();
     const { mutate: setESPModulesPower, isPending: setESPModulesPowerIsPending } = useSetESPModulePower()
     const { mutate: setESPModulesIsActive, isPending: setESPModulesIsActiveIsPending } = useSetESPModulesIsActive()
     const { mutate: setESPModulesMode, isPending: setESPModulesModeIsPending } = useSetESPModulesMode()
@@ -81,17 +76,7 @@ export default function ESPModules() {
 
                 <Tooltip placement="left" title={t["Inventory"]}>
                     <IconButton color="primary" onClick={() => scrollTo(box2Ref)}>
-                        <FactCheck />
-                    </IconButton>
-                </Tooltip>
-                <Tooltip placement="left" title={t["Scan"]}>
-                    <IconButton color="primary" onClick={() => scrollTo(box3Ref)}>
                         <RFIDIcon />
-                    </IconButton>
-                </Tooltip>
-                <Tooltip placement="left" title={t["NewProduct"]}>
-                    <IconButton color="primary" onClick={() => scrollTo(box4Ref)}>
-                        <AddBox />
                     </IconButton>
                 </Tooltip>
             </Stack >
@@ -136,7 +121,7 @@ export default function ESPModules() {
 
                     {/* Main Content */}
                     <Grid container spacing={2}>
-                        {[...(espModules ?? [])].filter(el => el.id != null).sort((a, b) => a.id! - b.id!).map((m, i, arr) => {
+                        {[...(espModules ?? [])].filter(el => el.id != null).sort((a, b) => a.id! - b.id!).map((m, _, arr) => {
                             const count = arr.length
 
                             return (
@@ -202,7 +187,7 @@ export default function ESPModules() {
                                                 <Stack justifyContent={'space-between'} bgcolor={theme.palette.mode === 'light' ? 'whitesmoke' : theme.palette.divider} direction={'row'} mb={-1.5} alignItems="center" width={1}>
                                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', pl: 1 }}>
                                                         <Stack direction={'row'} gap={0.5} >
-                                                            {(["Inventory", "Scan", "NewProduct"] as Mode[]).map((mMode) => (
+                                                            {(["Inventory", "Scan", "NewProduct"] as ScanMode[]).map((mMode) => (
                                                                 <Chip
                                                                     disabled={m.isActive === false}
                                                                     key={mMode}
@@ -238,15 +223,8 @@ export default function ESPModules() {
                     </Grid>
                 </Box>
                 <Box ref={box2Ref} >
-                    {/* <ESPCheckInventory /> */}
                     <ESPModulesScanMode />
                 </Box>
-                {/* <Box ref={box3Ref} p={1} px={0}>
-                    <ESPScan />
-                </Box>
-                <Box ref={box4Ref} p={1} px={0}>
-                    <ESPProductRegistration mode={"New"} />
-                </Box> */}
             </Container>
         </>
     );

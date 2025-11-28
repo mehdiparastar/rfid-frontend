@@ -38,13 +38,13 @@ import {
     useTheme
 } from '@mui/material';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import dingUrl from "../assets/sounds/ding.mp3"; // Vite: imports as URL
-import { useClearEspModulesScanHistory, useEspModules, useStartESPModulesScanByMode, useStopESPModulesScanByMode } from '../api/espModules';
+import { useClearEspModulesScanHistory, useEspModules, useSetESPModulePower, useSetESPModulesIsActive, useSetESPModulesMode, useStartESPModulesScanByMode, useStopESPModulesScanByMode } from '../api/espModules';
 import type { Tag } from '../api/tags';
+import dingUrl from "../assets/sounds/ding.mp3"; // Vite: imports as URL
 import { useESPModulesLive } from '../features/useESPModulesLive';
 import { useESPModulesScanLive } from '../features/useESPModulesScanLive';
-import { DialogTransition } from '../pages/ScanMode/components/ModuleSettings';
 import { translate } from '../utils/translate';
+import { DialogTransition } from './DialogTransition';
 
 
 interface ESPSelectTagsProps {
@@ -70,6 +70,9 @@ const ESPSelectTags: React.FC<ESPSelectTagsProps> = ({ selectedTags, open, onClo
     const fullScreenSettingsDialog = useMediaQuery(theme.breakpoints.down('sm'));
 
     const { data: allEspModules = [] } = useEspModules();
+    const { mutate: setESPModulesPower, } = useSetESPModulePower()
+    const { mutate: setESPModulesIsActive, } = useSetESPModulesIsActive()
+    const { mutate: setESPModulesMode, } = useSetESPModulesMode()
 
     useESPModulesLive(true)
     useESPModulesScanLive(true)
@@ -200,6 +203,13 @@ const ESPSelectTags: React.FC<ESPSelectTagsProps> = ({ selectedTags, open, onClo
         a.preload = "auto";
         a.volume = 1.0; // tweak if needed
         audioRef.current = a;
+
+        if (allEspModules.length === 1) {
+            const deviceId = allEspModules[0].id!
+            setESPModulesIsActive({ deviceId, isActive: true })
+            setESPModulesMode({ deviceId, mode: "NewProduct" })
+            setESPModulesPower({ deviceId, power: 9 })
+        }
 
         return () => {
             a.pause();

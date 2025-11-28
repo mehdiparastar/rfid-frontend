@@ -2,7 +2,7 @@ import { ArrowDownward, ArrowUpward, Clear, ViewWeek as ColumnIcon, Delete, Edit
 import { Alert, Backdrop, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Paper, Select, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useTheme } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useClearEspModulesScanHistory, useEspModules, useStartESPModulesScanByMode, useStopESPModulesScanByMode } from "../../../api/espModules";
+import { useClearEspModulesScanHistory, useEspModules, useSetESPModulePower, useSetESPModulesIsActive, useSetESPModulesMode, useStartESPModulesScanByMode, useStopESPModulesScanByMode } from "../../../api/espModules";
 import { useGoldCurrency } from "../../../api/goldCurrency";
 import { useDeleteProduct } from "../../../api/products";
 import dingUrl from "../../../assets/sounds/ding.mp3"; // Vite: imports as URL
@@ -40,6 +40,9 @@ const ESPScan: React.FC = () => {
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
 
     const { data: allEspModules = [] } = useEspModules();
+    const { mutate: setESPModulesPower, } = useSetESPModulePower()
+    const { mutate: setESPModulesIsActive, } = useSetESPModulesIsActive()
+    const { mutate: setESPModulesMode, } = useSetESPModulesMode()
 
     useESPModulesLive(true)
     useESPModulesScanLive(true)
@@ -119,6 +122,13 @@ const ESPScan: React.FC = () => {
         a.preload = "auto";
         a.volume = 1.0; // tweak if needed
         audioRef.current = a;
+
+        if (allEspModules.length === 1) {
+            const deviceId = allEspModules[0].id!
+            setESPModulesIsActive({ deviceId, isActive: true })
+            setESPModulesMode({ deviceId, mode: "Scan" })
+            setESPModulesPower({ deviceId, power: 7 })
+        }
 
         return () => {
             a.pause();

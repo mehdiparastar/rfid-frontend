@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import type { Esp32ClientInfo, Esp32StatusPayload } from "../api/espModules";
-import type { Mode } from "../api/modules";
+import type { ScanMode } from "../constants/scanMode";
 import { useSocketStore } from "../store/socketStore";
 
 
@@ -58,7 +58,7 @@ export function useESPModulesLive(refetchOnReconnect = true) {
             });
         }
 
-        const onESPModulesUpdateMode = (payload: { id: number, mode: Mode }) => {
+        const onESPModulesUpdateMode = (payload: { id: number, mode: ScanMode }) => {
             qc.setQueryData<Esp32ClientInfo[]>(["esp-modules"], (prev) => {
                 if (!prev) return prev;
 
