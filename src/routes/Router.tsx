@@ -1,11 +1,11 @@
+import { LinearProgress } from "@mui/material";
 import * as React from "react";
 import {
     createBrowserRouter,
-    RouterProvider,
     redirect,
+    RouterProvider,
     type LoaderFunctionArgs,
 } from "react-router-dom";
-import { LinearProgress } from "@mui/material";
 
 import RequireAuth from "./RequireAuth";
 
@@ -22,10 +22,10 @@ const GoldPriceDashboard = React.lazy(() => import("../pages/Dashboard/GoldPrice
 const Dashboard = React.lazy(() => import("../pages/Dashboard/Dashboard"));
 const ESPModules = React.lazy(() => import("../pages/ESPModules"));
 
-import { fetchProductsByIds } from "../api/products"; // your feature fetcher
-import Invoices from "../pages/Invoices";
 import { fetchInvoicesByIds } from "../api/invoices";
+import { fetchProductsByIds } from "../api/products"; // your feature fetcher
 import InvoiceDetails from "../pages/InvoiceDetails";
+import Invoices from "../pages/Invoices";
 
 export async function proformaInvoiceLoader({ request }: LoaderFunctionArgs) {
     const url = new URL(request.url);

@@ -2,6 +2,7 @@ import { AddBox, FactCheck } from "@mui/icons-material";
 import { Alert, AppBar, Box, CircularProgress, Grid, Tab, Tabs, useTheme, Zoom } from "@mui/material";
 import React from "react";
 import { useMe } from "../../api/auth";
+import type { ScanMode } from "../../constants/scanMode";
 import { useLocalStorageData } from "../../features/useLocalStorageData";
 import { useSocketStore } from "../../store/socketStore";
 import { RFIDIcon } from "../../svg/RFIDIcon/RFIDIcon";
@@ -9,7 +10,6 @@ import { translate } from "../../utils/translate";
 import ESPCheckInventory from "./components/ESPCheckInventory";
 import ESPProductRegistration from "./components/ESPProductRegistration";
 import ESPScan from "./components/ESPScan";
-import type { ScanMode } from "../../constants/scanMode";
 
 
 const ESPModulesScanMode: React.FC = () => {

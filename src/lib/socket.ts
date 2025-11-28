@@ -1,9 +1,9 @@
 // src/lib/socket.ts
 import { io, Socket } from "socket.io-client";
-import type { Product } from "./api";
-import type { Tag } from "../api/tags";
 import type { Esp32ClientInfo, Esp32StatusPayload } from "../api/espModules";
+import type { Tag } from "../api/tags";
 import type { ScanMode } from "../constants/scanMode";
+import type { Product } from "./api";
 
 
 export type ESPModulesProductScan = Product & { scantimestamp: number, scanRSSI: number, deviceId: number }
