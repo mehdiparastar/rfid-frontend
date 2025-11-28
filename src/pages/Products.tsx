@@ -13,6 +13,7 @@ import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { translate } from "../utils/translate";
 import ProductRegistration from "./ScanMode/components/ProductRegistration";
+import ESPProductRegistration from "./ESPModulesScanMode/components/ESPProductRegistration";
 
 export default function Products() {
     const theme = useTheme()
@@ -604,10 +605,11 @@ export default function Products() {
                                     >
                                         <CardMedia
                                             component="img"
-                                            height={220}
+                                            height={300}
+                                            width={400}
                                             image={`api${product.photos[0]}` || "/default-product-image.jpg"}
                                             alt={product.name}
-                                            sx={{ width: "100%", height: '100%', objectFit: "cover", cursor: "pointer" }}
+                                            sx={{ objectFit: "cover", cursor: "pointer" }}
                                             onClick={() => {
                                                 setLightboxPhotos(product.photos || []);
                                                 setLightboxOpen(true);
@@ -737,7 +739,7 @@ export default function Products() {
             <Dialog disableScrollLock maxWidth="md" fullWidth open={!!productToEdit} onClose={() => setProductToEdit(null)}>
                 <DialogTitle>{t["edit"]} {productToEdit?.name}</DialogTitle>
                 <DialogContent sx={{ p: 2 }}>
-                    {productToEdit && <ProductRegistration setProductToEdit={setProductToEdit} mode={"Edit"} toEditData={productToEdit as any} />}
+                    {productToEdit && <ESPProductRegistration setProductToEdit={setProductToEdit} mode={"Edit"} toEditData={productToEdit as any} />}
                 </DialogContent>
             </Dialog>
 

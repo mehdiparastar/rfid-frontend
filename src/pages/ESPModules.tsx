@@ -26,6 +26,9 @@ import { powerDbmToPercent, powerPercentToDbm } from "../utils/percentDbm";
 import { translate } from "../utils/translate";
 import ESPCheckInventory from "./ESPModulesScanMode/components/ESPCheckInventory";
 import { IsActiveSwitch } from "./ScanMode/components/ModuleSettings";
+import ESPScan from "./ESPModulesScanMode/components/ESPScan";
+import ESPProductRegistration from "./ESPModulesScanMode/components/ESPProductRegistration";
+import ESPModulesScanMode from "./ESPModulesScanMode/ESPModulesScanMode";
 
 
 export default function ESPModules() {
@@ -234,15 +237,16 @@ export default function ESPModules() {
                         })}
                     </Grid>
                 </Box>
-                <Box ref={box2Ref}>
-                    <ESPCheckInventory />
+                <Box ref={box2Ref} >
+                    {/* <ESPCheckInventory /> */}
+                    <ESPModulesScanMode />
                 </Box>
-                <Box ref={box3Ref}>
-                    {/* <ESPScan /> */}
+                {/* <Box ref={box3Ref} p={1} px={0}>
+                    <ESPScan />
                 </Box>
-                <Box ref={box4Ref}>
-                    {/* <ESPProductRegistration mode={"New"} /> */}
-                </Box>
+                <Box ref={box4Ref} p={1} px={0}>
+                    <ESPProductRegistration mode={"New"} />
+                </Box> */}
             </Container>
         </>
     );

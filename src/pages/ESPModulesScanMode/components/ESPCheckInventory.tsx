@@ -394,7 +394,8 @@ const ESPCheckInventory: React.FC = () => {
                                         <LinearProgress variant='determinate' value={distansePercentByRSSI} />
                                         <CardMedia
                                             component="img"
-                                            height={200}
+                                            height={300}
+                                            width={400}
                                             image={`api${product.photos[0]}` || "/default-product-image.jpg"}
                                             alt={product.name}
                                         />

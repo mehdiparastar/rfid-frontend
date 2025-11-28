@@ -44,8 +44,8 @@ const ESPModulesScanMode: React.FC = () => {
 
     return (
         <>
-            <Box sx={{ mx: 1, bgcolor: isConnected ? 'green' : 'red', height: 5 }} />
-            <Grid container pt={1} px={1} spacing={1}>
+            <Box sx={{ bgcolor: isConnected ? 'green' : 'red', height: 5 }} />
+            <Grid container pt={1} spacing={1}>
                 <AppBar position="static" color="warning">
                     <Tabs
                         value={selectedScenario}

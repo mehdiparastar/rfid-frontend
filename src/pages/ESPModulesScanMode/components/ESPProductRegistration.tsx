@@ -31,7 +31,7 @@ import { NumericFormat } from 'react-number-format';
 import { useCreateProduct, useUpdateProduct } from '../../../api/products';
 import type { Tag } from '../../../api/tags';
 import CameraFilePicker, { type CapturedFile } from '../../../components/CameraFilePicker';
-import SelectTags from '../../../components/SelectTags';
+import ESPSelectTags from '../../../components/ESPSelectTags';
 import type { Product } from '../../../lib/api';
 import { GOLD_PRODUCT_SUB_TYPES, GOLD_PRODUCT_TYPES, useProductFormStore, type GoldProductSUBType, type GoldProductType, type ProductFormValues } from '../../../store/useProductFormStore';
 import { generatePreview } from '../../../utils/imageUtils';
@@ -588,7 +588,7 @@ const ESPProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                     {createNewProductMutation.isPending ? <CircularProgress size={24} /> : (mode === "Edit" ? t["Edit Product"] : t['Register Product'])}
                 </Button>
             </form>
-            {dialogOpen && <SelectTags
+            {dialogOpen && <ESPSelectTags
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
                 onConfirm={handleTagConfirm}

@@ -383,7 +383,8 @@ const CheckInventory: React.FC = () => {
                                     <Card sx={{ transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.05)' } }}>
                                         <CardMedia
                                             component="img"
-                                            height={200}
+                                            height={300}
+                                            width={400}
                                             image={`api${product.photos[0]}` || "/default-product-image.jpg"}
                                             alt={product.name}
                                         />

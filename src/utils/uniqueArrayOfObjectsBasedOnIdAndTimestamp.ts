@@ -7,3 +7,13 @@ export const uniqueByIdAndTimeStamp = (arr: ({ id: number | string, timestamp: n
         return acc;
     }, {})
 );
+
+export const uniqueByTagEPCAndTimeStamp = (arr: ({ epc: string, timestamp: number } & any)[]) => Object.values(
+    arr.reduce((acc, item) => {
+        const existing = acc[item.epc];
+        if (!existing || item.timestamp > existing.timestamp) {
+            acc[item.epc] = item;
+        }
+        return acc;
+    }, {})
+);

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type Product } from "../lib/api";
-import type { ESPModulesScanResult } from "../lib/socket";
-import { serialSafeQueryDefaults, type Mode } from "./modules";
+import type { ESPModulesTagScanResults } from "../lib/socket";
+import { type Mode } from "./modules";
 
 export interface Esp32StatusPayload {
     rssi: number;
@@ -19,14 +19,13 @@ export interface Esp32ClientInfo {
     currentSoftPower: number; // enable if request power be less than 15
     isActive: boolean;
     isScan: boolean;
-    tagScanResults?: ESPModulesScanResult;
+    tagScanResults?: ESPModulesTagScanResults;
     status?: Esp32StatusPayload;
 }
 export function useEspModules() {
     return useQuery({
         queryKey: ["esp-modules"],
         queryFn: ({ signal }) => api<Esp32ClientInfo[]>(`/api/jrd/all-connected-esp-modules`, { signal }),
-        // ...serialSafeQueryDefaults,
     });
 }
 

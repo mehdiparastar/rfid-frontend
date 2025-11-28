@@ -389,10 +389,11 @@ const Scan: React.FC = () => {
                                     >
                                         <CardMedia
                                             component="img"
-                                            height={200}
+                                            height={300}
+                                            width={400}
                                             image={`api${product.photos[0]}` || "/default-product-image.jpg"}
                                             alt={product.name}
-                                            sx={{ width: "100%", objectFit: "cover", cursor: "pointer" }}
+                                            sx={{ objectFit: "cover", cursor: "pointer" }}
                                             onClick={() => {
                                                 setLightboxPhotos(product.photos || []);
                                                 setLightboxOpen(true);

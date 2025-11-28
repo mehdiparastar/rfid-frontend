@@ -1,9 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import type { Esp32ClientInfo } from "../api/espModules";
-import { useSocketStore } from "../store/socketStore";
-import type { ESPModulesProductScan, ESPModulesScanResult } from "../lib/socket";
 import type { Mode } from "../api/modules";
+import type { ESPModulesProductScan } from "../lib/socket";
+import { useSocketStore } from "../store/socketStore";
 
 
 export function useESPModulesScanLive(refetchOnReconnect = true) {
@@ -17,16 +17,17 @@ export function useESPModulesScanLive(refetchOnReconnect = true) {
 
                 const next: Esp32ClientInfo[] = [];
                 for (const m of prev) {
-                    let inventoryTagScanResults: ESPModulesProductScan[] = []
+                    const moduleMode = m.mode as "Inventory" | "Scan"
+                    let moduleModeTagScanResults: ESPModulesProductScan[] = []
 
                     for (const patch of payload) {
                         if (m.id === patch.deviceId) {
-                            const oldScannedProduct = (m?.tagScanResults?.Inventory ?? []).find(p => p.id === patch.id)
+                            const oldScannedProduct = (m?.tagScanResults?.[moduleMode] ?? []).find(p => p.id === patch.id)
 
                             if (oldScannedProduct) {
-                                inventoryTagScanResults = (m.tagScanResults?.Inventory ?? []).map(p => p.id === patch.id ? ({ ...oldScannedProduct, ...patch }) : p) as ESPModulesProductScan[]
+                                moduleModeTagScanResults = (m.tagScanResults?.[moduleMode] ?? []).map(p => p.id === patch.id ? ({ ...oldScannedProduct, ...patch }) : p) as ESPModulesProductScan[]
                             } else {
-                                inventoryTagScanResults = [...(m.tagScanResults?.Inventory ?? []), patch]
+                                moduleModeTagScanResults = [...(m.tagScanResults?.[moduleMode] ?? []), patch] as ESPModulesProductScan[]
                             }
                         }
                     }
@@ -35,9 +36,10 @@ export function useESPModulesScanLive(refetchOnReconnect = true) {
                         ...m,
                         tagScanResults: {
                             ...m.tagScanResults,
-                            Inventory: inventoryTagScanResults,
+                            Inventory: m.tagScanResults?.Inventory ?? [],
                             Scan: m.tagScanResults?.Scan ?? [],
-                            NewProduct: m.tagScanResults?.NewProduct ?? []
+                            NewProduct: m.tagScanResults?.NewProduct ?? [],
+                            [moduleMode]: moduleModeTagScanResults,
                         }
                     })
                 }
@@ -54,7 +56,7 @@ export function useESPModulesScanLive(refetchOnReconnect = true) {
         }
 
 
-        socket.on("esp-modules-new-inventory-scan-recieved", onESPModulesNewScanRecieved);
+        socket.on("esp-modules-new-scan-recieved", onESPModulesNewScanRecieved);
         socket.on("esp-modules-clear-scan-history-by-mode", onESPModulesClearScanHistoryByMode);
 
         const onReconnect = () => {
@@ -63,7 +65,7 @@ export function useESPModulesScanLive(refetchOnReconnect = true) {
         socket.io.on("reconnect", onReconnect);
 
         return () => {
-            socket.off("esp-modules-new-inventory-scan-recieved", onESPModulesNewScanRecieved);
+            socket.off("esp-modules-new-scan-recieved", onESPModulesNewScanRecieved);
             socket.io.off("reconnect", onReconnect);
         };
     }, [qc, socket, refetchOnReconnect]);
