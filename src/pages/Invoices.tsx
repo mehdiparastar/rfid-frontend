@@ -1,12 +1,14 @@
-import { ArrowDownward, ArrowUpward, Search } from "@mui/icons-material";
-import { Alert, Avatar, Box, Button, Card, CardContent, CardHeader, Chip, CircularProgress, Container, FormControl, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Radio, Select, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
+import { ArrowDownward, ArrowUpward, Delete, Search } from "@mui/icons-material";
+import { Alert, Avatar, Box, Button, Card, CardActions, CardContent, CardHeader, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Radio, Select, Snackbar, Stack, TextField, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
 import { red } from "@mui/material/colors";
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFnsJalali } from '@mui/x-date-pickers/AdapterDateFnsJalali';
 import { faIR } from 'date-fns-jalali/locale/fa-IR';
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useInvoices } from "../api/invoices";
+import { useDeleteInvoice, useInvoices } from "../api/invoices";
+import { ErrorSnack } from "../components/ErrorSnack";
+import type { Invoice } from "../lib/api";
 import { useSocketStore } from "../store/socketStore";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { translate } from "../utils/translate";
@@ -24,12 +26,15 @@ export default function Invoices() {
     const [filters, setFilters] = useState({ q: "" }); // for search filter
     const [/*cursor*/, setCursor] = useState(null);
     const [selectedInvoice, setSelectedInvoice] = useState<number | null>(null)
+    const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isError: fetchingIsError, error: fetchingError } = useInvoices({
         limit,
         sorting: [{ id: sortField, desc: sortDirection === "desc" }],
         filters,
     })
+    const { mutate: deleteInvoiceMutate, error: deleteInvoiceError, isError: deleteInvoiceIsError } = useDeleteInvoice()
+
 
     const invoices = data?.pages.flatMap(p => p.items) ?? []
 
@@ -61,6 +66,12 @@ export default function Invoices() {
                 }
             })
     }
+
+    const confirmDelete = async () => {
+        if (invoiceToDelete)
+            deleteInvoiceMutate(invoiceToDelete.id)
+        setInvoiceToDelete(null);
+    };
 
     useEffect(() => {
         // Reset the cursor when filters or sorting change
@@ -149,7 +160,7 @@ export default function Invoices() {
                         invoices.map((invoice, i) => {
 
                             return (
-                                <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={i}>
+                                <Grid size={{ xs: 12, sm: 6 }} key={i}>
                                     <Card
                                         sx={{
                                             borderRadius: 1,
@@ -241,6 +252,11 @@ export default function Invoices() {
                                                 </Typography>
                                             </Stack>
                                         </CardContent>
+                                        <CardActions>
+                                            <IconButton onClick={() => setInvoiceToDelete(invoice)} aria-label="delete">
+                                                <Delete color="error" />
+                                            </IconButton>
+                                        </CardActions>
                                     </Card>
                                 </Grid>
                             )
@@ -273,7 +289,30 @@ export default function Invoices() {
                         <Alert severity="error">{JSON.parse((fetchingError as Error)?.message).message || t["Something went wrong."]}</Alert>
                     </Snackbar>
                 )}
-            </Container >
+            </Container>
+
+            {/* Delete confirm dialog */}
+            <Dialog disableScrollLock maxWidth="md" fullWidth open={!!invoiceToDelete} onClose={() => setInvoiceToDelete(null)}>
+                <DialogTitle>{t["Confirm delete"]} {t["invoice"]} {invoiceToDelete?.customer.name}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {t["This action cannot be undone. Continue?"]}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setInvoiceToDelete(null)}>{t["Cancel"]}</Button>
+                    <Button onClick={confirmDelete} autoFocus color="error" variant="contained">
+                        {t["Delete"]}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Error Message */}
+            <ErrorSnack
+                deleteIsError={deleteInvoiceIsError}
+                deleteError={deleteInvoiceError}
+                t={t}
+            />
         </>
     )
 }

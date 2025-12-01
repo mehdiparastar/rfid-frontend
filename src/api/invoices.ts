@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, getInvoiceItems, type Invoice, type Page, type SortingState } from '../lib/api';
 import { invoicesByIdsQueryKey, invoicesQueryKey } from './queryKeys';
 
@@ -37,7 +37,20 @@ export function useInvoicesByIds(
     });
 }
 
+export function useDeleteInvoice() {
+    const queryClient = useQueryClient();
 
+    return useMutation({
+        mutationFn: (id: number) => api<void>(`/api/invoices/${id}`, { method: "DELETE" }),
+
+        // Simple path: just refetch everything related to products
+        onSuccess: (_data, /*id*/) => {
+            // If you have a canonical prefix in your keys, use that:
+            // e.g. ['products', { limit, sorting, filters }]
+            queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        },
+    });
+}
 
 // get all invoices
 export function useInvoices({

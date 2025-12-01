@@ -1,4 +1,4 @@
-import { ArrowDownward, ArrowUpward, Clear, ViewWeek as ColumnIcon, Delete, Edit, ViewStream as ModuleIcon, PlayArrow, PresentToAll, Search, Stop } from "@mui/icons-material";
+import { ArrowDownward, ArrowUpward, Check, Clear, ViewWeek as ColumnIcon, Delete, Edit, ViewStream as ModuleIcon, PlayArrow, PresentToAll, Search, Stop } from "@mui/icons-material";
 import { Alert, Backdrop, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Paper, Select, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useTheme } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -63,6 +63,22 @@ const ESPScan: React.FC = () => {
     ) as unknown as ESPModulesProductScan[]
 
     const handleStartScenario = async () => {
+        if (allEspModules.length === 1) {
+            const deviceId = allEspModules[0].id!
+            const isActive = allEspModules[0].isActive!
+            const mode = allEspModules[0].mode!
+            const currentHardPower = allEspModules[0].currentHardPower!
+            if (isActive === false) {
+                setESPModulesIsActive({ deviceId, isActive: true })
+            }
+            if (mode !== "Scan") {
+                setESPModulesMode({ deviceId, mode: "Scan" })
+            }
+            if (currentHardPower !== 26) {
+                setESPModulesPower({ deviceId, power: 26 })
+            }
+        }
+        await new Promise(res => setTimeout(res, 500));
         startESPModulesScanByMode({ mode: "Scan" })
     }
 
@@ -122,13 +138,6 @@ const ESPScan: React.FC = () => {
         a.preload = "auto";
         a.volume = 1.0; // tweak if needed
         audioRef.current = a;
-
-        if (allEspModules.length === 1) {
-            const deviceId = allEspModules[0].id!
-            setESPModulesIsActive({ deviceId, isActive: true })
-            setESPModulesMode({ deviceId, mode: "Scan" })
-            setESPModulesPower({ deviceId, power: 7 })
-        }
 
         return () => {
             a.pause();
@@ -435,7 +444,7 @@ const ESPScan: React.FC = () => {
                                                         <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                             <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                                {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingCharge, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge) || 0))}
+                                                                {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeSell, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0) || 0)).replace("ریال", "")} ريال
                                                             </Typography>
                                                             <Chip
                                                                 label={(product.quantity - soldQuantity) > 0 ?
@@ -449,20 +458,34 @@ const ESPScan: React.FC = () => {
                                                             />
                                                         </Box>
                                                         <Typography variant="body2" color="textSecondary">
-                                                            {t["Unit Weight:"]} {product.weight}g
+                                                            {t["Unit Weight:"]} {product.weight}{t["g"]}
                                                         </Typography>
-                                                        <Typography variant="body2" color="textSecondary">
-                                                            {t["Making Charge:"]} {product.makingCharge}%
-                                                        </Typography>
-                                                        <Typography variant="body2" color="textSecondary">
-                                                            {t["Sold Quantity:"]} {soldQuantity}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="textSecondary">
-                                                            {t["Sub Type:"]} {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="textSecondary">
-                                                            {t["Inventory Item:"]} {<Checkbox checked={!!product.inventoryItem} />}
-                                                        </Typography>
+                                                        <Box sx={{ my: 0.5, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <Typography variant="body2" color="textSecondary">
+                                                                {t["Making Charge Sell:"]} {product.makingChargeSell}%
+                                                            </Typography>
+                                                            <Chip sx={{ borderRadius: 1 }} label={product.karat} />
+                                                        </Box>
+                                                        <Box sx={{ my: 0.5, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <Typography variant="body2" color="textSecondary">
+                                                                {t["accessoriesCharge"]} {getIRRCurrency(product.accessoriesCharge).replace("ریال", "")} ريال
+                                                            </Typography>
+                                                            <Chip
+                                                                label={<Typography variant="body2">{t["Sold Quantity:"]} {soldQuantity}</Typography>}
+                                                                sx={{ borderRadius: 1 }}
+                                                            />
+                                                        </Box>
+                                                        <Box sx={{ my: 0.5, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <Typography variant="body2" color="textSecondary">
+                                                                {t["Sub Type:"]} {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.[theme.direction === "rtl" ? "name" : "name_en"]}
+                                                            </Typography>
+                                                            <Chip
+                                                                icon={!!product.inventoryItem ? <Check /> : <Clear />}
+                                                                label={t["Inventory Item"]}
+                                                                sx={{ borderRadius: 1 }}
+                                                                color={!!product.inventoryItem ? "info" : 'default'}
+                                                            />
+                                                        </Box>
                                                     </CardContent>
                                                     <CardActions sx={{ display: "flex", justifyContent: 'space-between' }}>
                                                         <Box>
@@ -551,8 +574,8 @@ const ESPScan: React.FC = () => {
                             </Snackbar>
                         )}
                         <ErrorSnack
-                            deleteProductIsError={deleteProductIsError}
-                            deleteProductError={deleteProductError}
+                            deleteIsError={deleteProductIsError}
+                            deleteError={deleteProductError}
                             t={t}
                         />
                     </Paper>
@@ -617,18 +640,18 @@ function BackDropBox({ product }: BackDropBoxProps) {
             <CardContent sx={{ py: 0.5 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Tooltip title={product.createdBy?.email}>
-                        <Typography variant="h5" fontWeight={'bold'}>{product.name}</Typography>
+                        <Typography variant="h4" fontWeight={'bold'}>{product.name}</Typography>
                     </Tooltip>
-                    <Chip label={t[product.type]} />
+                    <Chip sx={{ fontSize: 16 }} label={t[product.type]} />
                 </Box>
-                <Divider sx={{ mx: -2, my: 1 }} variant="fullWidth" />
+                <Divider sx={{ my: 1, mb: 1 }} variant="fullWidth" />
                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body1" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                        {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingCharge, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge) || 0))}
+                    <Typography variant="h6" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
+                        {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeSell, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0) || 0)).replace("ریال", "")} ريال
                     </Typography>
                     <Chip
                         label={(product.quantity - soldQuantity) > 0 ?
-                            <Typography variant="body1">
+                            <Typography variant="h6">
                                 {t["Available:"]} {product.quantity - soldQuantity}
                             </Typography> :
                             t["Out of stock"]
@@ -637,21 +660,35 @@ function BackDropBox({ product }: BackDropBoxProps) {
                         color={(product.quantity - soldQuantity) > 0 ? "success" : "warning"}
                     />
                 </Box>
-                <Typography variant="body1" color="textSecondary">
-                    {t["Unit Weight:"]} {product.weight}g
+                <Typography variant="h6" color="textSecondary">
+                    {t["Unit Weight:"]} {product.weight}{t["g"]}
                 </Typography>
-                <Typography variant="body1" color="textSecondary">
-                    {t["Making Charge:"]} {product.makingCharge}%
-                </Typography>
-                <Typography variant="body1" color="textSecondary">
-                    {t["Sold Quantity:"]} {soldQuantity}
-                </Typography>
-                <Typography variant="body1" color="textSecondary">
-                    {t["Sub Type:"]} {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}
-                </Typography>
-                <Typography variant="body1" color="textSecondary">
-                    {t["Inventory Item:"]} {<Checkbox checked={!!product.inventoryItem} />}
-                </Typography>
+                <Box sx={{ my: 0.5, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" color="textSecondary">
+                        {t["Making Charge Sell:"]} {product.makingChargeSell}%
+                    </Typography>
+                    <Chip sx={{ borderRadius: 1 }} label={product.karat} />
+                </Box>
+                <Box sx={{ my: 0.5, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" color="textSecondary">
+                        {t["accessoriesCharge"]} {getIRRCurrency(product.accessoriesCharge).replace("ریال", "")} ريال
+                    </Typography>
+                    <Chip
+                        label={<Typography variant="h6">{t["Sold Quantity:"]} {soldQuantity}</Typography>}
+                        sx={{ borderRadius: 1 }}
+                    />
+                </Box>
+                <Box sx={{ my: 0.5, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" color="textSecondary">
+                        {t["Sub Type:"]} {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.[theme.direction === "rtl" ? "name" : "name_en"]}
+                    </Typography>
+                    <Chip
+                        icon={!!product.inventoryItem ? <Check /> : <Clear />}
+                        label={t["Inventory Item"]}
+                        sx={{ borderRadius: 1 }}
+                        color={!!product.inventoryItem ? "info" : 'default'}
+                    />
+                </Box>
             </CardContent>
             <CardActions sx={{ display: "flex", justifyContent: 'space-between' }}>
                 <Box>
@@ -666,7 +703,7 @@ function BackDropBox({ product }: BackDropBoxProps) {
                                         px: 1,
                                         py: 0.3,
                                         borderRadius: 1,
-                                        fontSize: 13,
+                                        fontSize: 15,
                                         fontWeight: 800,
                                     }}
                                 >

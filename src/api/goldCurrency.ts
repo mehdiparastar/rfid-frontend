@@ -35,3 +35,21 @@ export const useGoldCurrency = () => {
         refetchIntervalInBackground: false,
     });
 };
+
+export const useIssueInvoiceGoldCurrency = () => {
+    return useQuery<GoldCurrencyData, ApiError>({
+        queryKey: ['gold-currency'],
+        queryFn: async () => {
+            return api<GoldCurrencyData>('/api/gold-currency');
+        },
+        staleTime: 5 * 60 * 1000, // Cache for 5 minute (300 seconds)
+        gcTime: 5 * 60 * 1000, // Garbage collection time set to 5 minute
+        retry: (failureCount, error) => {
+            // Do not retry on 401/403 errors, let the api function handle refresh
+            if (isAuthError(error)) return false;
+            return failureCount < 3; // Retry up to 3 times for other errors
+        },
+        refetchInterval: 300_000,
+        refetchIntervalInBackground: false,
+    });
+};

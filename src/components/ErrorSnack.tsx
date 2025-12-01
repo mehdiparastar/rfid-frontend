@@ -3,36 +3,34 @@ import { useEffect, useMemo, useState } from "react";
 import { Snackbar, Alert } from "@mui/material";
 
 export function ErrorSnack({
-    deleteProductIsError,
-    deleteProductError,
+    deleteIsError,
+    deleteError,
     t,
 }: {
-    deleteProductIsError: boolean;
-    deleteProductError?: unknown;
+    deleteIsError: boolean;
+    deleteError?: unknown;
     t: Record<string, string>;
 }) {
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        if (deleteProductIsError) setOpen(true);
-    }, [deleteProductIsError]);
+        if (deleteIsError) setOpen(true);
+    }, [deleteIsError]);
 
     const serverMessage = useMemo(() => {
         try {
-            const raw = (deleteProductError as Error)?.message ?? "";
+            const raw = (deleteError as Error)?.message ?? "";
             const parsed = JSON.parse(raw);
             return parsed?.message as string | undefined;
         } catch {
             return undefined;
         }
-    }, [deleteProductError]);
+    }, [deleteError]);
 
     const message = useMemo(() => {
         const map: Record<string, string> = {
-            "Cannot delete: product has related sales.":
-                t["Cannot delete: product has related sales."],
-            "You are not allowed to delete this product":
-                t["You are not allowed to delete this product"],
+            "Cannot delete: product has related sales.": t["Cannot delete: product has related sales."],
+            "You are not allowed to delete this product": t["You are not allowed to delete this product"],
             "Product not found": t["Product not found"],
         };
 

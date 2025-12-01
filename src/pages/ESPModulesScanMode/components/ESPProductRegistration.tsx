@@ -159,8 +159,8 @@ const ESPProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
         const changes: Partial<ProductFormValues> = {};
 
         // Primitives: Simple string/number/boolean comparison
-        const primitiveFields: (keyof Pick<ProductFormValues, 'name' | 'karat' | 'weight' | 'quantity' | 'makingCharge' | 'vat' | 'profit' | 'accessoriesCharge'>)[] = [
-            'name', 'karat', 'weight', 'quantity', 'makingCharge', 'vat', 'profit', 'accessoriesCharge'
+        const primitiveFields: (keyof Pick<ProductFormValues, 'name' | 'karat' | 'weight' | 'quantity' | 'makingChargeBuy' | 'makingChargeSell' | 'vat' | 'profit' | 'accessoriesCharge'>)[] = [
+            'name', 'karat', 'weight', 'quantity', 'makingChargeBuy', 'makingChargeSell', 'vat', 'profit', 'accessoriesCharge'
         ];
         primitiveFields.forEach(field => {
             if (current[field] !== original[field]) {
@@ -459,12 +459,29 @@ const ESPProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                         <TextField
-                            label={t["Making Charge"]}
+                            label={t["Making Charge Buy"]}
                             disabled={createNewProductMutation.isPending}
-                            value={values.makingCharge}
-                            onChange={(e) => setValue('makingCharge', e.target.value)}
-                            error={!!errors.makingCharge}
-                            helperText={errors.makingCharge || helpers.makingCharge}
+                            value={values.makingChargeBuy}
+                            onChange={(e) => setValue('makingChargeBuy', e.target.value)}
+                            error={!!errors.makingChargeBuy}
+                            helperText={errors.makingChargeBuy || helpers.makingChargeBuy}
+                            fullWidth
+                            margin="normal"
+                            type='number'
+                            slotProps={{
+                                htmlInput: { min: 0, step: "0.1", max: 100 },
+                                input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }
+                            }}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <TextField
+                            label={t["Making Charge Sell"]}
+                            disabled={createNewProductMutation.isPending}
+                            value={values.makingChargeSell}
+                            onChange={(e) => setValue('makingChargeSell', e.target.value)}
+                            error={!!errors.makingChargeSell}
+                            helperText={errors.makingChargeSell || helpers.makingChargeSell}
                             fullWidth
                             margin="normal"
                             type='number'

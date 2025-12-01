@@ -40,7 +40,7 @@ export default function Dashboard() {
     const t = translate(ln) as any;
     const isConnected = useSocketStore((s) => s.isConnected);
     const [period, setPeriod] = useState<PeriodType>("year");
-    const [repType, setRepType] = useState<"weight" | "weightPlusMakingCharge">("weight");
+    const [repType, setRepType] = useState<"weight" | "weightPlusMakingChargeBuy">("weight");
 
     const { data, isLoading, isError } = useSalesStats(period);
 
@@ -111,22 +111,22 @@ export default function Dashboard() {
                             color: "linear-gradient(135deg, #EF9A9A, #C62828)",
                         },
                         {
-                            title: t["Making Charge"],
-                            value: getIRRCurrency(totals.totalSoldMakingChargePrice),
+                            title: t["Making Charge Buy"],
+                            value: getIRRCurrency(totals.totalSoldMakingChargeBuyPrice),
                             icon: <Inventory2 />,
                             color: "linear-gradient(135deg, #FFF176, #FBC02D)",
                         },
                         {
                             title: t["Sold Gold Weight (g)"],
                             value: `${t["Physical"]}: ${Number(totals.totalSoldWeight || 0).toFixed(2)} ${t["(g)"]}`,
-                            value2: `${t["With Making Charge"]}: ${Number(totals.totalSoldWeightPlusMakingCharge || 0).toFixed(2)} ${t["(g)"]}`,
+                            value2: `${t["With Making Charge Buy"]}: ${Number(totals.totalSoldWeightPlusMakingChargeBuy || 0).toFixed(2)} ${t["(g)"]}`,
                             icon: <MonitorWeight />,
                             color: "linear-gradient(135deg, #90CAF9, #1565C0)",
                         },
                         {
                             title: t["Available Gold Weight (g)"],
                             value: `${t["Physical"]}: ${Number(totals.totalAvailableWeight || 0).toFixed(2)} ${t["(g)"]}`,
-                            value2: `${t["With Making Charge"]}: ${Number(totals.totalAvailableWeightPlusMakingCharge || 0).toFixed(2)} ${t["(g)"]}`,
+                            value2: `${t["With Making Charge Buy"]}: ${Number(totals.totalAvailableWeightPlusMakingChargeBuy || 0).toFixed(2)} ${t["(g)"]}`,
                             icon: <MonitorWeight />,
                             color: "linear-gradient(135deg, #90CAF9, #1565C0)",
                         },
@@ -274,12 +274,12 @@ export default function Dashboard() {
                                     sx={{ direction: "ltr" }}
                                 >
                                     <ToggleButton value="weight">{t["Physical"]}</ToggleButton>
-                                    <ToggleButton value="weightPlusMakingCharge">{t["With Making Charge"]}</ToggleButton>
+                                    <ToggleButton value="weightPlusMakingChargeBuy">{t["With Making Charge Buy"]}</ToggleButton>
                                 </ToggleButtonGroup>
                             </Stack>
                             {groupByTypes.map((g, i) => {
-                                const total = repType === "weight" ? g.totalWeight || 0 : g.totalWeightPlusMakingCharge || 0;
-                                const available = repType === "weight" ? g.totalAvailableWeight || 0 : g.totalAvailableWeightPlusMakingCharge;
+                                const total = repType === "weight" ? g.totalWeight || 0 : g.totalWeightPlusMakingChargeBuy || 0;
+                                const available = repType === "weight" ? g.totalAvailableWeight || 0 : g.totalAvailableWeightPlusMakingChargeBuy;
                                 const percent = total ? (available / total) * 100 : 0;
 
                                 return (
@@ -354,12 +354,12 @@ export default function Dashboard() {
                                     sx={{ direction: "ltr" }}
                                 >
                                     <ToggleButton value="weight">{t["Physical"]}</ToggleButton>
-                                    <ToggleButton value="weightPlusMakingCharge">{t["With Making Charge"]}</ToggleButton>
+                                    <ToggleButton value="weightPlusMakingChargeBuy">{t["With Making Charge Buy"]}</ToggleButton>
                                 </ToggleButtonGroup>
                             </Stack>
                             {groupBySubTypes.map((g, i) => {
-                                const total = repType === "weight" ? g.totalWeight || 0 : g.totalWeightPlusMakingCharge || 0;
-                                const available = repType === "weight" ? g.totalAvailableWeight || 0 : g.totalAvailableWeightPlusMakingCharge;
+                                const total = repType === "weight" ? g.totalWeight || 0 : g.totalWeightPlusMakingChargeBuy || 0;
+                                const available = repType === "weight" ? g.totalAvailableWeight || 0 : g.totalAvailableWeightPlusMakingChargeBuy;
                                 const percent = total ? (available / total) * 100 : 0;
 
                                 return (
@@ -649,7 +649,7 @@ export default function Dashboard() {
 //                             {
 //                                 icon: <AttachMoney fontSize="large" color="primary" />,
 //                                 title: "مجموع اجرت ساخت",
-//                                 value: getIRRCurrency(data.totalMakingCharge),
+//                                 value: getIRRCurrency(data.totalMakingChargeBuy),
 //                             },
 //                             {
 //                                 icon: <AttachMoney fontSize="large" color="primary" />,

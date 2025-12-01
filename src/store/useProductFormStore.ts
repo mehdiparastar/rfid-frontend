@@ -9,7 +9,8 @@ export interface ProductFormValues {
     subType: GoldProductSUBType;
     inventoryItem: boolean;
     quantity: string;
-    makingCharge: string;
+    makingChargeBuy: string;
+    makingChargeSell: string;
     vat: string;
     profit: string;
     accessoriesCharge: string;
@@ -248,7 +249,8 @@ const defaultInitialValues: ProductFormValues = {
     subType: GOLD_PRODUCT_SUB_TYPES[0].symbol,
     inventoryItem: false,
     quantity: "1",
-    makingCharge: '17',
+    makingChargeBuy: '17',
+    makingChargeSell: '19',
     vat: '2',
     profit: '7',
     accessoriesCharge: '0',
@@ -288,7 +290,8 @@ export const useProductFormStore = create<FormState>((set, get) => ({
         if (!values.subType) newErrors.subType = 'SubType is required';
         if (values.inventoryItem === undefined || values.inventoryItem === null) newErrors.inventoryItem = 'Inventory Item Status is required';
         if (values.quantity == null || isNaN(parseInt(values.quantity))) newErrors.quantity = 'Valid quantity is required';
-        if (values.makingCharge == null || isNaN(parseFloat(values.makingCharge))) newErrors.makingCharge = 'Valid making charge is required';
+        if (values.makingChargeBuy == null || isNaN(parseFloat(values.makingChargeBuy))) newErrors.makingChargeBuy = 'Valid making charge buy is required';
+        if (values.makingChargeSell == null || isNaN(parseFloat(values.makingChargeSell))) newErrors.makingChargeSell = 'Valid making charge sell is required';
         if (values.vat == null || isNaN(parseFloat(values.vat))) newErrors.vat = 'Valid VAT is required';
         if (values.profit == null || isNaN(parseFloat(values.profit))) newErrors.profit = 'Valid PROFIT is required';
         if (values.tags.length === 0) newErrors.tags = 'At least one tag is required';

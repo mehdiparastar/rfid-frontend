@@ -470,8 +470,10 @@ export default function InvoiceDetails() {
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700 }}>{t["Name"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Quantity"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 100 }}>{t["Weight(g)"]}</TableCell>
-                                                <TableCell className="no-print" align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge + Profit + VAT"]}</TableCell>
+                                                <TableCell className="no-print" align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge Buy + Profit + VAT"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Spot Price (ریال)"]}</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["accessoriesCharge (ریال)"]}</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["discount (ریال)"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["Total (ریال)"]}</TableCell>
                                             </TableRow>
                                         </TableHead>
@@ -504,8 +506,10 @@ export default function InvoiceDetails() {
                                                             />
                                                         </TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{Number(item.product.weight).toString()}</TableCell>
-                                                        <TableCell className="no-print" sx={{ height: 48 }} align="center">{Number(item.product.makingCharge).toString()}% + {Number(item.product.profit).toString()}% + {Number(item.product.vat).toString()}%</TableCell>
+                                                        <TableCell className="no-print" sx={{ height: 48 }} align="center">{Number(item.product.makingChargeSell).toString()}% + {Number(item.product.profit).toString()}% + {Number(item.product.vat).toString()}%</TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{itemIRRSpotPrice}</TableCell>
+                                                        <TableCell sx={{ height: 48 }} align="center">{getIRRCurrency(item.product.accessoriesCharge).replace('ریال', '')}</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{getIRRCurrency(item.discount).replace('ریال', '')}</TableCell>
                                                         <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{getIRRCurrency(item.soldPrice).replace('ریال', '')}</TableCell>
                                                     </TableRow>
                                                 )
@@ -521,7 +525,7 @@ export default function InvoiceDetails() {
                                                     }}
                                                     className="no-print"
                                                 >
-                                                    <TableCell colSpan={8} sx={{ height: 48 }} />
+                                                    <TableCell colSpan={9} sx={{ height: 48 }} />
                                                 </TableRow>
                                             ))}
                                         </TableBody>

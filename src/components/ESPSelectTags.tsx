@@ -120,6 +120,22 @@ const ESPSelectTags: React.FC<ESPSelectTagsProps> = ({ selectedTags, open, onClo
     };
 
     const handleStartScenario = async () => {
+        if (allEspModules.length === 1) {
+            const deviceId = allEspModules[0].id!
+            const isActive = allEspModules[0].isActive!
+            const mode = allEspModules[0].mode!
+            const currentHardPower = allEspModules[0].currentHardPower!
+            if (isActive === false) {
+                setESPModulesIsActive({ deviceId, isActive: true })
+            }
+            if (mode !== "NewProduct") {
+                setESPModulesMode({ deviceId, mode: "NewProduct" })
+            }
+            if (currentHardPower !== 26) {
+                setESPModulesPower({ deviceId, power: 26 })
+            }
+        }
+        await new Promise(res => setTimeout(res, 500));
         startESPModulesScanByMode({ mode: "NewProduct" })
     }
 
@@ -203,13 +219,6 @@ const ESPSelectTags: React.FC<ESPSelectTagsProps> = ({ selectedTags, open, onClo
         a.preload = "auto";
         a.volume = 1.0; // tweak if needed
         audioRef.current = a;
-
-        if (allEspModules.length === 1) {
-            const deviceId = allEspModules[0].id!
-            setESPModulesIsActive({ deviceId, isActive: true })
-            setESPModulesMode({ deviceId, mode: "NewProduct" })
-            setESPModulesPower({ deviceId, power: 9 })
-        }
 
         return () => {
             a.pause();

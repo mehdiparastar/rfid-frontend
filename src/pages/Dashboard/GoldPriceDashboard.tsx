@@ -1,5 +1,5 @@
 import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
-import { Box, Card, CardContent, Chip, CircularProgress, Divider, Grid, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Card, CardContent, Chip, CircularProgress, Divider, Grid, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useGoldCurrency } from "../../api/goldCurrency";
@@ -37,10 +37,16 @@ const calcCoinPrice = (symbol: GoldProductSUBType, pricePerGeram: number) => {
 }
 export default function GoldPriceDashboard() {
     const theme = useTheme()
+    const isLg = useMediaQuery(theme.breakpoints.up("lg"));
+
     const ln = theme.direction === "ltr" ? "en" : "fa"
     const t = translate(ln)!
     const isConnected = useSocketStore((s) => s.isConnected)
     const { data, isLoading, isError } = useGoldCurrency();
+
+    const mainItem = data?.gold.find(el => el.symbol === "IR_GOLD_18K")
+    const restItems = data?.gold.filter(el => el.symbol !== "IR_GOLD_18K")
+    const [rest_firstFourItems, rest_remainItems] = [restItems?.slice(0, 4), restItems?.slice(4)];
 
     useEffect(() => {
         window.scrollTo({
@@ -76,13 +82,192 @@ export default function GoldPriceDashboard() {
                         {t["Updated at:"]} {data?.gold?.[0]?.date} {data?.gold?.[0]?.time}
                     </Typography>
                 </Stack>
+                {
+                    isLg && mainItem && rest_firstFourItems &&
+                    <Grid container spacing={2}>
+                        {
+                            [mainItem].map((item) => {
+                                const isUp = item.change_value >= 0;
+                                return (
+                                    <Grid
+                                        size={6}
+                                        key={item.symbol}
+                                    >
+                                        <motion.div
+                                            style={{ height: '100%' }}
+                                            whileHover={{ scale: 1.03 }}
+                                            transition={{ type: "spring", stiffness: 300 }}
+                                        >
+                                            <Card
+                                                sx={{
+                                                    height: 1,
+                                                    borderRadius: 3,
+                                                    boxShadow: 4,
+                                                    background:
+                                                        theme.palette.mode === 'light' ? isUp
+                                                            ? "linear-gradient(135deg, #fff8e1, #fffde7)"
+                                                            : "linear-gradient(135deg, #ffebee, #fce4ec)" : {},
+                                                }}
+                                            >
+                                                <CardContent sx={{ height: 1 }}>
+                                                    <Stack height={1} direction={'column'} justifyContent={'space-between'}>
+                                                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                            <Typography variant="h2" fontWeight="bold">
+                                                                {ln === "en" ? item.name_en : item.name}
+                                                            </Typography>
+                                                            <Chip
+                                                                size="medium"
+                                                                label={`${item.change_percent.toFixed(2)}%`.replace("-", "")}
+                                                                color={isUp ? "success" : "error"}
+                                                                icon={isUp ? <ArrowUpward fontSize="medium" /> : <ArrowDownward fontSize="medium" />}
+                                                            />
+                                                        </Stack>
+                                                        <Box>
+                                                            <Typography variant="h3" fontWeight="bold" mt={4}>
+                                                                {calcCoinPrice(item.symbol, item.price).toLocaleString()} {item.unit}
+                                                            </Typography>
 
-                <Grid container spacing={2}>
+                                                            <Divider sx={{ my: 1 }} />
+                                                            <Stack width={1} direction={'row'} justifyContent={"space-between"}>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    جواهرات کنعان | میلاد نور
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    {item.time}
+                                                                </Typography>
+                                                            </Stack>
+                                                        </Box>
+                                                    </Stack>
+                                                </CardContent>
+                                            </Card>
+                                        </motion.div>
+                                    </Grid>
+                                );
+                            })
+                        }
+                        <Grid container size={6}>
+                            {
+                                rest_firstFourItems.map((item) => {
+                                    const isUp = item.change_value >= 0;
+                                    return (
+                                        <Grid
+                                            spacing={2}
+                                            size={6}
+                                            key={item.symbol}
+                                        >
+                                            <motion.div
+                                                whileHover={{ scale: 1.03 }}
+                                                transition={{ type: "spring", stiffness: 300 }}
+                                            >
+                                                <Card
+                                                    sx={{
+                                                        borderRadius: 3,
+                                                        boxShadow: 4,
+                                                        background:
+                                                            theme.palette.mode === 'light' ? isUp
+                                                                ? "linear-gradient(135deg, #fff8e1, #fffde7)"
+                                                                : "linear-gradient(135deg, #ffebee, #fce4ec)" : {},
+                                                    }}
+                                                >
+                                                    <CardContent>
+                                                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                            <Typography variant="subtitle1" fontWeight="bold">
+                                                                {ln === "en" ? item.name_en : item.name}
+                                                            </Typography>
+                                                            <Chip
+                                                                size="small"
+                                                                label={`${item.change_percent.toFixed(2)}%`.replace("-", "")}
+                                                                color={isUp ? "success" : "error"}
+                                                                icon={isUp ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />}
+                                                            />
+                                                        </Stack>
+
+                                                        <Typography variant="h6" fontWeight="bold" mt={1}>
+                                                            {calcCoinPrice(item.symbol, item.price).toLocaleString()} {item.unit}
+                                                        </Typography>
+
+                                                        <Divider sx={{ my: 1 }} />
+                                                        <Stack width={1} direction={'row'} justifyContent={"space-between"}>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                جواهرات کنعان | میلاد نور
+                                                            </Typography>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                {item.time}
+                                                            </Typography>
+                                                        </Stack>
+                                                    </CardContent>
+                                                </Card>
+                                            </motion.div>
+                                        </Grid>
+                                    );
+                                })
+                            }
+                        </Grid>
+                        {
+                            rest_remainItems?.map((item) => {
+                                const isUp = item.change_value >= 0;
+                                return (
+                                    <Grid
+                                        size={3}
+                                        key={item.symbol}
+                                    >
+                                        <motion.div
+                                            whileHover={{ scale: 1.03 }}
+                                            transition={{ type: "spring", stiffness: 300 }}
+                                        >
+                                            <Card
+                                                sx={{
+                                                    borderRadius: 3,
+                                                    boxShadow: 4,
+                                                    background:
+                                                        theme.palette.mode === 'light' ? isUp
+                                                            ? "linear-gradient(135deg, #fff8e1, #fffde7)"
+                                                            : "linear-gradient(135deg, #ffebee, #fce4ec)" : {},
+                                                }}
+                                            >
+                                                <CardContent>
+                                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                        <Typography variant="subtitle1" fontWeight="bold">
+                                                            {ln === "en" ? item.name_en : item.name}
+                                                        </Typography>
+                                                        <Chip
+                                                            size="small"
+                                                            label={`${item.change_percent.toFixed(2)}%`.replace("-", "")}
+                                                            color={isUp ? "success" : "error"}
+                                                            icon={isUp ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />}
+                                                        />
+                                                    </Stack>
+
+                                                    <Typography variant="h6" fontWeight="bold" mt={1}>
+                                                        {calcCoinPrice(item.symbol, item.price).toLocaleString()} {item.unit}
+                                                    </Typography>
+
+                                                    <Divider sx={{ my: 1 }} />
+                                                    <Stack width={1} direction={'row'} justifyContent={"space-between"}>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            جواهرات کنعان | میلاد نور
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {item.time}
+                                                        </Typography>
+                                                    </Stack>
+                                                </CardContent>
+                                            </Card>
+                                        </motion.div>
+                                    </Grid>
+                                );
+                            })
+                        }
+                    </Grid>
+                }
+                {!isLg && <Grid container spacing={2}>
                     {data?.gold.map((item) => {
                         const isUp = item.change_value >= 0;
-
                         return (
-                            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.symbol}>
+                            <Grid
+                                size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                                key={item.symbol}
+                            >
                                 <motion.div
                                     whileHover={{ scale: 1.03 }}
                                     transition={{ type: "spring", stiffness: 300 }}
@@ -129,7 +314,7 @@ export default function GoldPriceDashboard() {
                             </Grid>
                         );
                     })}
-                </Grid>
+                </Grid>}
             </Box>
         </>
     );

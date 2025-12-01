@@ -153,6 +153,7 @@ export type SaleItem = {
     quantity: number;
     spotPrice: number;  // Spot price at the time of sale
     soldPrice: number;
+    discount: number;
     createdBy: User;
     createdAt?: Date;
     updatedAt?: Date;
@@ -170,9 +171,10 @@ export type Product = {
     inventoryItem: boolean;
     createdBy?: User;
     quantity: number;  // Available quantity of the product
-    makingCharge: number;  // Charge for making the product
-    vat: number;  // vat for making the product
-    profit: number;  // profit for making the product
+    makingChargeBuy: number;
+    makingChargeSell: number;
+    vat: number;
+    profit: number;
     accessoriesCharge: number;
     tags?: Tag[];
     saleItems?: SaleItem[];

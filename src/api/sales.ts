@@ -23,15 +23,15 @@ export interface SalesStats {
         totalSoldQuantity: number
         totalWeight: number
         totalSoldWeight: number
-        totalSoldWeightPlusMakingCharge: number
+        totalSoldWeightPlusMakingChargeBuy: number
         totalAvailableWeight: number
         totalSoldPrice: number
         totalSoldWeightPrice: number
         totalSoldVatPrice: number
         totalSoldProfitPrice: number
-        totalSoldMakingChargePrice: number
-        totalAvailableWeightPlusMakingCharge: number
-        totalWeightPlusMakingCharge: number
+        totalSoldMakingChargeBuyPrice: number
+        totalAvailableWeightPlusMakingChargeBuy: number
+        totalWeightPlusMakingChargeBuy: number
     }
     groupByTypes: {
         type: GoldProductType
@@ -40,15 +40,15 @@ export interface SalesStats {
         totalSoldQuantity: number
         totalWeight: number
         totalSoldWeight: number
-        totalSoldWeightPlusMakingCharge: number
+        totalSoldWeightPlusMakingChargeBuy: number
         totalAvailableWeight: number
         totalSoldPrice: number
         totalSoldWeightPrice: number
         totalSoldVatPrice: number
         totalSoldProfitPrice: number
-        totalSoldMakingChargePrice: number
-        totalAvailableWeightPlusMakingCharge: number
-        totalWeightPlusMakingCharge: number
+        totalSoldMakingChargeBuyPrice: number
+        totalAvailableWeightPlusMakingChargeBuy: number
+        totalWeightPlusMakingChargeBuy: number
     }[]
     groupBySubTypes: {
         subType: GoldProductSUBType
@@ -57,15 +57,15 @@ export interface SalesStats {
         totalSoldQuantity: number
         totalWeight: number
         totalSoldWeight: number
-        totalSoldWeightPlusMakingCharge: number
+        totalSoldWeightPlusMakingChargeBuy: number
         totalAvailableWeight: number
         totalSoldPrice: number
         totalSoldWeightPrice: number
         totalSoldVatPrice: number
         totalSoldProfitPrice: number
-        totalSoldMakingChargePrice: number
-        totalAvailableWeightPlusMakingCharge: number
-        totalWeightPlusMakingCharge: number
+        totalSoldMakingChargeBuyPrice: number
+        totalAvailableWeightPlusMakingChargeBuy: number
+        totalWeightPlusMakingChargeBuy: number
     }[]
     newCustomersCount: number
     topCustomers: TopCustomer[]

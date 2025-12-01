@@ -32,7 +32,8 @@ export function useCreateProduct() {
             formData.append('subType', payload.subType);
             formData.append('inventoryItem', payload.inventoryItem === true ? '1' : '0');
             formData.append('quantity', payload.quantity);
-            formData.append('makingCharge', payload.makingCharge);
+            formData.append('makingChargeBuy', payload.makingChargeBuy);
+            formData.append('makingChargeSell', payload.makingChargeSell);
             formData.append('vat', payload.vat);
             formData.append('profit', payload.profit);
             formData.append('accessoriesCharge', payload.accessoriesCharge);
@@ -74,7 +75,8 @@ export function useUpdateProduct() {
             if (payload.subType !== undefined) formData.append('subType', payload.subType);
             if (payload.inventoryItem !== undefined) formData.append('inventoryItem', payload.inventoryItem === true ? '1' : '0');
             if (payload.quantity !== undefined) formData.append('quantity', payload.quantity);
-            if (payload.makingCharge !== undefined) formData.append('makingCharge', payload.makingCharge);
+            if (payload.makingChargeBuy !== undefined) formData.append('makingChargeBuy', payload.makingChargeBuy);
+            if (payload.makingChargeSell !== undefined) formData.append('makingChargeSell', payload.makingChargeSell);
             if (payload.vat !== undefined) formData.append('vat', payload.vat);
             if (payload.profit !== undefined) formData.append('profit', payload.profit);
             if (payload.accessoriesCharge !== undefined) formData.append('accessoriesCharge', payload.accessoriesCharge);
@@ -174,7 +176,7 @@ interface IProductPrice {
     weight: number,
     vat: number,
     profit: number,
-    makingCharge: number,
+    makingChargeSell: number,
     price: number,
     karat: number,
     accessoriesCharge: number,
@@ -182,7 +184,7 @@ interface IProductPrice {
 export interface IProductRange {
     weight: IRange,
     quantity: IRange,
-    makingCharge: IRange,
+    makingChargeSell: IRange,
     profit: IRange,
     price: { min: [IProductPrice, IProductPrice], max: [IProductPrice, IProductPrice] },
 }

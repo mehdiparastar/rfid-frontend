@@ -1,13 +1,13 @@
-import { Fingerprint, PhoneAndroid } from "@mui/icons-material";
-import { Alert, alpha, Autocomplete, Box, Button, Container, Divider, Grid, InputAdornment, MenuItem, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from "@mui/material";
+import { DiscountOutlined, Fingerprint, PhoneAndroid } from "@mui/icons-material";
+import { Alert, alpha, Autocomplete, Box, Button, Container, Divider, Grid, IconButton, InputAdornment, MenuItem, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from "@mui/material";
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFnsJalali } from '@mui/x-date-pickers/AdapterDateFnsJalali';
 import { faIR } from 'date-fns-jalali/locale/fa-IR';
 import { useRef, useState } from "react";
-import { useLoaderData, useLocation } from "react-router-dom";
+import { useLoaderData, useLocation, useNavigate } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 import { useCustomerSearch } from "../api/customers";
-import { useGoldCurrency } from "../api/goldCurrency";
+import { useIssueInvoiceGoldCurrency } from "../api/goldCurrency";
 import { useProductsByIds } from "../api/products";
 import { useCreateSale } from "../api/sales";
 import type { Customer, Invoice, Product } from "../lib/api";
@@ -19,6 +19,7 @@ import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { isValidIranianNationalId } from "../utils/nationalIdChecker";
 import { isValidIranMobile, normalizeIranMobileToE164 } from "../utils/phoneNumberChecker";
 import { translate } from "../utils/translate";
+import { NumericFormatCustom } from "./ESPModulesScanMode/components/ESPProductRegistration";
 
 export default function IssueInvoice() {
 
@@ -30,6 +31,7 @@ export default function IssueInvoice() {
     // data passed via navigate(..., { state: { snapshot } })
     const location = useLocation();
     const snapshot = (location.state)?.snapshot as Product[];
+    const navigate = useNavigate();
 
     const { mutateAsync: createSaleAsync, isPending: createSaleIsPending } = useCreateSale();
     const { products: loaderProducts } = useLoaderData() as { products: Product[] };
@@ -40,7 +42,7 @@ export default function IssueInvoice() {
     const [issuedInvoice, setIssuedInvoice] = useState<Invoice | null>(null)
 
     const { data } = useProductsByIds(ids, { initialData: loaderProducts });
-    const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
+    const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useIssueInvoiceGoldCurrency();
 
     // snapshot if present (fast), otherwise use loader result
     const products = data || loaderProducts || snapshot
@@ -58,6 +60,7 @@ export default function IssueInvoice() {
     const { data: customerOptions = [], isFetching } = useCustomerSearch(searchTerm);
 
     const [quantityPerProduct, setQuantityPerProduct] = useState<{ [key: string]: number }>(products.reduce((p, c) => ({ ...p, [`quantity_${c.id}`]: 1 }), {}))
+    const [discountPerProduct, setDiscountPerProduct] = useState<{ [key: string]: number }>(products.reduce((p, c) => ({ ...p, [`discount_${c.id}`]: 0 }), {}))
     const [payType, setPayType] = useState<'cash' | 'credit'>('cash');
     const [desc, setDesc] = useState<string>("")
 
@@ -181,9 +184,21 @@ export default function IssueInvoice() {
                         return ({
                             productId: p.id,
                             quantity: quantityPerProduct[`quantity_${p.id}`],
-                            soldPrice: Math.round(
-                                quantityPerProduct[`quantity_${p.id}`] * (calculateGoldPrice(Number(p.karat), Number(p.weight), Number(p.makingCharge), Number(p.profit), Number(p.vat), { price: productSpotPrice, karat: productSpotKarat }, Number(p.accessoriesCharge)) || 0)
-                            ),
+                            soldPrice:
+                                quantityPerProduct[`quantity_${p.id}`] *
+                                (
+                                    calculateGoldPrice(
+                                        Number(p.karat),
+                                        Number(p.weight),
+                                        Number(p.makingChargeSell),
+                                        Number(p.profit),
+                                        Number(p.vat),
+                                        { price: productSpotPrice, karat: productSpotKarat },
+                                        Number(p.accessoriesCharge),
+                                        Number(discountPerProduct[`discount_${p.id}`])
+                                    ) || 0
+                                ),
+                            discount: discountPerProduct[`discount_${p.id}`],
                             spotPrice: productSpotPrice
                         })
                     }),
@@ -191,13 +206,13 @@ export default function IssueInvoice() {
                 })
                 setServerErr(null)
                 setIssuedInvoice(create)
+                navigate(`/invoice-detail?${new URLSearchParams({ ids: [create.id].join(',') }).toString()}`, { replace: true })
             }
             catch (ex) {
                 console.log(ex)
                 const msg = JSON.parse((ex as Error).message || '{}').message
                 setServerErr(msg)
             }
-            console.log()
         }
     }
 
@@ -622,8 +637,10 @@ export default function IssueInvoice() {
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700 }}>{t["Name"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Quantity"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 100 }}>{t["Weight(g)"]}</TableCell>
-                                                <TableCell className="no-print" align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge + Profit + VAT"]}</TableCell>
+                                                <TableCell className="no-print" align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge Buy + Profit + VAT"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Spot Price (ریال)"]}</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["accessoriesCharge (ریال)"]}</TableCell>
+                                                <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["discount (ریال)"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["Total (ریال)"]}</TableCell>
                                             </TableRow>
                                         </TableHead>
@@ -660,12 +677,80 @@ export default function IssueInvoice() {
                                                             />
                                                         </TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{Number(product.weight).toString()}</TableCell>
-                                                        <TableCell className="no-print" sx={{ height: 48 }} align="center">{Number(product.makingCharge).toString()}% + {Number(product.profit).toString()}% + {Number(product.vat).toString()}%</TableCell>
+                                                        <TableCell className="no-print" sx={{ height: 48 }} align="center">{Number(product.makingChargeSell).toString()}% + {Number(product.profit).toString()}% + {Number(product.vat).toString()}%</TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{productIRRSpotPrice}</TableCell>
+                                                        <TableCell sx={{ height: 48 }} align="center">{getIRRCurrency(product.accessoriesCharge).replace('ریال', '')}</TableCell>
+                                                        <TableCell sx={{ height: 48 }} align="center">
+                                                            <NumericFormatCustom
+                                                                variant="standard"
+                                                                name={`discount_${product.id}`}
+                                                                value={!!issuedInvoice ?
+                                                                    issuedInvoice.items.find(el => el.product.id === product.id)?.discount :
+                                                                    Number(discountPerProduct[`discount_${product.id}`])}
+                                                                onChange={(e: any) =>
+                                                                    setDiscountPerProduct(p => {
+                                                                        return (
+                                                                            {
+                                                                                ...p,
+                                                                                [e.target.name]:
+                                                                                    e.target.value === "" ? 0 :
+                                                                                        (Number(e.target.value) > (Number(product.weight) * Number(productSpotPrice))) ?
+                                                                                            (Number(product.weight) * Number(productSpotPrice)) :
+                                                                                            ((Number(e.target.value) < 0) ?
+                                                                                                0 :
+                                                                                                Number(e.target.value))
+                                                                            }
+                                                                        )
+                                                                    })
+                                                                }
+                                                                disabled={!!issuedInvoice}
+                                                                fullWidth
+                                                                margin="normal"
+                                                                InputProps={{
+                                                                    endAdornment: (
+                                                                        <InputAdornment position="end">
+                                                                            <IconButton onClick={() => {
+                                                                                setDiscountPerProduct(p => {
+                                                                                    const basePrice = calculateGoldPrice(
+                                                                                        Number(product.karat),
+                                                                                        Number(product.weight),
+                                                                                        Number(product.makingChargeSell),
+                                                                                        Number(product.profit),
+                                                                                        Number(product.vat),
+                                                                                        { price: Number(productSpotPrice), karat: Number(productSpotKarat) },
+                                                                                        Number(product.accessoriesCharge),
+                                                                                        Number(discountPerProduct[`discount_${product.id}`])
+                                                                                    )
+                                                                                    return (
+                                                                                        {
+                                                                                            ...p,
+                                                                                            [`discount_${product.id}`]: discountPerProduct[`discount_${product.id}`] + Math.floor(Number(basePrice) - Math.floor(Number(basePrice) / 1000) * 1000)
+                                                                                        }
+                                                                                    )
+                                                                                })
+                                                                            }}>
+                                                                                <DiscountOutlined />
+                                                                            </IconButton>
+                                                                        </InputAdornment>
+                                                                    )
+                                                                }}
+                                                            />
+                                                        </TableCell>
                                                         <TableCell sx={{ fontWeight: 700, height: 48 }} align="center">{
                                                             getIRRCurrency(
                                                                 quantityPerProduct[`quantity_${product.id}`] *
-                                                                (calculateGoldPrice(Number(product.karat), Number(product.weight), Number(product.makingCharge), Number(product.profit), Number(product.vat), { price: Number(productSpotPrice), karat: Number(productSpotKarat) }, Number(product.accessoriesCharge)) || 0)
+                                                                (
+                                                                    calculateGoldPrice(
+                                                                        Number(product.karat),
+                                                                        Number(product.weight),
+                                                                        Number(product.makingChargeSell),
+                                                                        Number(product.profit),
+                                                                        Number(product.vat),
+                                                                        { price: Number(productSpotPrice), karat: Number(productSpotKarat) },
+                                                                        Number(product.accessoriesCharge),
+                                                                        Number(discountPerProduct[`discount_${product.id}`])
+                                                                    ) || 0
+                                                                )
                                                             ).replace('ریال', '')}
                                                         </TableCell>
                                                     </TableRow>
@@ -682,7 +767,7 @@ export default function IssueInvoice() {
                                                     }}
                                                     className="no-print"
                                                 >
-                                                    <TableCell colSpan={8} sx={{ height: 48 }} />
+                                                    <TableCell colSpan={9} sx={{ height: 48 }} />
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -710,7 +795,22 @@ export default function IssueInvoice() {
                                             getIRRCurrency(products.reduce((p, c) => {
                                                 const productSpotPrice = 10 * (spotPrice?.gold.find(it => it.symbol === c.subType)?.price || 0)
                                                 const productSpotKarat = (spotPrice?.gold.find(it => it.symbol === c.subType)?.karat || 0)
-                                                return p + (quantityPerProduct[`quantity_${c.id}`] * (calculateGoldPrice(Number(c.karat), Number(c.weight), Number(c.makingCharge), Number(c.profit), Number(c.vat), { price: productSpotPrice, karat: productSpotKarat }, Number(c.accessoriesCharge)) || 0))
+                                                return p +
+                                                    (
+                                                        quantityPerProduct[`quantity_${c.id}`] *
+                                                        (
+                                                            calculateGoldPrice(
+                                                                Number(c.karat),
+                                                                Number(c.weight),
+                                                                Number(c.makingChargeSell),
+                                                                Number(c.profit),
+                                                                Number(c.vat),
+                                                                { price: productSpotPrice, karat: productSpotKarat },
+                                                                Number(c.accessoriesCharge),
+                                                                Number(Number(discountPerProduct[`discount_${c.id}`]))
+                                                            ) || 0
+                                                        )
+                                                    )
                                             }, 0))
                                         }
                                     </Typography>

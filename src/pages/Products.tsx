@@ -1,4 +1,4 @@
-import { ArrowDownward, ArrowUpward, Cancel, Check, ViewWeek as ColumnIcon, Delete, Edit, ExpandMore, ViewStream as ModuleIcon, Search, Tune } from "@mui/icons-material";
+import { ArrowDownward, ArrowUpward, Check, Clear, ViewWeek as ColumnIcon, Delete, Edit, ExpandMore, ViewStream as ModuleIcon, Search, Tune } from "@mui/icons-material";
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -36,7 +36,7 @@ export default function Products() {
 
     const [priceRange, setPriceRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
     const [weightRange, setWeightRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
-    const [makingChargeRange, setMakingChargeRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
+    const [makingChargeSellRange, setMakingChargeSellRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
     const [profitRange, setProfitRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
 
     const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
@@ -57,7 +57,7 @@ export default function Products() {
         calculateGoldPrice(
             ranges.price.min[0].karat,
             ranges.price.min[0].weight,
-            ranges.price.min[0].makingCharge,
+            ranges.price.min[0].makingChargeSell,
             ranges.price.min[0].profit,
             ranges.price.min[0].vat,
             {
@@ -65,13 +65,14 @@ export default function Products() {
                 karat: (spotPrice.gold.find(it => it.symbol === ranges.price.min[0].subType)?.karat || 0),
             },
             ranges.price.min[0].accessoriesCharge,
+            0
         )
     const maxPrice =
         spotPrice && spotPrice.gold && ranges &&
         calculateGoldPrice(
             ranges.price.max[0].karat,
             ranges.price.max[0].weight,
-            ranges.price.max[0].makingCharge,
+            ranges.price.max[0].makingChargeSell,
             ranges.price.max[0].profit,
             ranges.price.max[0].vat,
             {
@@ -79,7 +80,7 @@ export default function Products() {
                 karat: (spotPrice.gold.find(it => it.symbol === ranges.price.max[0].subType)?.karat || 0)
             },
             ranges.price.max[0].accessoriesCharge,
-
+            0
         )
 
     const confirmDelete = async () => {
@@ -136,14 +137,14 @@ export default function Products() {
                 setWeightRange(weightRange => ({ ...weightRange, max: maxValue }));
             }
         }
-        if (event.target.name.includes("makingCharge")) {
+        if (event.target.name.includes("makingChargeSell")) {
             if (event.target.name.includes("min")) {
-                const minValue = Number(event.target.value) <= makingChargeRange.max ? Number(event.target.value) : makingChargeRange.max
-                setWeightRange(makingChargeRange => ({ ...makingChargeRange, min: minValue }));
+                const minValue = Number(event.target.value) <= makingChargeSellRange.max ? Number(event.target.value) : makingChargeSellRange.max
+                setWeightRange(makingChargeSellRange => ({ ...makingChargeSellRange, min: minValue }));
             }
             if (event.target.name.includes("max")) {
-                const maxValue = Number(event.target.value) >= makingChargeRange.min ? Number(event.target.value) : makingChargeRange.min
-                setWeightRange(makingChargeRange => ({ ...makingChargeRange, max: maxValue }));
+                const maxValue = Number(event.target.value) >= makingChargeSellRange.min ? Number(event.target.value) : makingChargeSellRange.min
+                setWeightRange(makingChargeSellRange => ({ ...makingChargeSellRange, max: maxValue }));
             }
         }
         if (event.target.name.includes("profit")) {
@@ -168,9 +169,8 @@ export default function Products() {
         if (!!ranges) {
             setPriceRange({ min: minPrice || 0, max: maxPrice || 0 })
             setWeightRange({ min: ranges.weight.min, max: ranges.weight.max })
-            setMakingChargeRange({ min: ranges.makingCharge.min, max: ranges.makingCharge.max })
+            setMakingChargeSellRange({ min: ranges.makingChargeSell.min, max: ranges.makingChargeSell.max })
             setProfitRange({ min: ranges.profit.min, max: ranges.profit.max })
-
         }
     }, [ranges])
     useEffect(() => {
@@ -227,7 +227,7 @@ export default function Products() {
         <>
             <Box sx={{ width: 1, bgcolor: isConnected ? 'green' : 'red', height: 5 }} />
             {/* controls you wire to setSorting / setFilters */}
-            <Container maxWidth="lg" sx={{ px: 1, mb: 2 }}>
+            <Container maxWidth="xl" sx={{ px: 1, mb: 2 }}>
                 {/* Filters Section */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
                     <TextField
@@ -306,7 +306,7 @@ export default function Products() {
                         expandIcon={<ExpandMore />}
                         aria-controls="advanced-filters-content"
                     >
-                        <IconButton><Tune color={Object.keys(filters).length !== 1 ? "success" : "inherit"} /></IconButton>
+                        <Tune sx={{ mx: 1 }} color={Object.keys(filters).length !== 1 ? "success" : "inherit"} />
                         <Typography variant="subtitle1" fontWeight={600}>
                             {t["Advanced Filters"]}
                         </Typography>
@@ -413,13 +413,13 @@ export default function Products() {
                                 </Stack>
                             </Box>
 
-                            {/* Making Charge */}
+                            {/* Making Charge Sell */}
                             <Box>
                                 <Stack direction={"row"} alignItems={"center"} gap={2}>
-                                    <Chip sx={{ minWidth: 140, borderRadius: 1 }} label={t["Making Charge (%)"]} />
+                                    <Chip sx={{ minWidth: 140, borderRadius: 1 }} label={t["Making Charge Sell (%)"]} />
                                     <TextField
-                                        value={makingChargeRange.min}
-                                        name="makingCharge-min"
+                                        value={makingChargeSellRange.min}
+                                        name="makingChargeSell-min"
                                         size="small"
                                         fullWidth
                                         type='number'
@@ -427,40 +427,40 @@ export default function Products() {
                                         slotProps={{
                                             htmlInput: {
                                                 step: 0.1,
-                                                min: ranges?.makingCharge.min || 0,
-                                                max: ranges?.makingCharge.max || 100,
-                                                "aria-labelledby": 'min-makingCharge-input-slider',
+                                                min: ranges?.makingChargeSell.min || 0,
+                                                max: ranges?.makingChargeSell.max || 100,
+                                                "aria-labelledby": 'min-makingChargeSell-input-slider',
                                                 sx: { textAlign: 'center', px: "1px", pt: "5px", pb: "1px", fontSize: 14 },
                                             },
                                             input: { sx: { borderRadius: 0 } }
                                         }}
                                         sx={{ width: 120 }}
                                         onChange={handleAdvanceFilterInputChange}
-                                        aria-labelledby="min-makingCharge-input-slider"
+                                        aria-labelledby="min-makingChargeSell-input-slider"
                                     />
                                     <Slider
-                                        value={[makingChargeRange.min, makingChargeRange.max]}
+                                        value={[makingChargeSellRange.min, makingChargeSellRange.max]}
                                         onChange={(_, val) =>
-                                            setMakingChargeRange(makingChargeRange => ({ ...makingChargeRange, min: val[0] <= val[1] ? val[0] : val[1], max: val[1] >= val[0] ? val[1] : val[0] }))
+                                            setMakingChargeSellRange(makingChargeSellRange => ({ ...makingChargeSellRange, min: val[0] <= val[1] ? val[0] : val[1], max: val[1] >= val[0] ? val[1] : val[0] }))
                                         }
                                         valueLabelDisplay="auto"
-                                        min={ranges?.makingCharge.min || 0}
-                                        max={ranges?.makingCharge.max || 100}
+                                        min={ranges?.makingChargeSell.min || 0}
+                                        max={ranges?.makingChargeSell.max || 100}
                                         step={0.1}
                                         sx={sliderStyle}
                                         marks
-                                        aria-labelledby="makingCharge-input-slider"
+                                        aria-labelledby="makingChargeSell-input-slider"
                                         slotProps={{
                                             root: { style: { paddingBottom: 0, marginLeft: -16, marginRight: -16, borderRadius: 0 } },
                                             rail: { style: { height: 26, borderRadius: 0 } },
-                                            track: { style: { height: 24, borderRadius: 0, backgroundColor: ranges ? `hsl(${(makingChargeRange.max - makingChargeRange.min) / (ranges?.makingCharge.max - ranges?.makingCharge.min) * 100}, 100%, 30%)` : `hsl(100, 100%, 30%)` } },
+                                            track: { style: { height: 24, borderRadius: 0, backgroundColor: ranges ? `hsl(${(makingChargeSellRange.max - makingChargeSellRange.min) / (ranges?.makingChargeSell.max - ranges?.makingChargeSell.min) * 100}, 100%, 30%)` : `hsl(100, 100%, 30%)` } },
                                             thumb: { style: { zIndex: 100, color: theme.palette.warning.light, borderRadius: 2, height: 14, width: 14 } }
                                         }}
                                     />
                                     <TextField
                                         variant="outlined"
-                                        value={makingChargeRange.max}
-                                        name="makingCharge-max"
+                                        value={makingChargeSellRange.max}
+                                        name="makingChargeSell-max"
                                         size="small"
                                         fullWidth
                                         type='number'
@@ -468,16 +468,16 @@ export default function Products() {
                                         slotProps={{
                                             htmlInput: {
                                                 step: 0.1,
-                                                min: ranges?.makingCharge.min || 0,
-                                                max: ranges?.makingCharge.max || 100,
-                                                "aria-labelledby": 'max-makingCharge-input-slider',
+                                                min: ranges?.makingChargeSell.min || 0,
+                                                max: ranges?.makingChargeSell.max || 100,
+                                                "aria-labelledby": 'max-makingChargeSell-input-slider',
                                                 sx: { textAlign: 'center', px: "1px", pt: "5px", pb: "1px", fontSize: 14 },
                                             },
                                             input: { sx: { borderRadius: 0 } }
                                         }}
                                         sx={{ width: 120 }}
                                         onChange={handleAdvanceFilterInputChange}
-                                        aria-labelledby="max-makingCharge-input-slider"
+                                        aria-labelledby="max-makingChargeSell-input-slider"
                                     />
                                 </Stack>
                             </Box>
@@ -569,7 +569,7 @@ export default function Products() {
                                         ...filters,
                                         priceRange,
                                         weightRange,
-                                        makingChargeRange,
+                                        makingChargeSellRange: makingChargeSellRange,
                                         profitRange
                                     }))}
                                 >
@@ -625,7 +625,7 @@ export default function Products() {
                                             <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingCharge, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge) || 0))}
+                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeSell, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0) || 0)).replace("ریال", "")} ريال
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?
@@ -641,21 +641,27 @@ export default function Products() {
                                             <Typography variant="body2" color="textSecondary">
                                                 {t["Unit Weight:"]} {product.weight}{t["g"]}
                                             </Typography>
-                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Box sx={{ my: 0.5, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary">
-                                                    {t["Making Charge:"]} {product.makingCharge}%
+                                                    {t["Making Charge Sell:"]} {product.makingChargeSell}%
                                                 </Typography>
                                                 <Chip sx={{ borderRadius: 1 }} label={product.karat} />
                                             </Box>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {t["Sold Quantity:"]} {soldQuantity}
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Box sx={{ my: 0.5, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Typography variant="body2" color="textSecondary">
+                                                    {t["accessoriesCharge"]} {getIRRCurrency(product.accessoriesCharge).replace("ریال", "")} ريال
+                                                </Typography>
+                                                <Chip
+                                                    label={<Typography variant="body2">{t["Sold Quantity:"]} {soldQuantity}</Typography>}
+                                                    sx={{ borderRadius: 1 }}
+                                                />
+                                            </Box>
+                                            <Box sx={{ my: 0.5, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary">
                                                     {t["Sub Type:"]} {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.[theme.direction === "rtl" ? "name" : "name_en"]}
                                                 </Typography>
                                                 <Chip
-                                                    icon={!!product.inventoryItem ? <Check /> : <Cancel />}
+                                                    icon={!!product.inventoryItem ? <Check /> : <Clear />}
                                                     label={t["Inventory Item"]}
                                                     sx={{ borderRadius: 1 }}
                                                     color={!!product.inventoryItem ? "info" : 'default'}
@@ -766,8 +772,8 @@ export default function Products() {
                 </Snackbar>
             )}
             <ErrorSnack
-                deleteProductIsError={deleteProductIsError}
-                deleteProductError={deleteProductError}
+                deleteIsError={deleteProductIsError}
+                deleteError={deleteProductError}
                 t={t}
             />
         </>

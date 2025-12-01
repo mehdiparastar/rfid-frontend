@@ -113,6 +113,22 @@ const ESPCheckInventory: React.FC = () => {
     };
 
     const handleStartScenario = async () => {
+        if (allEspModules.length === 1) {
+            const deviceId = allEspModules[0].id!
+            const isActive = allEspModules[0].isActive!
+            const mode = allEspModules[0].mode!
+            const currentHardPower = allEspModules[0].currentHardPower!
+            if (isActive === false) {
+                setESPModulesIsActive({ deviceId, isActive: true })
+            }
+            if (mode !== "Inventory") {
+                setESPModulesMode({ deviceId, mode: "Inventory" })
+            }
+            if (currentHardPower !== 26) {
+                setESPModulesPower({ deviceId, power: 26 })
+            }
+        }
+        await new Promise(res => setTimeout(res, 500));
         startESPModulesScanByMode({ mode: "Inventory" })
     }
 
@@ -160,13 +176,6 @@ const ESPCheckInventory: React.FC = () => {
         a.preload = "auto";
         a.volume = 1.0; // tweak if needed
         audioRef.current = a;
-
-        if (allEspModules.length === 1) {
-            const deviceId = allEspModules[0].id!
-            setESPModulesIsActive({ deviceId, isActive: true })
-            setESPModulesMode({ deviceId, mode: "Inventory" })
-            setESPModulesPower({ deviceId, power: 26 })
-        }
 
         return () => {
             a.pause();
@@ -424,11 +433,12 @@ const ESPCheckInventory: React.FC = () => {
                                                         calculateGoldPrice(
                                                             product.karat,
                                                             product.weight,
-                                                            product.makingCharge,
+                                                            product.makingChargeSell,
                                                             product.profit,
                                                             product.vat,
                                                             { price: productSpotPrice, karat: productSpotKarat },
-                                                            product.accessoriesCharge
+                                                            product.accessoriesCharge,
+                                                            0
                                                         ) || 0
                                                     )}
                                                 />
@@ -444,7 +454,7 @@ const ESPCheckInventory: React.FC = () => {
                                                 />
                                             </Box>
                                             <InfoRow label={t["Unit Weight:"]} value={`${product.weight} ${t["g"]}`} />
-                                            <InfoRow label={t["Making Charge:"]} value={`${product.makingCharge}%`} />
+                                            <InfoRow label={t["Making Charge Sell:"]} value={`${product.makingChargeSell}%`} />
                                             <InfoRow label={t["Sold Quantity:"]} value={`${soldQuantity}`} />
                                             <InfoRow label={t["Sub Type:"]} value={`${GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}`} />
                                         </CardContent>
@@ -638,7 +648,7 @@ const ESPCheckInventory: React.FC = () => {
                                             borderBottom: '2px solid #8b6508',
                                         }}
                                     >
-                                        {t["Making Charge"]}
+                                        {t["Making Charge Buy"]}
                                     </TableCell>
                                     <TableCell
                                         align="center"
@@ -699,7 +709,7 @@ const ESPCheckInventory: React.FC = () => {
                                                 <Chip label={t[product.type]} size="small" />
                                             </TableCell>
                                             <TableCell align="center" variant="body" color="textSecondary" sx={{ fontWeight: 'bold', fontFamily: "IRANSans, sans-serifRoboto, Arial, sans-serif" }} >
-                                                {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingCharge, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge) || 0)).replace("ریال", "")}
+                                                {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeBuy, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0) || 0)).replace("ریال", "")}
                                             </TableCell>
                                             <TableCell align="center">
                                                 <Chip
@@ -722,7 +732,7 @@ const ESPCheckInventory: React.FC = () => {
                                                 {product.weight}
                                             </TableCell>
                                             <TableCell align="center" variant="body" color="textSecondary">
-                                                {product.makingCharge}%
+                                                {product.makingChargeBuy}%
                                             </TableCell>
                                             <TableCell align="center" variant="body" color="textSecondary">
                                                 {soldQuantity}
