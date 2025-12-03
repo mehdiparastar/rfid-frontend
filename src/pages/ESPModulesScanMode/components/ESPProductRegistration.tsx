@@ -163,7 +163,7 @@ const ESPProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
             'name', 'karat', 'weight', 'quantity', 'makingChargeBuy', 'makingChargeSell', 'vat', 'profit', 'accessoriesCharge'
         ];
         primitiveFields.forEach(field => {
-            if (current[field] !== original[field]) {
+            if (current[field] != original[field]) {
                 changes[field] = current[field];
             }
         });

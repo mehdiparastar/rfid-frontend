@@ -1,5 +1,5 @@
 import { DiscountOutlined, Fingerprint, PhoneAndroid } from "@mui/icons-material";
-import { Alert, alpha, Autocomplete, Box, Button, Container, Divider, Grid, IconButton, InputAdornment, MenuItem, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from "@mui/material";
+import { Alert, alpha, Autocomplete, Box, Button, Container, Divider, Grid, IconButton, InputAdornment, MenuItem, Paper, Select, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from "@mui/material";
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFnsJalali } from '@mui/x-date-pickers/AdapterDateFnsJalali';
 import { faIR } from 'date-fns-jalali/locale/fa-IR';
@@ -10,10 +10,10 @@ import { useCustomerSearch } from "../api/customers";
 import { useIssueInvoiceGoldCurrency } from "../api/goldCurrency";
 import { useProductsByIds } from "../api/products";
 import { useCreateSale } from "../api/sales";
-import type { Customer, Invoice, Product } from "../lib/api";
+import type { Customer, Invoice, ItariffType, Product } from "../lib/api";
 import { useSocketStore } from "../store/socketStore";
 import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
-import { InvoiceLogoImg } from "../svg/InvoiceLogo/InvoiceLogo";
+import { InvoiceLogo } from "../svg/InvoiceLogo/InvoiceLogo";
 import { calculateGoldPrice } from "../utils/calculateGoldPrice";
 import { getIRRCurrency } from "../utils/getIRRCurrency";
 import { isValidIranianNationalId } from "../utils/nationalIdChecker";
@@ -61,6 +61,7 @@ export default function IssueInvoice() {
 
     const [quantityPerProduct, setQuantityPerProduct] = useState<{ [key: string]: number }>(products.reduce((p, c) => ({ ...p, [`quantity_${c.id}`]: 1 }), {}))
     const [discountPerProduct, setDiscountPerProduct] = useState<{ [key: string]: number }>(products.reduce((p, c) => ({ ...p, [`discount_${c.id}`]: 0 }), {}))
+    const [tariffType, setTariffType] = useState<{ [key: string]: ItariffType }>(products.reduce((p, c) => ({ ...p, [`tariffType_${c.id}`]: "CT" }), {}))
     const [payType, setPayType] = useState<'cash' | 'credit'>('cash');
     const [desc, setDesc] = useState<string>("")
 
@@ -196,10 +197,11 @@ export default function IssueInvoice() {
                                         { price: productSpotPrice, karat: productSpotKarat },
                                         Number(p.accessoriesCharge),
                                         Number(discountPerProduct[`discount_${p.id}`])
-                                    ) || 0
+                                    )?.[tariffType[`tariffType_${p.id}`]] || 0
                                 ),
                             discount: discountPerProduct[`discount_${p.id}`],
-                            spotPrice: productSpotPrice
+                            spotPrice: productSpotPrice,
+                            tariffType: tariffType[`tariffType_${p.id}`]
                         })
                     }),
                     description: desc
@@ -264,7 +266,8 @@ export default function IssueInvoice() {
                                 <Box sx={{ position: "relative", zIndex: 2, width: 1, height: 1 }}>
                                     <Grid container spacing={1} height={1} display={"flex"} flexDirection={'column'} justifyContent={"space-between"}>
                                         <Grid size={{ xs: 12 }} sx={{ gap: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                            <InvoiceLogoImg width={130} height={130} />
+                                            <InvoiceLogo sx={{ fill: 'green', fontSize: 100 }} />
+                                            <br />
                                             <LocalizationProvider dateAdapter={AdapterDateFnsJalali} adapterLocale={faIR}>
                                                 <DatePicker
                                                     name="date"
@@ -367,6 +370,19 @@ export default function IssueInvoice() {
                                                     // focused
                                                     '& .MuiInput-underline:after': {
                                                         borderBottomColor: 'wheat',
+                                                        borderRadius: 0
+                                                    },
+                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: 'white',
+                                                        borderRadius: 0
+                                                    },
+                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: 'white',
+                                                        borderRadius: 0
+                                                    },
+                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: 'wheat',
+                                                        borderRadius: 0
                                                     },
                                                 }}
                                                 slotProps={{
@@ -393,7 +409,7 @@ export default function IssueInvoice() {
                                                 fullWidth
                                                 variant="standard"
                                                 multiline
-                                                rows={5}
+                                                rows={12}
                                                 sx={{
                                                     // default state
                                                     '& .MuiInput-underline:before': {
@@ -406,6 +422,19 @@ export default function IssueInvoice() {
                                                     // focused
                                                     '& .MuiInput-underline:after': {
                                                         borderBottomColor: 'wheat',
+                                                        borderRadius: 0
+                                                    },
+                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: 'white',
+                                                        borderRadius: 0
+                                                    },
+                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: 'white',
+                                                        borderRadius: 0
+                                                    },
+                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: 'wheat',
+                                                        borderRadius: 0
                                                     },
                                                 }}
                                                 slotProps={{
@@ -413,12 +442,16 @@ export default function IssueInvoice() {
                                                         sx: { color: 'wheat' },
                                                         startAdornment: (
                                                             <InputAdornment position="start">
-                                                                <Typography variant="body2" color="common.white" gutterBottom>
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    color="common.white"
+                                                                    gutterBottom
+                                                                >
                                                                     {t["Desc:"]}
                                                                 </Typography>
                                                             </InputAdornment>
                                                         )
-                                                    }
+                                                    },
                                                 }}
                                             />
                                         </Grid>
@@ -436,10 +469,10 @@ export default function IssueInvoice() {
                                         </Grid>
                                         <Grid size={{ xs: 12 }} sx={{ width: 1, justifyContent: 'center', display: 'flex', flexDirection: 'column' }}>
                                             <Typography width={1} variant="caption" color="common.white">
-                                                {t["Address: Tabriz, Milad Noor"]}
+                                                {t["Address: Tabriz, Valiasr, Milad Noor, No 36"]}
                                             </Typography>
                                             <Typography variant="caption" color="common.white">
-                                                {t["PHONE: 09141501251"]}
+                                                {t["PHONE: 041-3326-0198"]}
                                             </Typography>
                                         </Grid>
                                     </Grid>
@@ -461,39 +494,73 @@ export default function IssueInvoice() {
                         }}
                     >
                         <Grid
+                            size={{ xs: 12 }}
                             sx={{
                                 position: "relative",
-                                // optional base background
-                                bgcolor: "background.paper",
-                                // create the dotted overlay on the left half
+                                py: 2,               // ⬅️ compressed (was 4)
+                                textAlign: "center",
+                                overflow: "hidden",
+
+                                // -------- Dots (reduced opacity + visible in light mode) --------
                                 "&::before": {
                                     content: '""',
                                     position: "absolute",
                                     inset: 0,
-                                    width: "100%",           // left half; use height: "50%" & width: "100%" for top half
-                                    // Dots: 3px dot (adjust) on transparent
-                                    backgroundImage: "radial-gradient(currentColor 1.5px, transparent 1.6px)",
-                                    // Spacing between dot centers = 10px (so 5px gap around the first/last dots when positioned at 5,5)
+                                    backgroundImage:
+                                        "radial-gradient(rgba(180, 140, 20, 0.28) 1px, transparent 1.2px)",
                                     backgroundSize: "10px 10px",
-                                    // Ensures the nearest dots are exactly 5px from each side of the overlay
-                                    backgroundPosition: "5px 5px",
-                                    color: "divider",       // dot color; pick any (e.g., "#bdbdbd")
-                                    pointerEvents: "none",  // keep it purely decorative
+                                    opacity: 0.25,    // ⬅️ lower for clarity
+                                    pointerEvents: "none",
                                     zIndex: 0,
                                 },
-                                // Make children sit above the overlay
-                                "> *": { position: "relative", zIndex: 1 },
-                                // minHeight: 240, // just to make it visible in a demo
-                            }}
 
-                            size={{ xs: 12 }}
+                                "> *": { position: "relative", zIndex: 2 },
+
+                                // -------- Top thin divider --------
+                                "&::after": {
+                                    content: '""',
+                                    position: "absolute",
+                                    left: "15%",
+                                    right: "15%",
+                                    top: 0,
+                                    height: "1.5px",   // ⬅️ thinner
+                                    background:
+                                        "linear-gradient(to right, transparent, #B8860B, transparent)",
+                                    opacity: 0.7,
+                                },
+                            }}
                         >
-                            <Typography textAlign={'center'} fontFamily={theme.direction === "ltr" ? 'Pacifico, Segoe Script, Vazirmatn, Poppins, cursive' : 'IRANSans'} variant="h4" p={2} color="gold" fontWeight={700}>
+                            <Typography
+                                variant="h4"
+                                sx={{
+                                    fontFamily:
+                                        theme.direction === "ltr"
+                                            ? "Pacifico, Segoe Script, Poppins, cursive"
+                                            : "IRANNastaliq, IRANSans",
+
+                                    fontSize: { xs: 32, sm: 40 },  // ⬅️ smaller = shorter header
+                                    fontWeight: 700,
+
+                                    // Dark gold gradient (visible in light mode)
+                                    background: "linear-gradient(90deg, #B8860B, #DAA520, #B8860B)",
+                                    WebkitBackgroundClip: "text",
+                                    WebkitTextFillColor: "transparent",
+                                }}
+                            >
                                 {t["Kanani jewelry"]}
                             </Typography>
-                        </Grid>
-                        <Grid size={{ xs: 12 }} sx={{ mb: 1 }}>
-                            <Divider variant="fullWidth" sx={{ bgcolor: 'wheat', height: 4 }} />
+
+                            <Box
+                                sx={{
+                                    // width: "45%",
+                                    height: "1.5px",
+                                    mx: "auto",
+                                    mt: 0.5,       // ⬅️ compact spacing
+                                    background:
+                                        "linear-gradient(to right, transparent, #B8860B, transparent)",
+                                    opacity: 0.7,
+                                }}
+                            />
                         </Grid>
 
                         {/* --- Name --- */}
@@ -636,8 +703,9 @@ export default function IssueInvoice() {
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 70 }}>{t["No"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700 }}>{t["Name"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Quantity"]}</TableCell>
+                                                <TableCell className="no-print" align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Tariff Type"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 100 }}>{t["Weight(g)"]}</TableCell>
-                                                <TableCell className="no-print" align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge Buy + Profit + VAT"]}</TableCell>
+                                                <TableCell className="no-print" align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 135 }}>{t["Making Charge Sell + Profit + VAT"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 90 }}>{t["Spot Price (ریال)"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["accessoriesCharge (ریال)"]}</TableCell>
                                                 <TableCell align="center" sx={{ bgcolor: 'wheat', height: 48, fontWeight: 700, width: 150 }}>{t["discount (ریال)"]}</TableCell>
@@ -662,7 +730,7 @@ export default function IssueInvoice() {
                                                         }}
                                                     >
                                                         <TableCell sx={{ height: 48 }} align="center">{i + 1}</TableCell>
-                                                        <TableCell sx={{ height: 48 }} align="center">{product.name} - {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}</TableCell>
+                                                        <TableCell sx={{ height: 48, minWidth: 200 }} align="center">{product.name} - {GOLD_PRODUCT_SUB_TYPES.find(it => it.symbol === product.subType)?.name}</TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">
                                                             <TextField
                                                                 name={`quantity_${product.id}`}
@@ -675,6 +743,29 @@ export default function IssueInvoice() {
                                                                 slotProps={{ htmlInput: { min: 1, max: availableQuantity, sx: { textAlign: 'center' }, readOnly: !!issuedInvoice } }}
                                                                 onChange={(e) => setQuantityPerProduct(p => ({ ...p, [e.target.name]: Number(e.target.value) > availableQuantity ? availableQuantity : Number(e.target.value) < 1 ? 1 : Number(e.target.value) }))}
                                                             />
+                                                        </TableCell>
+                                                        <TableCell className="no-print" sx={{ height: 48, minWidth: 105 }} align="center">
+                                                            {
+                                                                !!issuedInvoice ?
+                                                                    <TextField
+                                                                        name={`tariffType_${product.id}`}
+                                                                        size="small"
+                                                                        variant="standard"
+                                                                        value={t[issuedInvoice.items.find(el => el.product.id === product.id)?.tariffType as ItariffType]}
+                                                                        slotProps={{ htmlInput: { sx: { textAlign: 'center' }, readOnly: true } }}
+                                                                    /> :
+                                                                    <Select
+                                                                        name={`tariffType_${product.id}`}
+                                                                        variant="standard"
+                                                                        labelId="select-tariff-type-label"
+                                                                        id="select-tariff-type"
+                                                                        value={tariffType[`tariffType_${product.id}`]}
+                                                                        onChange={(e) => setTariffType(p => ({ ...p, [e.target.name]: e.target.value as ItariffType }))}
+                                                                    >
+                                                                        <MenuItem title={t["CT"]} value={"CT"}>{t["CT"]}</MenuItem>
+                                                                        <MenuItem title={t["UT"]} value={"UT"}>{t["UT"]}</MenuItem>
+                                                                    </Select>
+                                                            }
                                                         </TableCell>
                                                         <TableCell sx={{ height: 48 }} align="center">{Number(product.weight).toString()}</TableCell>
                                                         <TableCell className="no-print" sx={{ height: 48 }} align="center">{Number(product.makingChargeSell).toString()}% + {Number(product.profit).toString()}% + {Number(product.vat).toString()}%</TableCell>
@@ -720,7 +811,7 @@ export default function IssueInvoice() {
                                                                                         { price: Number(productSpotPrice), karat: Number(productSpotKarat) },
                                                                                         Number(product.accessoriesCharge),
                                                                                         Number(discountPerProduct[`discount_${product.id}`])
-                                                                                    )
+                                                                                    )?.[tariffType[`tariffType_${product.id}`]]
                                                                                     return (
                                                                                         {
                                                                                             ...p,
@@ -749,7 +840,7 @@ export default function IssueInvoice() {
                                                                         { price: Number(productSpotPrice), karat: Number(productSpotKarat) },
                                                                         Number(product.accessoriesCharge),
                                                                         Number(discountPerProduct[`discount_${product.id}`])
-                                                                    ) || 0
+                                                                    )?.[tariffType[`tariffType_${product.id}`]] || 0
                                                                 )
                                                             ).replace('ریال', '')}
                                                         </TableCell>
@@ -767,7 +858,7 @@ export default function IssueInvoice() {
                                                     }}
                                                     className="no-print"
                                                 >
-                                                    <TableCell colSpan={9} sx={{ height: 48 }} />
+                                                    <TableCell colSpan={10} sx={{ height: 48 }} />
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -808,7 +899,7 @@ export default function IssueInvoice() {
                                                                 { price: productSpotPrice, karat: productSpotKarat },
                                                                 Number(c.accessoriesCharge),
                                                                 Number(Number(discountPerProduct[`discount_${c.id}`]))
-                                                            ) || 0
+                                                            )?.[tariffType[`tariffType_${c.id}`]] || 0
                                                         )
                                                     )
                                             }, 0))

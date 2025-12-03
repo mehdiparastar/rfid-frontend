@@ -1,6 +1,6 @@
 // ErrorSnack.tsx
+import { Alert, Snackbar } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { Snackbar, Alert } from "@mui/material";
 
 export function ErrorSnack({
     deleteIsError,

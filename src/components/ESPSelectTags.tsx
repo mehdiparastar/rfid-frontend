@@ -40,7 +40,6 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useClearEspModulesScanHistory, useEspModules, useSetESPModulePower, useSetESPModulesIsActive, useSetESPModulesMode, useStartESPModulesScanByMode, useStopESPModulesScanByMode } from '../api/espModules';
 import type { Tag } from '../api/tags';
-import dingUrl from "../assets/sounds/ding.mp3"; // Vite: imports as URL
 import { useESPModulesLive } from '../features/useESPModulesLive';
 import { useESPModulesScanLive } from '../features/useESPModulesScanLive';
 import { translate } from '../utils/translate';
@@ -58,7 +57,7 @@ const ESPSelectTags: React.FC<ESPSelectTagsProps> = ({ selectedTags, open, onClo
     const theme = useTheme()
     const ln = theme.direction === "ltr" ? "en" : "fa"
     const t = translate(ln)! as any
-    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const startWaitRef = useRef<NodeJS.Timeout | null>(null);
 
     const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
     const [page, setPage] = useState(0);
@@ -131,15 +130,18 @@ const ESPSelectTags: React.FC<ESPSelectTagsProps> = ({ selectedTags, open, onClo
             if (mode !== "NewProduct") {
                 setESPModulesMode({ deviceId, mode: "NewProduct" })
             }
-            if (currentHardPower !== 26) {
-                setESPModulesPower({ deviceId, power: 26 })
+            if (currentHardPower !== 12) {
+                setESPModulesPower({ deviceId, power: 12 })
             }
         }
         await new Promise(res => setTimeout(res, 500));
         startESPModulesScanByMode({ mode: "NewProduct" })
+        startWaitRef.current = setTimeout(() => {
+            handleStopScenario()
+        }, 180000);
     }
 
-    const handleStopScenario = async () => {
+    const handleStopScenario = () => {
         stopESPModulesScanByMode({ mode: "NewProduct" })
     }
 
@@ -214,30 +216,11 @@ const ESPSelectTags: React.FC<ESPSelectTagsProps> = ({ selectedTags, open, onClo
     };
 
     useEffect(() => {
-        // create & preload once
-        const a = new Audio(dingUrl);
-        a.preload = "auto";
-        a.volume = 1.0; // tweak if needed
-        audioRef.current = a;
-
         return () => {
-            a.pause();
-            audioRef.current = null;
             stopESPModulesScanByMode({ mode: "Scan" })
+            if (startWaitRef.current) clearTimeout(startWaitRef.current);
         };
     }, []);
-
-    useEffect(() => {
-        // play ding
-        const a = audioRef.current;
-        if (a && products && products.length > 0) {
-            // restart sound if rapid events
-            a.pause();
-            a.currentTime = 0;
-            // browsers may block without prior user interaction
-            a.play().catch(() => {/* ignore */ });
-        }
-    }, [tags?.length])
 
 
     const isScanning = (newProductModules || []).filter(el => el.isScan).length > 0

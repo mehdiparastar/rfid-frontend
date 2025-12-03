@@ -1,8 +1,8 @@
-import type { SortingState } from "../lib/api";
+import type { ItariffType, SortingState } from "../lib/api";
 
 export const scenarioKey = ["scenario"] as const;
 
-export const productsQueryKey = (limit?: number, sorting?: SortingState, filters?: Record<string, any>) => ['products', { limit, sorting, filters }];
+export const productsQueryKey = (limit?: number, sorting?: SortingState, filters?: Record<string, any>, tariffType?: ItariffType) => ['products', { limit, sorting, filters, tariffType }];
 
 export const tagsQueryKey = (limit?: number, sorting?: SortingState, filters?: Record<string, any>) => ['tags', { limit, sorting, filters }];
 

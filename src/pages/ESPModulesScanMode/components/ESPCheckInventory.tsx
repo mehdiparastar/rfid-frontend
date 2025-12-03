@@ -2,6 +2,8 @@ import {
     ArrowDownward as ArrowDownwardIcon,
     ArrowUpward as ArrowUpwardIcon,
     Clear,
+    HandshakeOutlined,
+    PaymentsOutlined,
     PlayArrow,
     Stop
 } from '@mui/icons-material';
@@ -40,9 +42,9 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useClearEspModulesScanHistory, useEspModules, useEspModulesInventoryItemShouldBeScanned, useSetESPModulePower, useSetESPModulesIsActive, useSetESPModulesMode, useStartESPModulesScanByMode, useStopESPModulesScanByMode } from '../../../api/espModules';
 import { useGoldCurrency } from '../../../api/goldCurrency';
-import dingUrl from "../../../assets/sounds/ding.mp3"; // Vite: imports as URL
 import { useESPModulesLive } from '../../../features/useESPModulesLive';
 import { useESPModulesScanLive } from '../../../features/useESPModulesScanLive';
+import type { ItariffType } from '../../../lib/api';
 import type { ESPModulesProductScan } from '../../../lib/socket';
 import { GOLD_PRODUCT_SUB_TYPES } from '../../../store/useProductFormStore';
 import { calculateGoldPrice } from '../../../utils/calculateGoldPrice';
@@ -57,7 +59,7 @@ const ESPCheckInventory: React.FC = () => {
     const theme = useTheme()
     const ln = theme.direction === "ltr" ? "en" : "fa"
     const t = translate(ln)!
-    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const startWaitRef = useRef<NodeJS.Timeout | null>(null);
 
     const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
     const [page, setPage] = useState(0);
@@ -65,6 +67,7 @@ const ESPCheckInventory: React.FC = () => {
     const [sortBy, setSortBy] = useState<'name' | 'weight' | 'latest'>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [openBackDrop, setOpenBackDrop] = useState<boolean>(false);
+    const [tariffType, setTariffType] = useState<ItariffType>("CT")
 
     const { data: allEspModules = [] } = useEspModules();
     const { mutate: setESPModulesPower, } = useSetESPModulePower()
@@ -130,9 +133,12 @@ const ESPCheckInventory: React.FC = () => {
         }
         await new Promise(res => setTimeout(res, 500));
         startESPModulesScanByMode({ mode: "Inventory" })
+        startWaitRef.current = setTimeout(() => {
+            handleStopScenario()
+        }, 180000);
     }
 
-    const handleStopScenario = async () => {
+    const handleStopScenario = () => {
         stopESPModulesScanByMode({ mode: "Inventory" })
     }
 
@@ -171,30 +177,12 @@ const ESPCheckInventory: React.FC = () => {
     const isScanning = thisModeModules.filter(m => m.isActive && m.isScan).length > 0
 
     useEffect(() => {
-        // create & preload once
-        const a = new Audio(dingUrl);
-        a.preload = "auto";
-        a.volume = 1.0; // tweak if needed
-        audioRef.current = a;
-
         return () => {
-            a.pause();
-            audioRef.current = null;
             stopESPModulesScanByMode({ mode: "Inventory" })
+            if (startWaitRef.current) clearTimeout(startWaitRef.current);
         };
     }, []);
 
-    useEffect(() => {
-        // play ding
-        const a = audioRef.current;
-        if (a && products && products.length > 0) {
-            // restart sound if rapid events
-            a.pause();
-            a.currentTime = 0;
-            // browsers may block without prior user interaction
-            a.play().catch(() => {/* ignore */ });
-        }
-    }, [products?.length])
 
     return (
         <Paper elevation={3} sx={{ pt: 1, pb: 4, px: 1, width: 1, mx: 'auto' }}>
@@ -360,6 +348,33 @@ const ESPCheckInventory: React.FC = () => {
                             {sortOrder === 'asc' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
                         </IconButton>
                     </Tooltip>
+
+                    <ToggleButtonGroup
+                        size="small"
+                        value={tariffType}
+                        exclusive
+                        onChange={(_, newValue) => setTariffType(newValue)}
+                        aria-label="Select tariff type"
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            '& .MuiToggleButtonGroup-grouped': {
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                '&:not(:first-of-type)': { borderLeft: 0 },
+                                '&:first-of-type': { borderRadius: '4px 0 0 4px' },
+                                '&:last-of-type': { borderRadius: '0 4px 4px 0' },
+                                '&.Mui-selected': {
+                                    backgroundColor: 'primary.main',
+                                    color: 'white',
+                                    '&:hover': { backgroundColor: 'primary.dark' },
+                                },
+                            },
+                        }}
+                    >
+                        <ToggleButton title={t["CT"]} value={"CT"} size="small"><PaymentsOutlined fontSize="small" /></ToggleButton>
+                        <ToggleButton title={t["UT"]} value={"UT"} size="small"><HandshakeOutlined fontSize="small" /></ToggleButton>
+                    </ToggleButtonGroup>
                 </Box>
                 <ToggleButtonGroup
                     value={viewMode}
@@ -439,7 +454,7 @@ const ESPCheckInventory: React.FC = () => {
                                                             { price: productSpotPrice, karat: productSpotKarat },
                                                             product.accessoriesCharge,
                                                             0
-                                                        ) || 0
+                                                        )?.[tariffType] || 0
                                                     )}
                                                 />
                                                 <Chip
@@ -709,7 +724,7 @@ const ESPCheckInventory: React.FC = () => {
                                                 <Chip label={t[product.type]} size="small" />
                                             </TableCell>
                                             <TableCell align="center" variant="body" color="textSecondary" sx={{ fontWeight: 'bold', fontFamily: "IRANSans, sans-serifRoboto, Arial, sans-serif" }} >
-                                                {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeBuy, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0) || 0)).replace("ریال", "")}
+                                                {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeBuy, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0)?.[tariffType] || 0)).replace("ریال", "")}
                                             </TableCell>
                                             <TableCell align="center">
                                                 <Chip

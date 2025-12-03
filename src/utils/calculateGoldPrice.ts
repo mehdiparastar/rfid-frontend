@@ -15,7 +15,10 @@ export const calculateGoldPrice = (
 
     if (karat && weight && makingCharge != null && profit != null && vat != null && unitPrice) {
         if (karat > 0 && weight > 0 && makingCharge >= 0 && profit >= 0 && vat >= 0 && unitPrice > 0) {
-            return Math.floor((karat / unitKarat * weight * unitPrice * (1 + (makingCharge / 100)) * (1 + (profit / 100)) * (1 + (vat / 100))) + Number(accessoriesCharge) - Number(discount))
+            return {
+                CT: Math.floor((karat / unitKarat * weight * unitPrice * (1 + (makingCharge / 100)) * (1 + (profit / 100)) * (1 + (vat / 100))) + Number(accessoriesCharge) - Number(discount)), // Conventional Tariff
+                UT: Math.floor((karat / unitKarat * weight * unitPrice * (1 + (makingCharge / 100)) * (1 + (profit / 100)) * (1 + (vat / 100))) + Number(accessoriesCharge) - Number(discount)), // Union Tariff
+            }
         }
     }
 }

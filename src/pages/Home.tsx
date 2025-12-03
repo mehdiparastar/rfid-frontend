@@ -26,7 +26,7 @@ import {
     Typography,
     useTheme
 } from '@mui/material';
-import { InvoiceLogoImg } from '../svg/InvoiceLogo/InvoiceLogo';
+import { InvoiceLogo } from '../svg/InvoiceLogo/InvoiceLogo';
 import { darkGoldGradient, darkGradient, lightGoldGradient, lightGradient, softBg } from '../utils/const';
 import { translate } from '../utils/translate';
 
@@ -125,7 +125,7 @@ export default function KANANHomePage() {
             {/* App Bar */}
             <AppBar position="sticky" sx={{ top: 0, background: (t) => alpha(t.palette.background.paper, 0.6), borderBottom: (t) => `1px solid ${alpha(t.palette.common.white, 0.06)}`, backdropFilter: 'blur(8px)' }}>
                 <Toolbar sx={{ justifyContent: 'space-between' }}>
-                    <InvoiceLogoImg width={100} height={100} />
+                    <InvoiceLogo sx={{ fill: theme.palette.success.main, fontSize: 40 }} />
 
                     <Stack direction={{ xs: 'row', md: 'row' }} spacing={1.5} alignItems="center">
                         <Box sx={{ display: { xs: 'block', md: 'block' } }}>
@@ -277,7 +277,7 @@ export default function KANANHomePage() {
                 <Container maxWidth="lg">
                     <Grid container spacing={3} alignItems="center">
                         <Grid sx={{ xs: 12, md: 6 }}>
-                            <InvoiceLogoImg width={100} height={100} />
+                            <InvoiceLogo sx={{ fill: theme.palette.secondary.main }} />
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>© {theme.direction === "ltr" ? new Date().getFullYear() : new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric' }).format(new Date())} {t["KANAN Gold. All rights reserved."]}</Typography>
                         </Grid>
                         <Grid sx={{ xs: 12, md: 6 }}>

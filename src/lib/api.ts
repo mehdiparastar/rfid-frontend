@@ -146,11 +146,14 @@ export type Invoice = {
     updatedAt?: Date;
 }
 
+export type ItariffType = "CT" | "UT"
+
 export type SaleItem = {
     id: number;
     invoice: Invoice;
     product: Product;
     quantity: number;
+    tariffType: ItariffType;
     spotPrice: number;  // Spot price at the time of sale
     soldPrice: number;
     discount: number;
@@ -204,15 +207,18 @@ export async function getProductItems({
     limit,
     sorting,
     filters,
+    tariffType
 }: {
     cursor?: string | null
     limit?: number
     sorting?: SortingState
     filters?: Record<string, string | number | boolean | undefined>
+    tariffType?: ItariffType
 }) {
     const params = new URLSearchParams()
     if (cursor) params.set('cursor', JSON.stringify(cursor))
     if (limit) params.set('limit', String(limit))
+    if (tariffType) params.set('tariffType', String(tariffType))
     const sort = encodeSort(sorting)
     if (sort) params.set('sort', sort)
 

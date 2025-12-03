@@ -1,4 +1,4 @@
-import { ArrowDownward, ArrowUpward, Check, Clear, ViewWeek as ColumnIcon, Delete, Edit, ExpandMore, ViewStream as ModuleIcon, Search, Tune } from "@mui/icons-material";
+import { ArrowDownward, ArrowUpward, Check, Clear, ViewWeek as ColumnIcon, Delete, Edit, ExpandMore, HandshakeOutlined, ViewStream as ModuleIcon, PaymentsOutlined, Search, Tune } from "@mui/icons-material";
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, MenuItem, Select, Slider, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useTheme, type SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -6,7 +6,7 @@ import { useGoldCurrency } from "../api/goldCurrency";
 import { useDeleteProduct, useProducts } from "../api/products";
 import { ErrorSnack } from "../components/ErrorSnack";
 import PhotoLightbox from "../components/PhotoLightbox";
-import type { Product } from "../lib/api";
+import type { ItariffType, Product } from "../lib/api";
 import { useSocketStore } from "../store/socketStore";
 import { GOLD_PRODUCT_SUB_TYPES } from "../store/useProductFormStore";
 import { calculateGoldPrice } from "../utils/calculateGoldPrice";
@@ -38,6 +38,7 @@ export default function Products() {
     const [weightRange, setWeightRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
     const [makingChargeSellRange, setMakingChargeSellRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
     const [profitRange, setProfitRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
+    const [tariffType, setTariffType] = useState<ItariffType>("CT")
 
     const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
 
@@ -45,6 +46,7 @@ export default function Products() {
         limit,
         sorting: [{ id: sortField, desc: sortDirection === "desc" }],
         filters,
+        tariffType
     })
     const { mutate: deleteProductMutate, error: deleteProductError, isError: deleteProductIsError } = useDeleteProduct()
 
@@ -66,7 +68,7 @@ export default function Products() {
             },
             ranges.price.min[0].accessoriesCharge,
             0
-        )
+        )?.[tariffType]
     const maxPrice =
         spotPrice && spotPrice.gold && ranges &&
         calculateGoldPrice(
@@ -81,7 +83,7 @@ export default function Products() {
             },
             ranges.price.max[0].accessoriesCharge,
             0
-        )
+        )?.[tariffType]
 
     const confirmDelete = async () => {
         if (productToDelete)
@@ -163,7 +165,7 @@ export default function Products() {
     useEffect(() => {
         // Reset the cursor when filters or sorting change
         setCursor(null);
-    }, [filters, sortField, sortDirection]);
+    }, [filters, sortField, sortDirection, tariffType]);
 
     useEffect(() => {
         if (!!ranges) {
@@ -269,6 +271,33 @@ export default function Products() {
                     </Typography>
                     {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}{t["product(s) selected."]}</Typography>}
                     <Stack direction={"row"} gap={2} alignItems={'center'}>
+                        <ToggleButtonGroup
+                            size="small"
+                            value={tariffType}
+                            exclusive
+                            onChange={(_, newValue) => setTariffType(newValue)}
+                            aria-label="Select tariff type"
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                '& .MuiToggleButtonGroup-grouped': {
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    '&:not(:first-of-type)': { borderLeft: 0 },
+                                    '&:first-of-type': { borderRadius: '4px 0 0 4px' },
+                                    '&:last-of-type': { borderRadius: '0 4px 4px 0' },
+                                    '&.Mui-selected': {
+                                        backgroundColor: 'primary.main',
+                                        color: 'white',
+                                        '&:hover': { backgroundColor: 'primary.dark' },
+                                    },
+                                },
+                            }}
+                        >
+                            <ToggleButton title={t["CT"]} value={"CT"} size="small"><PaymentsOutlined fontSize="small" /></ToggleButton>
+                            <ToggleButton title={t["UT"]} value={"UT"} size="small"><HandshakeOutlined fontSize="small" /></ToggleButton>
+
+                        </ToggleButtonGroup>
                         <ToggleButtonGroup
                             value={columnCount}
                             exclusive
@@ -625,7 +654,7 @@ export default function Products() {
                                             <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeSell, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0) || 0)).replace("ریال", "")} ريال
+                                                    {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeSell, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0)?.[tariffType] || 0)).replace("ریال", "")} ريال
                                                 </Typography>
                                                 <Chip
                                                     label={(product.quantity - soldQuantity) > 0 ?

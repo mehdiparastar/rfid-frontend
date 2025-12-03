@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { Esp32ClientInfo } from "../api/espModules";
+import dingUrl from "../assets/sounds/ding.mp3"; // Vite: imports as URL
 import type { ScanMode } from "../constants/scanMode";
 import type { ESPModulesProductScan } from "../lib/socket";
 import { useSocketStore } from "../store/socketStore";
@@ -9,6 +10,20 @@ import { useSocketStore } from "../store/socketStore";
 export function useESPModulesScanLive(refetchOnReconnect = true) {
     const qc = useQueryClient();
     const socket = useSocketStore(s => s.socket);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    useEffect(() => {
+        // create & preload once
+        const a = new Audio(dingUrl);
+        a.preload = "auto";
+        a.volume = 1.0; // tweak if needed
+        audioRef.current = a;
+
+        return () => {
+            a.pause();
+            audioRef.current = null;
+        };
+    }, []);
 
     useEffect(() => {
         const onESPModulesNewScanRecieved = (payload: ESPModulesProductScan[]) => {
@@ -28,6 +43,14 @@ export function useESPModulesScanLive(refetchOnReconnect = true) {
                                 moduleModeTagScanResults = (m.tagScanResults?.[moduleMode] ?? []).map(p => p.id === patch.id ? ({ ...oldScannedProduct, ...patch }) : p) as ESPModulesProductScan[]
                             } else {
                                 moduleModeTagScanResults = [...(m.tagScanResults?.[moduleMode] ?? []), patch] as ESPModulesProductScan[]
+                                const a = audioRef.current;
+                                if (a) {
+                                    // restart sound if rapid events
+                                    a.pause();
+                                    a.currentTime = 0;
+                                    // browsers may block without prior user interaction
+                                    a.play().catch(() => {/* ignore */ });
+                                }
                             }
                         }
                     }

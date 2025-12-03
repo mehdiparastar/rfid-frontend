@@ -1,16 +1,15 @@
-import { ArrowDownward, ArrowUpward, Check, Clear, ViewWeek as ColumnIcon, Delete, Edit, ViewStream as ModuleIcon, PlayArrow, PresentToAll, Search, Stop } from "@mui/icons-material";
+import { ArrowDownward, ArrowUpward, Check, Clear, ViewWeek as ColumnIcon, Delete, Edit, HandshakeOutlined, ViewStream as ModuleIcon, PaymentsOutlined, PlayArrow, PresentToAll, Search, Stop } from "@mui/icons-material";
 import { Alert, Backdrop, Box, Button, Card, CardActions, CardContent, CardMedia, Checkbox, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, FormControl, Grid, IconButton, InputLabel, LinearProgress, MenuItem, Paper, Select, Snackbar, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useTheme } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClearEspModulesScanHistory, useEspModules, useSetESPModulePower, useSetESPModulesIsActive, useSetESPModulesMode, useStartESPModulesScanByMode, useStopESPModulesScanByMode } from "../../../api/espModules";
 import { useGoldCurrency } from "../../../api/goldCurrency";
 import { useDeleteProduct } from "../../../api/products";
-import dingUrl from "../../../assets/sounds/ding.mp3"; // Vite: imports as URL
 import { ErrorSnack } from "../../../components/ErrorSnack";
 import PhotoLightbox from "../../../components/PhotoLightbox";
 import { useESPModulesLive } from "../../../features/useESPModulesLive";
 import { useESPModulesScanLive } from "../../../features/useESPModulesScanLive";
-import type { Product } from "../../../lib/api";
+import type { ItariffType, Product } from "../../../lib/api";
 import type { ESPModulesProductScan } from "../../../lib/socket";
 import { GOLD_PRODUCT_SUB_TYPES } from "../../../store/useProductFormStore";
 import { calculateGoldPrice } from "../../../utils/calculateGoldPrice";
@@ -26,7 +25,7 @@ const ESPScan: React.FC = () => {
     const theme = useTheme()
     const ln = theme.direction === "ltr" ? "en" : "fa"
     const t = translate(ln)!
-    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const startWaitRef = useRef<NodeJS.Timeout | null>(null);
 
     const [sortField, setSortField] = useState("latest");
     const [sortDirection, setSortDirection] = useState("desc");
@@ -38,6 +37,8 @@ const ESPScan: React.FC = () => {
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
+    const [tariffType, setTariffType] = useState<ItariffType>("CT")
+
 
     const { data: allEspModules = [] } = useEspModules();
     const { mutate: setESPModulesPower, } = useSetESPModulePower()
@@ -74,15 +75,18 @@ const ESPScan: React.FC = () => {
             if (mode !== "Scan") {
                 setESPModulesMode({ deviceId, mode: "Scan" })
             }
-            if (currentHardPower !== 26) {
-                setESPModulesPower({ deviceId, power: 26 })
+            if (currentHardPower !== 11) {
+                setESPModulesPower({ deviceId, power: 11 })
             }
         }
         await new Promise(res => setTimeout(res, 500));
         startESPModulesScanByMode({ mode: "Scan" })
+        startWaitRef.current = setTimeout(() => {
+            handleStopScenario()
+        }, 180000);
     }
 
-    const handleStopScenario = async () => {
+    const handleStopScenario = () => {
         stopESPModulesScanByMode({ mode: "Scan" })
     }
 
@@ -133,30 +137,11 @@ const ESPScan: React.FC = () => {
         });
 
     useEffect(() => {
-        // create & preload once
-        const a = new Audio(dingUrl);
-        a.preload = "auto";
-        a.volume = 1.0; // tweak if needed
-        audioRef.current = a;
-
         return () => {
-            a.pause();
-            audioRef.current = null;
             stopESPModulesScanByMode({ mode: "Scan" })
+            if (startWaitRef.current) clearTimeout(startWaitRef.current);
         };
     }, []);
-
-    useEffect(() => {
-        // play ding
-        const a = audioRef.current;
-        if (a && products && products.length > 0) {
-            // restart sound if rapid events
-            a.pause();
-            a.currentTime = 0;
-            // browsers may block without prior user interaction
-            a.play().catch(() => {/* ignore */ });
-        }
-    }, [products?.length])
 
     const thisModeModules = allEspModules?.filter(m => m.mode === "Scan")
     const isScanning = thisModeModules.filter(m => m.isActive && m.isScan).length > 0
@@ -356,6 +341,32 @@ const ESPScan: React.FC = () => {
                                 </Typography>
                                 {selectedProducts.length > 0 && <Typography variant="caption">{selectedProducts.length}{t["product(s) selected."]}</Typography>}
                                 <Stack direction={"row"} gap={2} alignItems={'center'}>
+                                    <ToggleButtonGroup
+                                        size="small"
+                                        value={tariffType}
+                                        exclusive
+                                        onChange={(_, newValue) => setTariffType(newValue)}
+                                        aria-label="Select tariff type"
+                                        sx={{
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            '& .MuiToggleButtonGroup-grouped': {
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                '&:not(:first-of-type)': { borderLeft: 0 },
+                                                '&:first-of-type': { borderRadius: '4px 0 0 4px' },
+                                                '&:last-of-type': { borderRadius: '0 4px 4px 0' },
+                                                '&.Mui-selected': {
+                                                    backgroundColor: 'primary.main',
+                                                    color: 'white',
+                                                    '&:hover': { backgroundColor: 'primary.dark' },
+                                                },
+                                            },
+                                        }}
+                                    >
+                                        <ToggleButton title={t["CT"]} value={"CT"} size="small"><PaymentsOutlined fontSize="small" /></ToggleButton>
+                                        <ToggleButton title={t["UT"]} value={"UT"} size="small"><HandshakeOutlined fontSize="small" /></ToggleButton>
+                                    </ToggleButtonGroup>
                                     <ToggleButton
                                         size="small"
                                         value="check"
@@ -444,7 +455,7 @@ const ESPScan: React.FC = () => {
                                                         <Divider sx={{ mx: -2, mb: 1 }} variant="fullWidth" />
                                                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                                             <Typography variant="body2" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                                                                {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeSell, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0) || 0)).replace("ریال", "")} ريال
+                                                                {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeSell, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0)?.[tariffType] || 0)).replace("ریال", "")} ريال
                                                             </Typography>
                                                             <Chip
                                                                 label={(product.quantity - soldQuantity) > 0 ?
@@ -588,7 +599,7 @@ const ESPScan: React.FC = () => {
                             backdropFilter: "blur(8px)",
                         }}
                     >
-                        <BackDropBox product={products.sort((a, b) => b.scantimestamp - a.scantimestamp)[0]} />
+                        <BackDropBox product={products.sort((a, b) => b.scantimestamp - a.scantimestamp)[0]} tariffType={tariffType} />
                     </Backdrop>
             }
         </>
@@ -599,10 +610,11 @@ export default ESPScan;
 
 
 interface BackDropBoxProps {
-    product: ESPModulesProductScan
+    product: ESPModulesProductScan,
+    tariffType: ItariffType
 }
 
-function BackDropBox({ product }: BackDropBoxProps) {
+function BackDropBox({ product, tariffType }: BackDropBoxProps) {
     const theme = useTheme()
     const ln = theme.direction === "ltr" ? "en" : "fa"
     const t = translate(ln)!
@@ -647,7 +659,15 @@ function BackDropBox({ product }: BackDropBoxProps) {
                 <Divider sx={{ my: 1, mb: 1 }} variant="fullWidth" />
                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" color="textSecondary" fontWeight={'bold'} fontFamily={"IRANSans, sans-serifRoboto, Arial, sans-serif"}>
-                        {t["Unit Price:"]} {getIRRCurrency(Math.round(calculateGoldPrice(product.karat, product.weight, product.makingChargeSell, product.profit, product.vat, { price: productSpotPrice, karat: productSpotKarat }, product.accessoriesCharge, 0) || 0)).replace("ریال", "")} ريال
+                        {t["Unit Price:"]} {getIRRCurrency(Math.round(
+                            calculateGoldPrice(
+                                product.karat,
+                                product.weight,
+                                product.makingChargeSell,
+                                product.profit,
+                                product.vat,
+                                { price: productSpotPrice, karat: productSpotKarat },
+                                product.accessoriesCharge, 0)?.[tariffType] || 0)).replace("ریال", "")} ريال
                     </Typography>
                     <Chip
                         label={(product.quantity - soldQuantity) > 0 ?
