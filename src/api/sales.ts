@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type Invoice, type SaleItem } from "../lib/api";
 import type { GoldProductSUBType, GoldProductType } from "../store/useProductFormStore";
+import type { ICustomer } from "./customers";
 
 export type CreateSalePayload = {
     sellDate: Date;
     payType: string;
     description?: string;
-    customer: { name: string; phone: string; nid: string };
+    customer: ICustomer;
     items: Array<{ productId: number; quantity: number; soldPrice: number, spotPrice: number }>;
 };
 

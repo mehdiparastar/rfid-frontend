@@ -21,6 +21,7 @@ const IssueInvoice = React.lazy(() => import("../pages/IssueInvoice"));
 const GoldPriceDashboard = React.lazy(() => import("../pages/Dashboard/GoldPriceDashboard"));
 const Dashboard = React.lazy(() => import("../pages/Dashboard/Dashboard"));
 const ESPModules = React.lazy(() => import("../pages/ESPModules"));
+const Customers = React.lazy(() => import("../pages/Customers"));
 
 import { fetchInvoicesByIds } from "../api/invoices";
 import { fetchProductsByIds } from "../api/products"; // your feature fetcher
@@ -122,6 +123,7 @@ const router = createBrowserRouter([
                     { path: "products", element: <Products /> },
                     { path: "tags", element: <Tags /> },
                     { path: "backupDB", element: <BackupDB /> },
+                    { path: "customers", element: <Customers /> },
                     { path: "users", element: <Users /> },
                     { path: "issue-invoice", loader: proformaInvoiceLoader, element: <IssueInvoice /> },
                     { path: "invoice-detail", loader: invoicesDetailsLoader, element: <InvoiceDetails /> },

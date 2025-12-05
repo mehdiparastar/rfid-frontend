@@ -38,7 +38,7 @@ export default function Products() {
     const [weightRange, setWeightRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
     const [makingChargeSellRange, setMakingChargeSellRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
     const [profitRange, setProfitRange] = useState<{ min: number, max: number }>({ min: 0, max: 100 });
-    const [tariffType, setTariffType] = useState<ItariffType>("CT")
+    const [tariffType, setTariffType] = useState<ItariffType>("UT")
 
     const { data: spotPrice, /*isLoading: spotPriceIsLoading,*/ error: spotPriceError, isError: spotPriceIsError } = useGoldCurrency();
 

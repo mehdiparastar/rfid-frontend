@@ -457,7 +457,7 @@ const ESPProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <TextField
                             label={t["Making Charge Buy"]}
                             disabled={createNewProductMutation.isPending}
@@ -474,7 +474,7 @@ const ESPProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <TextField
                             label={t["Making Charge Sell"]}
                             disabled={createNewProductMutation.isPending}
@@ -486,12 +486,12 @@ const ESPProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             margin="normal"
                             type='number'
                             slotProps={{
-                                htmlInput: { min: 0, step: "0.1", max: 100 },
+                                htmlInput: { min: values.makingChargeBuy, step: "0.1", max: 100 },
                                 input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }
                             }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <TextField
                             label={t["VAT"]}
                             disabled={createNewProductMutation.isPending}
@@ -508,7 +508,7 @@ const ESPProductRegistration: React.FC<ProductRegistrationProps> = (props) => {
                             }}
                         />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <TextField
                             label={t["PROFIT"]}
                             disabled={createNewProductMutation.isPending}

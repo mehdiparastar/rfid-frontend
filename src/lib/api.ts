@@ -1,4 +1,5 @@
 import type { User } from "../api/auth";
+import type { ICustomer } from "../api/customers";
 import type { IProductRange } from "../api/products";
 import type { Tag } from "../api/tags";
 import type { GoldProductSUBType, GoldProductType } from "../store/useProductFormStore";
@@ -147,6 +148,7 @@ export type Invoice = {
 }
 
 export type ItariffType = "CT" | "UT"
+export const conventionalTariffPercent = 2
 
 export type SaleItem = {
     id: number;
@@ -257,6 +259,31 @@ export async function getTagItems({
     }
 
     return api<Page<Tag>>(`/api/tags/all?${params.toString()}`)
+}
+
+export async function getCustomerItems({
+    cursor,
+    limit,
+    sorting,
+    filters,
+}: {
+    cursor?: string | null
+    limit?: number
+    sorting?: SortingState
+    filters?: Record<string, string | number | boolean | undefined>
+}) {
+    const params = new URLSearchParams()
+    if (cursor) params.set('cursor', JSON.stringify(cursor))
+    if (limit) params.set('limit', String(limit))
+    const sort = encodeSort(sorting)
+    if (sort) params.set('sort', sort)
+
+    // Properly stringify filters object before sending
+    if (filters && Object.keys(filters).length > 0) {
+        params.set('filters', JSON.stringify(filters));  // Send as JSON string
+    }
+
+    return api<Page<ICustomer>>(`/api/customers/find/all?${params.toString()}`)
 }
 
 export async function getInvoiceItems({

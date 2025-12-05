@@ -37,7 +37,7 @@ const ESPScan: React.FC = () => {
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
-    const [tariffType, setTariffType] = useState<ItariffType>("CT")
+    const [tariffType, setTariffType] = useState<ItariffType>("UT")
 
 
     const { data: allEspModules = [] } = useEspModules();

@@ -67,7 +67,7 @@ const ESPCheckInventory: React.FC = () => {
     const [sortBy, setSortBy] = useState<'name' | 'weight' | 'latest'>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [openBackDrop, setOpenBackDrop] = useState<boolean>(false);
-    const [tariffType, setTariffType] = useState<ItariffType>("CT")
+    const [tariffType, setTariffType] = useState<ItariffType>("UT")
 
     const { data: allEspModules = [] } = useEspModules();
     const { mutate: setESPModulesPower, } = useSetESPModulePower()

@@ -1,5 +1,6 @@
 const dict = {
     "en": {
+        "Tag NAMA": "Tag NAMA",
         "RFID Scanner": "RFID Scanner",
         "Sign in": "Sign in",
         "Signing out…": "Signing out…",
@@ -289,8 +290,13 @@ const dict = {
         "CT": "CT",
         "UT": "UT",
         "Elegance • Purity • Trust": "Elegance • Purity • Trust",
+        "Customers": "Customers",
+        "Search Customers": "Search Customers",
+        "Ascending": "Ascending",
+        "Descending": "Descending",
     },
     "fa": {
+        "Tag NAMA": "تگ نما",
         "RFID Scanner": "تگ نما",
         "Sign in": "ورود",
         "Signing out…": "در حال خروج",
@@ -580,6 +586,10 @@ const dict = {
         "CT": "عرفی",
         "UT": "اتحادیه",
         "Elegance • Purity • Trust": "ظریف • خاص • اصیل",
+        "Customers": "مشتریان",
+        "Search Customers": "جستجوی مشتریان",
+        "Ascending": "افزایشی",
+        "Descending": "کاهشی",
     }
 }
 

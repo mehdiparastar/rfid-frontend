@@ -6,6 +6,8 @@ export const productsQueryKey = (limit?: number, sorting?: SortingState, filters
 
 export const tagsQueryKey = (limit?: number, sorting?: SortingState, filters?: Record<string, any>) => ['tags', { limit, sorting, filters }];
 
+export const customersQueryKey = (limit?: number, sorting?: SortingState, filters?: Record<string, any>) => ['customers', { limit, sorting, filters }];
+
 export const productQueryKey = (id: string | number) => ['product', String(id)];
 
 export const tagQueryKey = (id: string | number) => ['tag', String(id)];

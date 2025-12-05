@@ -1,16 +1,9 @@
-import { Backup, CleaningServices, Dashboard, Fullscreen, HomeFilled, RestartAlt, WifiFind } from "@mui/icons-material";
+import { BackupOutlined, CleaningServices, DashboardOutlined, Fullscreen, HomeOutlined, Inventory2Outlined, LabelOutlined, LoginOutlined, MonetizationOnOutlined, PeopleAltOutlined, PersonAddOutlined, PersonOutline, ReceiptOutlined, RestartAlt, WifiFindOutlined } from "@mui/icons-material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
-import Inventory2Icon from "@mui/icons-material/Inventory2";
-import LabelIcon from "@mui/icons-material/Label";
 import LightModeIcon from "@mui/icons-material/LightMode";
-import SignInIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import UsersIcon from "@mui/icons-material/People";
-import SignUpIcon from "@mui/icons-material/PersonAdd";
-import ReceiptIcon from '@mui/icons-material/Receipt';
 import {
     AppBar,
     Avatar,
@@ -47,17 +40,18 @@ const drawerWidth = 260;
 type NavItem = { to: string; label: string; icon: React.ReactElement };
 
 const NAV_ITEMS: NavItem[] = [
-    { to: "/home", label: "Home", icon: <HomeFilled /> },
-    { to: "/dashboard", label: "Dashboard", icon: <Dashboard /> },
-    { to: "/gold-price-dashboard", label: "Gold Price Dashboard", icon: <MonetizationOnIcon /> },
-    { to: "/esp-modules", label: "Connected Modules", icon: <WifiFind /> },
-    { to: "/products", label: "Products", icon: <Inventory2Icon /> },
-    { to: "/invoices", label: "Invoices", icon: <ReceiptIcon /> },
-    { to: "/tags", label: "Tags", icon: <LabelIcon /> },
-    { to: "/users", label: "Users", icon: <UsersIcon /> },
-    { to: "/backupDB", label: "Backup DB", icon: <Backup /> },
-    { to: "/signin", label: "SignIn", icon: <SignInIcon /> },
-    { to: "/signup", label: "SignUp", icon: <SignUpIcon /> },
+    { to: "/home", label: "Home", icon: <HomeOutlined /> },
+    { to: "/dashboard", label: "Dashboard", icon: <DashboardOutlined /> },
+    { to: "/gold-price-dashboard", label: "Gold Price Dashboard", icon: <MonetizationOnOutlined /> },
+    { to: "/esp-modules", label: "Connected Modules", icon: <WifiFindOutlined /> },
+    { to: "/products", label: "Products", icon: <Inventory2Outlined /> },
+    { to: "/invoices", label: "Invoices", icon: <ReceiptOutlined /> },
+    { to: "/tags", label: "Tags", icon: <LabelOutlined /> },
+    { to: "/customers", label: "Customers", icon: <PeopleAltOutlined /> },
+    { to: "/users", label: "Users", icon: <PersonOutline /> },
+    { to: "/backupDB", label: "Backup DB", icon: <BackupOutlined /> },
+    { to: "/signin", label: "SignIn", icon: <LoginOutlined /> },
+    { to: "/signup", label: "SignUp", icon: <PersonAddOutlined /> },
 ] as const;
 
 
@@ -318,6 +312,8 @@ const Header = React.memo(function Header({ onMenuClick }: { onMenuClick: () => 
 
 export default function MainLayout() {
     const theme = useTheme();
+    const ln = theme.direction === "ltr" ? "en" : "fa"
+    const t = translate(ln)!
     const mdUp = useMediaQuery(theme.breakpoints.up("md"));
     const [mobileOpen, setMobileOpen] = React.useState(false);
     const drawerWidthCollapsed = 57;
@@ -425,7 +421,7 @@ export default function MainLayout() {
                         borderColor: "divider",
                     }}
                 >
-                    © {new Date().getFullYear()} RFID Scanner
+                    © {new Date().getFullYear()} {t["Tag NAMA"]}
                 </Box>
             </Box>
         </Box>

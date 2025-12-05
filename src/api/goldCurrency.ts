@@ -12,6 +12,9 @@ export interface GoldCurrencyData {
         price: number;
         symbol: GoldProductSUBType;
         time: string;
+        timeTaban: string;
+        dateTaban: string;
+        base: "T" | "B";
         time_unix: number;
         unit: string;
         karat: number;

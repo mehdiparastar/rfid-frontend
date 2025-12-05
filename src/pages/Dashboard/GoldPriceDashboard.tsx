@@ -1,4 +1,3 @@
-import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
 import { Box, Card, CardContent, Chip, CircularProgress, Divider, Grid, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
@@ -8,32 +7,32 @@ import type { GoldProductSUBType } from "../../store/useProductFormStore";
 import { translate } from "../../utils/translate";
 
 const calcCoinPrice = (symbol: GoldProductSUBType, pricePerGeram: number) => {
-    if (symbol === "IR_COIN_EMAMI") return pricePerGeram * 8.133
-    if (symbol === "IR_COIN_BAHAR") return pricePerGeram * 8.133
-    if (symbol === "IR_COIN_HALF") return pricePerGeram * 4.066
-    if (symbol === "IR_COIN_QUARTER") return pricePerGeram * 2.033
-    if (symbol === "IR_COIN_1G") return pricePerGeram * 1.01
-    if (symbol === "IR_PCOIN_1-5G") return pricePerGeram * 1.50
-    if (symbol === "IR_PCOIN_1-4G") return pricePerGeram * 1.40
-    if (symbol === "IR_PCOIN_1-3G") return pricePerGeram * 1.30
-    if (symbol === "IR_PCOIN_1-2G") return pricePerGeram * 1.20
-    if (symbol === "IR_PCOIN_1-1G") return pricePerGeram * 1.10
-    if (symbol === "IR_PCOIN_1G") return pricePerGeram * 1.00
-    if (symbol === "IR_PCOIN_900MG") return pricePerGeram * 0.90
-    if (symbol === "IR_PCOIN_800MG") return pricePerGeram * 0.80
-    if (symbol === "IR_PCOIN_700MG") return pricePerGeram * 0.70
-    if (symbol === "IR_PCOIN_600MG") return pricePerGeram * 0.60
-    if (symbol === "IR_PCOIN_500MG") return pricePerGeram * 0.50
-    if (symbol === "IR_PCOIN_400MG") return pricePerGeram * 0.40
-    if (symbol === "IR_PCOIN_300MG") return pricePerGeram * 0.30
-    if (symbol === "IR_PCOIN_200MG") return pricePerGeram * 0.20
-    if (symbol === "IR_PCOIN_100MG") return pricePerGeram * 0.10
-    if (symbol === "IR_PCOIN_70MG") return pricePerGeram * 0.070
-    if (symbol === "IR_PCOIN_50MG") return pricePerGeram * 0.050
-    if (symbol === "IR_PCOIN_30MG") return pricePerGeram * 0.030
-    if (symbol === "IR_GOLD_MELTED") return pricePerGeram * 4.3318
-    if (symbol === "XAUUSD") return pricePerGeram * 28.3495
-    return pricePerGeram
+    if (symbol === "IR_COIN_EMAMI") return Math.floor(pricePerGeram * 8.133)
+    if (symbol === "IR_COIN_BAHAR") return Math.floor(pricePerGeram * 8.133)
+    if (symbol === "IR_COIN_HALF") return Math.floor(pricePerGeram * 4.066)
+    if (symbol === "IR_COIN_QUARTER") return Math.floor(pricePerGeram * 2.033)
+    if (symbol === "IR_COIN_1G") return Math.floor(pricePerGeram * 1.01)
+    if (symbol === "IR_PCOIN_1-5G") return Math.floor(pricePerGeram * 1.50)
+    if (symbol === "IR_PCOIN_1-4G") return Math.floor(pricePerGeram * 1.40)
+    if (symbol === "IR_PCOIN_1-3G") return Math.floor(pricePerGeram * 1.30)
+    if (symbol === "IR_PCOIN_1-2G") return Math.floor(pricePerGeram * 1.20)
+    if (symbol === "IR_PCOIN_1-1G") return Math.floor(pricePerGeram * 1.10)
+    if (symbol === "IR_PCOIN_1G") return Math.floor(pricePerGeram * 1.00)
+    if (symbol === "IR_PCOIN_900MG") return Math.floor(pricePerGeram * 0.90)
+    if (symbol === "IR_PCOIN_800MG") return Math.floor(pricePerGeram * 0.80)
+    if (symbol === "IR_PCOIN_700MG") return Math.floor(pricePerGeram * 0.70)
+    if (symbol === "IR_PCOIN_600MG") return Math.floor(pricePerGeram * 0.60)
+    if (symbol === "IR_PCOIN_500MG") return Math.floor(pricePerGeram * 0.50)
+    if (symbol === "IR_PCOIN_400MG") return Math.floor(pricePerGeram * 0.40)
+    if (symbol === "IR_PCOIN_300MG") return Math.floor(pricePerGeram * 0.30)
+    if (symbol === "IR_PCOIN_200MG") return Math.floor(pricePerGeram * 0.20)
+    if (symbol === "IR_PCOIN_100MG") return Math.floor(pricePerGeram * 0.10)
+    if (symbol === "IR_PCOIN_70MG") return Math.floor(pricePerGeram * 0.070)
+    if (symbol === "IR_PCOIN_50MG") return Math.floor(pricePerGeram * 0.050)
+    if (symbol === "IR_PCOIN_30MG") return Math.floor(pricePerGeram * 0.030)
+    if (symbol === "IR_GOLD_MELTED") return Math.floor(pricePerGeram * 4.3318)
+    if (symbol === "XAUUSD") return Math.floor(pricePerGeram * 28.3495)
+    return Math.floor(pricePerGeram)
 }
 export default function GoldPriceDashboard() {
     const theme = useTheme()
@@ -74,20 +73,12 @@ export default function GoldPriceDashboard() {
         <>
             <Box sx={{ width: 1, bgcolor: isConnected ? 'green' : 'red', height: 5 }} />
             <Box p={3}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                    <Typography variant="h5" fontWeight="bold">
-                        {t["Gold Price Dashboard"]}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        {t["Updated at:"]} {data?.gold?.[0]?.date} {data?.gold?.[0]?.time}
-                    </Typography>
-                </Stack>
                 {
                     isLg && mainItem && rest_firstFourItems &&
                     <Grid container spacing={2}>
                         {
                             [mainItem].map((item) => {
-                                const isUp = item.change_value >= 0;
+                                const isUp = item.base === "T";
                                 return (
                                     <Grid
                                         size={6}
@@ -117,9 +108,8 @@ export default function GoldPriceDashboard() {
                                                             </Typography>
                                                             <Chip
                                                                 size="medium"
-                                                                label={`${item.change_percent.toFixed(2)}%`.replace("-", "")}
+                                                                label={item.base === "B" ? "بورس" : "تابان گوهر"}
                                                                 color={isUp ? "success" : "error"}
-                                                                icon={isUp ? <ArrowUpward fontSize="medium" /> : <ArrowDownward fontSize="medium" />}
                                                             />
                                                         </Stack>
                                                         <Box>
@@ -130,10 +120,10 @@ export default function GoldPriceDashboard() {
                                                             <Divider sx={{ my: 1 }} />
                                                             <Stack width={1} direction={'row'} justifyContent={"space-between"}>
                                                                 <Typography variant="caption" color="text.secondary">
-                                                                    جواهرات کنعان | میلاد نور
+                                                                    {item.timeTaban} {item.dateTaban} {"(تابان گوهر)"}
                                                                 </Typography>
                                                                 <Typography variant="caption" color="text.secondary">
-                                                                    {item.time}
+                                                                    {item.time} {item.date} {"(بورس)"}
                                                                 </Typography>
                                                             </Stack>
                                                         </Box>
@@ -148,7 +138,7 @@ export default function GoldPriceDashboard() {
                         <Grid container size={6}>
                             {
                                 rest_firstFourItems.map((item) => {
-                                    const isUp = item.change_value >= 0;
+                                    const isUp = item.base === "T";
                                     return (
                                         <Grid
                                             spacing={2}
@@ -176,9 +166,8 @@ export default function GoldPriceDashboard() {
                                                             </Typography>
                                                             <Chip
                                                                 size="small"
-                                                                label={`${item.change_percent.toFixed(2)}%`.replace("-", "")}
+                                                                label={item.base === "B" ? "بورس" : "تابان گوهر"}
                                                                 color={isUp ? "success" : "error"}
-                                                                icon={isUp ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />}
                                                             />
                                                         </Stack>
 
@@ -189,10 +178,10 @@ export default function GoldPriceDashboard() {
                                                         <Divider sx={{ my: 1 }} />
                                                         <Stack width={1} direction={'row'} justifyContent={"space-between"}>
                                                             <Typography variant="caption" color="text.secondary">
-                                                                جواهرات کنعان | میلاد نور
+                                                                {item.timeTaban} {item.dateTaban} {"(تابان گوهر)"}
                                                             </Typography>
                                                             <Typography variant="caption" color="text.secondary">
-                                                                {item.time}
+                                                                {item.time} {item.date} {"(بورس)"}
                                                             </Typography>
                                                         </Stack>
                                                     </CardContent>
@@ -205,7 +194,7 @@ export default function GoldPriceDashboard() {
                         </Grid>
                         {
                             rest_remainItems?.map((item) => {
-                                const isUp = item.change_value >= 0;
+                                const isUp = item.base === "T";
                                 return (
                                     <Grid
                                         size={3}
@@ -232,9 +221,8 @@ export default function GoldPriceDashboard() {
                                                         </Typography>
                                                         <Chip
                                                             size="small"
-                                                            label={`${item.change_percent.toFixed(2)}%`.replace("-", "")}
+                                                            label={item.base === "B" ? "بورس" : "تابان گوهر"}
                                                             color={isUp ? "success" : "error"}
-                                                            icon={isUp ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />}
                                                         />
                                                     </Stack>
 
@@ -245,10 +233,10 @@ export default function GoldPriceDashboard() {
                                                     <Divider sx={{ my: 1 }} />
                                                     <Stack width={1} direction={'row'} justifyContent={"space-between"}>
                                                         <Typography variant="caption" color="text.secondary">
-                                                            جواهرات کنعان | میلاد نور
+                                                            {item.timeTaban} {item.dateTaban} {"(تابان گوهر)"}
                                                         </Typography>
                                                         <Typography variant="caption" color="text.secondary">
-                                                            {item.time}
+                                                            {item.time} {item.date} {"(بورس)"}
                                                         </Typography>
                                                     </Stack>
                                                 </CardContent>
@@ -262,7 +250,7 @@ export default function GoldPriceDashboard() {
                 }
                 {!isLg && <Grid container spacing={2}>
                     {data?.gold.map((item) => {
-                        const isUp = item.change_value >= 0;
+                        const isUp = item.base === "T";
                         return (
                             <Grid
                                 size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
@@ -289,9 +277,8 @@ export default function GoldPriceDashboard() {
                                                 </Typography>
                                                 <Chip
                                                     size="small"
-                                                    label={`${item.change_percent.toFixed(2)}%`.replace("-", "")}
+                                                    label={item.base === "B" ? "بورس" : "تابان گوهر"}
                                                     color={isUp ? "success" : "error"}
-                                                    icon={isUp ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />}
                                                 />
                                             </Stack>
 
@@ -302,10 +289,10 @@ export default function GoldPriceDashboard() {
                                             <Divider sx={{ my: 1 }} />
                                             <Stack width={1} direction={'row'} justifyContent={"space-between"}>
                                                 <Typography variant="caption" color="text.secondary">
-                                                    جواهرات کنعان | میلاد نور
+                                                    {item.timeTaban} {item.dateTaban} {"(تابان گوهر)"}
                                                 </Typography>
                                                 <Typography variant="caption" color="text.secondary">
-                                                    {item.time}
+                                                    {item.time} {item.date} {"(بورس)"}
                                                 </Typography>
                                             </Stack>
                                         </CardContent>
